@@ -1,0 +1,18 @@
+{
+  "functions": {
+    "api/*.php": {
+      "runtime": "vercel-php@0.6.0"
+    }
+  },
+  "routes": [
+    { "src": "/style/(.*)", "dest": "/public/style/$1" },
+    { "src": "/logo/(.*)", "dest": "/public/logo/$1" },
+    { "src": "/login", "dest": "/api/login.php" },
+    { "src": "/logout", "dest": "/api/logout.php" },
+    { "src": "/proses_login", "dest": "/api/proses_login.php" },
+    { "src": "/proses_absen", "dest": "/api/proses_absen.php" },
+    { "src": "/(.*)\\.php", "dest": "/api/$1.php" },
+    { "src": "/", "dest": "/api/index.php" },
+    { "src": "/(.*)", "dest": "/api/$1.php" }
+  ]
+}

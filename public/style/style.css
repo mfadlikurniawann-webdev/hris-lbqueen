@@ -1,0 +1,205 @@
+:root {
+    --lb-pink: #C94F78;
+    --lb-pink-light: #FDF0F5;
+    --lb-pink-hover: #A83E60;
+}
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 0;
+}
+
+/* =========================================
+   CONTAINER MULTI-PLATFORM (RESPONSIF)
+========================================= */
+.mobile-container {
+    max-width: 100%;
+    /* Penuh di layar HP */
+    min-height: 100vh;
+    margin: 0 auto;
+    background-color: #ffffff;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: max-width 0.3s ease;
+}
+
+/* Penyesuaian Lebar untuk Tablet */
+@media (min-width: 768px) {
+    .mobile-container {
+        max-width: 720px;
+        box-shadow: 0 0 25px rgba(0, 0, 0, 0.08);
+    }
+}
+
+/* Penyesuaian Lebar untuk Desktop/Laptop */
+@media (min-width: 992px) {
+    .mobile-container {
+        max-width: 960px;
+    }
+}
+
+.bg-pink {
+    background-color: var(--lb-pink) !important;
+    color: white;
+}
+
+.text-pink {
+    color: var(--lb-pink) !important;
+}
+
+/* =========================================
+   TOMBOL BACK (KEMBALI) PROFESIONAL
+========================================= */
+.btn-back {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: absolute;
+    left: 20px;
+    top: 20px;
+    z-index: 10;
+    backdrop-filter: blur(5px);
+    /* Efek blur/glassmorphism */
+}
+
+.btn-back:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(1.05);
+    /* Sedikit membesar saat disorot */
+}
+
+.avatar-initials {
+    width: 60px;
+    height: 60px;
+    background-color: var(--lb-pink-light);
+    color: var(--lb-pink);
+    font-size: 24px;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    margin-top: 20px;
+}
+
+.action-card {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 15px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.action-card:hover {
+    background: var(--lb-pink-light);
+    transform: translateY(-2px);
+    /* Efek terangkat saat disorot */
+    box-shadow: 0 4px 10px rgba(201, 79, 120, 0.1);
+}
+
+.action-icon {
+    font-size: 24px;
+    color: var(--lb-pink);
+}
+
+/* =========================================
+   PENGATURAN LAYAR & NAVIGASI BAWAH
+========================================= */
+.app-screen {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 80px;
+}
+
+.app-screen.active {
+    display: block;
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: white;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    z-index: 1000;
+    /* Agar selalu presisi di tengah mengikuti lebar layar desktop/tablet */
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Responsif Navigasi Bawah Mengikuti Container */
+@media (min-width: 768px) {
+    .bottom-nav {
+        max-width: 720px;
+        border-radius: 15px 15px 0 0;
+        border: 1px solid #eee;
+        border-bottom: none;
+    }
+}
+
+@media (min-width: 992px) {
+    .bottom-nav {
+        max-width: 960px;
+    }
+}
+
+.nav-item-btn {
+    background: none;
+    border: none;
+    color: #adb5bd;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.3s ease;
+    cursor: pointer;
+}
+
+.nav-item-btn.active {
+    color: var(--lb-pink);
+    font-weight: bold;
+}
+
+.nav-item-btn:hover {
+    color: var(--lb-pink-hover);
+}
+
+.nav-item-btn i {
+    font-size: 20px;
+    transition: transform 0.2s ease;
+}
+
+.nav-item-btn.active i {
+    transform: translateY(-3px);
+    /* Ikon sedikit naik saat menu aktif */
+}
