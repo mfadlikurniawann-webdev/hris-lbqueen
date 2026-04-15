@@ -1,12 +1,14 @@
 <?php
 // api/koneksi.php
-// Koneksi database menggunakan environment variables (aman untuk Vercel)
 
-$host = getenv('DB_HOST');
-$user = getenv('DB_USER');
-$pass = getenv('DB_PASS');
-$db   = getenv('DB_NAME');
-$port = getenv('DB_PORT') ?: 3306;
+// Teknik Fallback: Mengutamakan $_ENV / getenv, jika kosong akan pakai data cadangan (hardcode)
+$host = $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: 'sql12.freesqldatabase.com';
+$user = $_ENV['DB_USER'] ?? getenv('DB_USER') ?: 'sql12823338';
+$db   = $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: 'sql12823338';
+$port = $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: 3306;
+
+// PERHATIAN: Ganti tulisan di bawah ini dengan password asli yang ada di email kamu!
+$pass = $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?: 'PASSWORD_DARI_EMAIL_KAMU'; 
 
 $conn = new mysqli($host, $user, $pass, $db, (int)$port);
 
@@ -21,7 +23,8 @@ $conn->set_charset("utf8mb4");
 // JWT HELPER - Pengganti $_SESSION untuk Vercel
 // =====================================================
 
-define('JWT_SECRET', getenv('JWT_SECRET') ?: 'hris_lbqueen_secret_2026');
+$jwt_secret = $_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET') ?: 'hris_lbqueen_rahasia_2026';
+define('JWT_SECRET', $jwt_secret);
 define('JWT_EXPIRE', 60 * 60 * 8); // 8 jam
 
 function jwt_base64url_encode($data) {
@@ -33,7 +36,7 @@ function jwt_base64url_decode($data) {
 }
 
 function jwt_create($payload) {
-    $header    = jwt_base64url_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+    $header   = jwt_base64url_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
     $payload['exp'] = time() + JWT_EXPIRE;
     $payloadEnc = jwt_base64url_encode(json_encode($payload));
     $signature  = jwt_base64url_encode(hash_hmac('sha256', "$header.$payloadEnc", JWT_SECRET, true));
