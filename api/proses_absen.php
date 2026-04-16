@@ -1,10 +1,8 @@
 <?php
-// api/proses_absen.php - VERSI FOLDER LOKAL (Fix Tanpa Foto)
+// api/proses_absen.php - VERSI FINAL (Cloudinary Fix for Vercel)
 include __DIR__ . '/koneksi.php';
 
-// =====================================================
 // 1. VERIFIKASI JWT
-// =====================================================
 $token   = get_token_from_cookie();
 $payload = jwt_verify($token);
 if (!$payload) {
@@ -42,7 +40,7 @@ if ($cek->num_rows > 0) {
     exit();
 }
 
-// Logika status Check In (Batas 12:00)
+// Logika status (Batas 12:00)
 $status = '-';
 if ($jenis == 'Check In') {
     if ($jam_menit > '12:00') {
@@ -56,44 +54,54 @@ if ($jenis == 'Check In') {
 }
 
 // =====================================================
-// 2. PROSES FOTO - SIMPAN KE FOLDER LOKAL /uploads
+// 2. PROSES FOTO - UPLOAD KE CLOUDINARY
 // =====================================================
 $foto_raw = $_POST['foto'] ?? '';
 $foto_url = null; 
 
-if (!empty($foto_raw) && strpos($foto_raw, 'data:image') !== false) {
-    try {
-        // Tentukan path folder uploads (naik satu tingkat dari folder api)
-        $target_dir = __DIR__ . '/../uploads/';
-        
-        // Buat folder jika belum ada
-        if (!is_dir($target_dir)) {
-            mkdir($target_dir, 0777, true);
+if (!empty($foto_raw) && strlen($foto_raw) > 100) {
+    // Ambil kredensial dari Environment Variables di Vercel
+    $cloud_name = getenv('CLOUDINARY_CLOUD_NAME');
+    $api_key    = getenv('CLOUDINARY_API_KEY');
+    $api_secret = getenv('CLOUDINARY_API_SECRET');
+
+    if ($cloud_name && $api_key && $api_secret) {
+        $timestamp  = time();
+        $jenis_slug = str_replace(' ', '', $jenis); 
+        $public_id  = "hris_absen/{$nik}_{$jenis_slug}_{$timestamp}";
+
+        $params_to_sign = "public_id={$public_id}&timestamp={$timestamp}";
+        $signature      = sha1($params_to_sign . $api_secret);
+
+        $upload_url = "https://api.cloudinary.com/v1_1/{$cloud_name}/image/upload";
+
+        $post_data = [
+            'file'      => $foto_raw,
+            'public_id' => $public_id,
+            'timestamp' => $timestamp,
+            'api_key'   => $api_key,
+            'signature' => $signature,
+        ];
+
+        $ch = curl_init($upload_url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $post_data,
+            CURLOPT_TIMEOUT        => 30,
+        ]);
+
+        $response = curl_exec($ch);
+        $result = json_decode($response, true);
+        curl_close($ch);
+
+        if (isset($result['secure_url'])) {
+            $foto_url = $result['secure_url'];
         }
-
-        // Olah data base64
-        $image_parts = explode(";base64,", $foto_raw);
-        $image_type_aux = explode("image/", $image_parts[0]);
-        $image_type = $image_type_aux[1];
-        $image_base64 = base64_decode($image_parts[1]);
-
-        // Nama file unik: nik_jenis_timestamp.jpg
-        $file_name = $nik . "_" . str_replace(' ', '', $jenis) . "_" . time() . "." . $image_type;
-        $file_path = $target_dir . $file_name;
-
-        // Simpan file ke sistem
-        if (file_put_contents($file_path, $image_base64)) {
-            // Simpan path relatif untuk database agar bisa dipanggil di HTML
-            $foto_url = "/uploads/" . $file_name;
-        }
-    } catch (Exception $e) {
-        $foto_url = null;
     }
 }
 
-// =====================================================
 // 3. SIMPAN KE DATABASE
-// =====================================================
 $foto_val = ($foto_url !== null) ? "'" . $conn->real_escape_string($foto_url) . "'" : "NULL";
 
 $sql = "INSERT INTO absensi (nik, waktu, jenis, lokasi, status, foto) 
@@ -102,15 +110,8 @@ $sql = "INSERT INTO absensi (nik, waktu, jenis, lokasi, status, foto)
 if ($conn->query($sql) === TRUE) {
     $msg = "✅ Berhasil $jenis!";
     if ($status != '-') $msg .= " Status: $status.";
-    
-    // Beri info apakah foto masuk atau tidak
-    if ($foto_url) {
-        $msg .= " 📸 Foto tersimpan di server.";
-    } else {
-        $msg .= " (Tanpa foto)";
-    }
-    echo $msg;
+    echo ($foto_url) ? $msg . " 📸 Foto OK." : $msg . " (Tanpa foto)";
 } else {
-    echo "❌ Gagal menyimpan ke database: " . $conn->error;
+    echo "❌ Database Error: " . $conn->error;
 }
 ?>
