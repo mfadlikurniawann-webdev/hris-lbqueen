@@ -95,6 +95,7 @@ if ($is_admin) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style/style.css">
+    <link rel="icon" type="image/png" href="/logo/lbqueen_logo.PNG">
     <style>
         .modal-content { border-radius: 20px; border: none; }
         .nav-pills .nav-link { color: #6c757d; border-radius: 10px; font-weight: bold; }
