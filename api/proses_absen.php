@@ -21,7 +21,7 @@ $jenis = $conn->real_escape_string($_POST['jenis_absen']);
 date_default_timezone_set('Asia/Jakarta');
 $waktu_lengkap = date('Y-m-d H:i:s');
 $hari_ini      = date('Y-m-d');
-$jam_menit     = date('H:i:i');
+$jam_menit     = date('H:i:s');
 
 // Cek duplikat
 $cek = $conn->query("SELECT id FROM absensi WHERE nik='$nik' AND jenis='$jenis' AND DATE(waktu)='$hari_ini'");
@@ -33,8 +33,8 @@ if ($cek->num_rows > 0) {
 // Logika status Check In (Batas 12:00)
 $status = '-';
 if ($jenis == 'Check In') {
-    if ($jam_menit > '12:00') {
-        echo "❌ Gagal: Batas waktu Check In (12:00 WIB) telah berakhir.";
+    if ($jam_menit > '13:00') {
+        echo "❌ Gagal: Batas waktu Check In (13:00 WIB) telah berakhir.";
         exit();
     } elseif ($jam_menit > '09:15') {
         $status = 'Telat';
