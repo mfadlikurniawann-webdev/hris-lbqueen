@@ -26,10 +26,16 @@ function formatTanggalIndo($tanggal) {
     return $p[2] . ' ' . $bulan[(int)$p[1]] . ' ' . $p[0];
 }
 
-// STATUS ABSENSI HARI INI
-$hari_ini       = date('Y-m-d');
-$batas_check_in = '10:30';
-$lewat_batas_in = false;
+// LOGIKA WAKTU ABSENSI HARI INI
+$hari_ini             = date('Y-m-d');
+$jam_sekarang         = date('H:i');
+$batas_check_in_awal  = '08:30';
+$batas_check_in_akhir = '10:30';
+$batas_check_out_awal = '18:00';
+
+$belum_waktunya_in  = ($jam_sekarang < $batas_check_in_awal);
+$lewat_batas_in     = ($jam_sekarang > $batas_check_in_akhir);
+$belum_waktunya_out = ($jam_sekarang < $batas_check_out_awal);
 
 $cek_in   = $conn->query("SELECT waktu, status FROM absensi WHERE nik='".$karyawan['nik']."' AND jenis='Check In' AND DATE(waktu)='$hari_ini'");
 $data_in  = $cek_in->fetch_assoc();
@@ -41,6 +47,14 @@ $cek_out   = $conn->query("SELECT waktu FROM absensi WHERE nik='".$karyawan['nik
 $data_out  = $cek_out->fetch_assoc();
 $sudah_out = $cek_out->num_rows > 0;
 $waktu_out = $sudah_out ? date('H:i', strtotime($data_out['waktu'])) : '--:--';
+
+// PENENTUAN KAMERA AKTIF ATAU TIDAK
+$show_camera = false;
+if (!$sudah_in && !$belum_waktunya_in && !$lewat_batas_in) {
+    $show_camera = true; // Buka kamera untuk Check In
+} elseif ($sudah_in && !$sudah_out && !$belum_waktunya_out) {
+    $show_camera = true; // Buka kamera untuk Check Out
+}
 
 // RIWAYAT ABSENSI PRIBADI
 $full_history = $conn->query("SELECT 
@@ -92,12 +106,12 @@ if ($is_admin) {
         .btn-pink { background-color: var(--lb-pink); color: white; transition: 0.3s; }
         .btn-pink:hover { background-color: var(--lb-pink-hover); color: white; }
         .activity-box { background: #fff; border: 1px solid #eaeaea; border-radius: 15px; padding: 15px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+        .table-admin td { vertical-align: middle; }
     </style>
 </head>
 <body>
 <div class="mobile-container">
 
-    <!-- ===== BERANDA ===== -->
     <div id="screen-beranda" class="app-screen active">
         <div class="bg-pink p-4 rounded-bottom-4 shadow-sm">
             <div class="d-flex align-items-center justify-content-center mb-3 pb-3 border-bottom border-light border-opacity-25">
@@ -131,45 +145,46 @@ if ($is_admin) {
                     <i class="bi bi-geo-alt-fill"></i> Lokasi Kerja: <?= $karyawan['penempatan'] ?>
                 </div>
 
-                <?php if (!$sudah_out): ?>
-                <div id="camera-wrapper" class="mb-3 mx-auto shadow-sm" style="width:200px; height:200px; border-radius:50%; overflow:hidden; border:4px solid var(--lb-pink-light); background:#eee;">
-                    <video id="kamera" autoplay playsinline style="width:100%; height:100%; object-fit:cover; transform:scaleX(-1);"></video>
-                    <canvas id="canvas_kamera" style="display:none;"></canvas>
-                </div>
+                <?php if ($show_camera): ?>
+                    <div id="camera-wrapper" class="mb-3 mx-auto shadow-sm" style="width:200px; height:200px; border-radius:50%; overflow:hidden; border:4px solid var(--lb-pink-light); background:#eee;">
+                        <video id="kamera" autoplay playsinline style="width:100%; height:100%; object-fit:cover; transform:scaleX(-1);"></video>
+                        <canvas id="canvas_kamera" style="display:none;"></canvas>
+                    </div>
+                    <small class="text-muted d-block mb-3">Pastikan wajah terlihat jelas sebelum absen.</small>
+                <?php else: ?>
+                    <div class="alert alert-secondary text-center p-4 rounded-4 mb-4 mx-auto shadow-sm" style="max-width: 300px;">
+                        <i class="bi bi-camera-video-off fs-1 text-muted mb-2 d-block"></i>
+                        <?php if (!$sudah_in && $belum_waktunya_in): ?>
+                            <h6 class="fw-bold mb-1">Kamera Belum Aktif</h6>
+                            <p class="mb-0 small text-muted">Check In baru bisa dilakukan mulai pukul 08:30 WIB.</p>
+                        <?php elseif (!$sudah_in && $lewat_batas_in): ?>
+                            <h6 class="fw-bold mb-1 text-danger">Batas Waktu Habis</h6>
+                            <p class="mb-0 small text-danger">Batas Check In (10:30 WIB) telah terlewat.</p>
+                        <?php elseif ($sudah_in && !$sudah_out && $belum_waktunya_out): ?>
+                            <h6 class="fw-bold mb-1">Belum Waktu Pulang</h6>
+                            <p class="mb-0 small text-muted">Check Out baru bisa dilakukan mulai pukul 18:00 WIB.</p>
+                        <?php elseif ($sudah_out): ?>
+                            <h6 class="fw-bold mb-1 text-success">Absensi Selesai</h6>
+                            <p class="mb-0 small text-muted">Terima kasih, selamat beristirahat!</p>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
 
                 <div id="absen-response" class="mb-3 fw-bold text-primary"></div>
 
-                <?php if ($sudah_out): ?>
-                    <div class="alert alert-info rounded-4 text-center p-4 mb-4 shadow-sm" style="background-color:#e8f4fd; border:none;">
-                        <i class="bi bi-check2-circle display-4 text-success mb-2 d-block"></i>
-                        <h6 class="fw-bold mb-1">Absensi Selesai</h6>
-                        <p class="mb-0 text-muted" style="font-size:14px;">Hari ini Anda telah absen pulang. Terima kasih atas kerja kerasnya hari ini, selamat beristirahat!</p>
-                    </div>
-                <?php else: ?>
-                    <div class="d-flex gap-3 mb-2">
-                        <button class="btn <?= ($sudah_in || $lewat_batas_in) ? 'btn-secondary' : 'btn-success' ?> flex-fill rounded-4 py-3 fw-bold shadow-sm"
-                                <?= ($sudah_in || $lewat_batas_in) ? 'disabled' : "onclick=\"kirimAbsen('Check In')\"" ?>>
-                            <i class="bi bi-camera-fill me-1"></i> Check In
-                        </button>
-                        <button class="btn <?= (!$sudah_in) ? 'btn-secondary' : 'btn-outline-danger' ?> flex-fill rounded-4 py-3 fw-bold shadow-sm"
-                                <?= (!$sudah_in) ? 'disabled' : "onclick=\"kirimAbsen('Check Out')\"" ?>>
-                            <i class="bi bi-camera-fill me-1"></i> Check Out
-                        </button>
-                    </div>
-                    <?php if (!$sudah_in): ?>
-                        <?php if ($lewat_batas_in): ?>
-                            <small class="text-danger d-block mb-4 mt-3 fw-bold"><i class="bi bi-x-circle-fill"></i> Batas waktu Check In (10:30 WIB) telah terlewat.</small>
-                        <?php else: ?>
-                            <small class="text-muted d-block mb-4 mt-3">Pastikan wajah terlihat jelas sebelum absen.</small>
-                        <?php endif; ?>
-                    <?php else: ?>
-                        <small class="text-warning d-block mb-4 mt-3 fw-bold"><i class="bi bi-info-circle-fill"></i> Anda sudah Check In hari ini.</small>
-                    <?php endif; ?>
-                <?php endif; ?>
+                <div class="d-flex gap-3 mb-4">
+                    <button class="btn <?= (!$sudah_in && !$belum_waktunya_in && !$lewat_batas_in) ? 'btn-success' : 'btn-secondary' ?> flex-fill rounded-4 py-3 fw-bold shadow-sm"
+                            <?= (!$sudah_in && !$belum_waktunya_in && !$lewat_batas_in) ? "onclick=\"kirimAbsen('Check In')\"" : 'disabled' ?>>
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Check In
+                    </button>
+                    <button class="btn <?= ($sudah_in && !$sudah_out && !$belum_waktunya_out) ? 'btn-outline-danger' : 'btn-secondary' ?> flex-fill rounded-4 py-3 fw-bold shadow-sm"
+                            <?= ($sudah_in && !$sudah_out && !$belum_waktunya_out) ? "onclick=\"kirimAbsen('Check Out')\"" : 'disabled' ?>>
+                        <i class="bi bi-box-arrow-right me-1"></i> Check Out
+                    </button>
+                </div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+            <div class="d-flex justify-content-between align-items-center mt-2 mb-3">
                 <h6 class="section-title mb-0 mt-0">Aktivitas Hari Ini</h6>
                 <button class="btn btn-sm btn-link text-pink text-decoration-none fw-bold p-0" onclick="switchScreen('riwayat')">Lihat Riwayat</button>
             </div>
@@ -232,7 +247,6 @@ if ($is_admin) {
         </div>
     </div>
 
-    <!-- ===== RIWAYAT ===== -->
     <div id="screen-riwayat" class="app-screen">
         <div class="bg-pink p-3 position-relative rounded-bottom-4 shadow-sm text-center mb-3">
             <h5 class="mb-0 text-white fw-bold mt-2">Riwayat Kehadiran</h5>
@@ -287,7 +301,6 @@ if ($is_admin) {
         </div>
     </div>
 
-    <!-- ===== LAYANAN ===== -->
     <div id="screen-layanan" class="app-screen">
         <div class="bg-pink p-3 text-center rounded-bottom-4 shadow-sm mb-3">
             <h5 class="mb-0 text-white fw-bold mt-2">Layanan HRIS</h5>
@@ -323,7 +336,6 @@ if ($is_admin) {
         </div>
     </div>
 
-    <!-- ===== ADMIN LOG KEHADIRAN ===== -->
     <?php if ($is_admin): ?>
     <div id="screen-admin-absen" class="app-screen">
         <div class="bg-pink p-3 position-relative rounded-bottom-4 shadow-sm text-center mb-3">
@@ -332,48 +344,54 @@ if ($is_admin) {
         </div>
         <div class="p-3 pt-0">
             <?php if ($admin_history && $admin_history->num_rows > 0): ?>
-                <?php while ($data = $admin_history->fetch_assoc()):
-                    $durasi_teks = '-';
-                    if ($data['in_time'] && $data['out_time']) {
-                        $diff = strtotime($data['out_time']) - strtotime($data['in_time']);
-                        $durasi_teks = floor($diff/3600).' jam '.floor(($diff%3600)/60).' menit';
-                    }
-                    $waktu_in_view  = $data['in_time']  ? date('H.i', strtotime($data['in_time']))  : '-';
-                    $waktu_out_view = $data['out_time'] ? date('H.i', strtotime($data['out_time'])) : '-';
-                    $status_in = $data['status_in'] ?: 'Tidak Hadir';
-                    $badge_bg  = 'bg-success';
-                    if ($status_in=='Telat') $badge_bg='bg-warning text-dark';
-                    if ($status_in=='Tidak Hadir') $badge_bg='bg-danger';
-                    $modalData = htmlspecialchars(json_encode([
-                        'tanggal'    => formatTanggalIndo($data['tgl']),
-                        'nama'       => $data['nama'],
-                        'status'     => $status_in,
-                        'durasi'     => $durasi_teks,
-                        'in_time'    => $data['in_time']  ? date('H:i', strtotime($data['in_time']))  : '-',
-                        'out_time'   => $data['out_time'] ? date('H:i', strtotime($data['out_time'])) : '-',
-                        'in_lokasi'  => $data['lok_in']  ?: 'Tidak ada data lokasi',
-                        'out_lokasi' => $data['lok_out'] ?: 'Tidak ada data lokasi',
-                        'in_foto'    => $data['foto_in']  ?: '',
-                        'out_foto'   => $data['foto_out'] ?: ''
-                    ]));
-                ?>
-                <div class="card border-0 shadow-sm rounded-4 mb-3" onclick="bukaDetail(<?= $modalData ?>)" style="cursor:pointer;">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-start mb-2 border-bottom pb-2">
-                            <div>
-                                <span class="d-block fw-bold text-dark fs-6"><?= $data['nama'] ?></span>
-                                <small class="text-muted"><i class="bi bi-calendar-event me-1"></i><?= formatTanggalIndo($data['tgl']) ?></small>
-                            </div>
-                            <span class="badge <?= $badge_bg ?> rounded-pill px-3 mt-1"><?= $status_in ?></span>
-                        </div>
-                        <div class="row text-center mt-2">
-                            <div class="col-5"><small class="text-muted d-block">Check In</small><span class="fw-bold fs-5 text-success"><?= $waktu_in_view ?></span></div>
-                            <div class="col-2 d-flex align-items-center justify-content-center"><i class="bi bi-arrow-right text-muted"></i></div>
-                            <div class="col-5"><small class="text-muted d-block">Check Out</small><span class="fw-bold fs-5 text-danger"><?= $waktu_out_view ?></span></div>
-                        </div>
-                    </div>
+                <div class="table-responsive bg-white rounded-4 shadow-sm border" style="overflow: hidden;">
+                    <table class="table table-hover table-admin align-middle mb-0" style="font-size: 13px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="px-3 py-3">Nama & Tgl</th>
+                                <th class="text-center py-3">Masuk</th>
+                                <th class="text-center py-3">Pulang</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while ($data = $admin_history->fetch_assoc()):
+                                $durasi_teks = '-';
+                                if ($data['in_time'] && $data['out_time']) {
+                                    $diff = strtotime($data['out_time']) - strtotime($data['in_time']);
+                                    $durasi_teks = floor($diff/3600).' jam '.floor(($diff%3600)/60).' menit';
+                                }
+                                $waktu_in_view  = $data['in_time']  ? date('H:i', strtotime($data['in_time']))  : '-';
+                                $waktu_out_view = $data['out_time'] ? date('H:i', strtotime($data['out_time'])) : '-';
+                                $status_in = $data['status_in'] ?: 'Tidak Hadir';
+                                $badge_bg  = 'bg-success';
+                                if ($status_in=='Telat') $badge_bg='bg-warning text-dark';
+                                if ($status_in=='Tidak Hadir') $badge_bg='bg-danger';
+                                $modalData = htmlspecialchars(json_encode([
+                                    'tanggal'    => formatTanggalIndo($data['tgl']),
+                                    'nama'       => $data['nama'],
+                                    'status'     => $status_in,
+                                    'durasi'     => $durasi_teks,
+                                    'in_time'    => $data['in_time']  ? date('H:i', strtotime($data['in_time']))  : '-',
+                                    'out_time'   => $data['out_time'] ? date('H:i', strtotime($data['out_time'])) : '-',
+                                    'in_lokasi'  => $data['lok_in']  ?: 'Tidak ada data lokasi',
+                                    'out_lokasi' => $data['lok_out'] ?: 'Tidak ada data lokasi',
+                                    'in_foto'    => $data['foto_in']  ?: '',
+                                    'out_foto'   => $data['foto_out'] ?: ''
+                                ]));
+                            ?>
+                            <tr onclick="bukaDetail(<?= $modalData ?>)" style="cursor:pointer;">
+                                <td class="px-3 py-2">
+                                    <span class="fw-bold d-block text-dark text-truncate" style="max-width: 130px;"><?= $data['nama'] ?></span>
+                                    <small class="text-muted d-block" style="font-size:11px;"><?= date('d/m/Y', strtotime($data['tgl'])) ?></small>
+                                    <span class="badge <?= $badge_bg ?> rounded-pill mt-1" style="font-size:9px;"><?= $status_in ?></span>
+                                </td>
+                                <td class="text-center text-success fw-bold"><?= $waktu_in_view ?></td>
+                                <td class="text-center text-danger fw-bold"><?= $waktu_out_view ?></td>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
                 </div>
-                <?php endwhile; ?>
             <?php else: ?>
                 <div class="text-center py-5 text-muted">Belum ada data kehadiran dari tim.</div>
             <?php endif; ?>
@@ -381,7 +399,6 @@ if ($is_admin) {
     </div>
     <?php endif; ?>
 
-    <!-- ===== PROFIL ===== -->
     <div id="screen-profil" class="app-screen">
         <div class="bg-pink p-4 pb-5 text-center rounded-bottom-4 shadow-sm">
             <div class="avatar-initials mx-auto mt-2 mb-2 bg-white text-pink" style="width:80px; height:80px; font-size:32px;"><?= $inisial ?></div>
@@ -406,7 +423,6 @@ if ($is_admin) {
         </div>
     </div>
 
-    <!-- ===== BOTTOM NAV ===== -->
     <div class="bottom-nav shadow-lg">
         <button class="nav-item-btn active" id="nav-beranda" onclick="switchScreen('beranda')"><i class="bi bi-house-door-fill"></i> Beranda</button>
         <button class="nav-item-btn" id="nav-riwayat" onclick="switchScreen('riwayat')"><i class="bi bi-clock-history"></i> Riwayat</button>
@@ -415,7 +431,6 @@ if ($is_admin) {
     </div>
 </div>
 
-<!-- Modal Detail Absen -->
 <div class="modal fade" id="modalDetailAbsen" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -456,7 +471,6 @@ if ($is_admin) {
     </div>
 </div>
 
-<!-- Modal Alert -->
 <div class="modal fade" id="modernAlertModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -535,30 +549,41 @@ if ($is_admin) {
             .then(stream => { video.srcObject = stream; kameraAktif = true; })
             .catch(() => {
                 const w = document.getElementById('camera-wrapper');
-                if (w) w.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 bg-light"><small class="text-danger fw-bold text-center px-2">Kamera tidak diizinkan.</small></div>';
+                if (w) w.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 bg-light"><small class="text-danger fw-bold text-center px-2">Kamera tidak diizinkan / tidak ditemukan.</small></div>';
             });
     }
 
     function kirimAbsen(jenis) {
         if (!confirm("Apakah Anda yakin ingin melakukan " + jenis + " sekarang?")) return;
         const responseDiv = document.getElementById('absen-response');
-        responseDiv.innerText = "Mengambil foto...";
+        responseDiv.innerText = "Mengambil data dan mengirim absen...";
+        
         const formData = new FormData();
         formData.append('jenis_absen', jenis);
         formData.append('nik', userNIK);
+        
+        // Optimasi Pengambilan Gambar Canvas
         if (kameraAktif && video && canvas) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            formData.append('foto', canvas.toDataURL('image/jpeg', 0.8));
+            try {
+                canvas.width = video.videoWidth || 300;
+                canvas.height = video.videoHeight || 400;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                formData.append('foto', imageData);
+            } catch (err) {
+                console.error("Gagal mengambil gambar dari canvas:", err);
+                formData.append('foto', '');
+            }
         } else {
             formData.append('foto', '');
         }
+
         // Arahkan ke endpoint Vercel
         fetch('/proses_absen', { method: 'POST', body: formData })
             .then(res => res.text())
             .then(data => { responseDiv.innerText = data; setTimeout(() => location.reload(), 1500); })
-            .catch(() => { responseDiv.innerText = "Terjadi kesalahan koneksi."; });
+            .catch(() => { responseDiv.innerText = "Terjadi kesalahan saat memproses absensi."; });
     }
 
     // Jam & Tanggal
