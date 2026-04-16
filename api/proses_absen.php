@@ -28,14 +28,11 @@ date_default_timezone_set('Asia/Jakarta');
 $waktu_lengkap = date('Y-m-d H:i:s');
 $hari_ini      = date('Y-m-d');
 $jam_menit     = date('H:i');
-$jam_file      = date('H-i-s'); 
-$tgl_file      = date('d-m-Y');
 
-// Ambil Nama Karyawan untuk penamaan file yang rapi
-$res_user = $conn->query("SELECT nama, penempatan FROM karyawan WHERE nik='$nik'");
+// Ambil data karyawan
+$res_user = $conn->query("SELECT penempatan FROM karyawan WHERE nik='$nik'");
 $u = $res_user->fetch_assoc();
-$nama_karyawan = $u['nama'] ?? 'Karyawan';
-$lokasi   = $u['penempatan'] ?? '-';
+$lokasi = $u['penempatan'] ?? '-';
 
 // Cek duplikat absen hari ini
 $cek = $conn->query("SELECT id FROM absensi WHERE nik='$nik' AND jenis='$jenis' AND DATE(waktu)='$hari_ini'");
@@ -58,65 +55,27 @@ if ($jenis == 'Check In') {
 }
 
 // =====================================================
-// UPLOAD FOTO KE GOOGLE DRIVE VIA APPS SCRIPT
+// SIMPAN FOTO LANGSUNG KE DATABASE (BASE64)
 // =====================================================
-$nama_file_foto = NULL;
+$foto_raw = $_POST['foto'] ?? '';
 
-/** * GANTI URL DI BAWAH INI dengan URL dari 'Manage Deployments' terbaru 
- * Pastikan versinya adalah 'New Version' setiap kali update kode GS
- */
-$apps_script_url = "https://script.google.com/macros/s/AKfycbwAI0PZal-xWEZuec5GMUVfJIVWazMSjYg1G2j0W7mp8EEXjZQnVyy84zfUKRrr3NA5ag/exec";
-
-if (isset($_POST['foto']) && !empty($_POST['foto'])) {
-    
-    // Penamaan file: [Check In] - M Fadli Kurniawan - 16-04-2026 08-30-00.jpg
-    $nama_file_rapi = "[$jenis] - $nama_karyawan - {$tgl_file} {$jam_file}.jpg";
-    
-    $postData = json_encode([
-        "foto" => $_POST['foto'],
-        "namaFile" => $nama_file_rapi
-    ]);
-
-    // Proses kirim ke Google Apps Script
-    $ch = curl_init($apps_script_url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // PENTING: Untuk menghandle redirect Google
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-    
-    $response = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    $result = json_decode($response, true);
-    
-    // Validasi respon Apps Script
-    if ($http_code == 200 && isset($result['status']) && $result['status'] === 'success') {
-        $nama_file_foto = $result['url'];
-    } else {
-        $err = $result['message'] ?? 'Koneksi ke Google Drive terputus / diblokir.';
-        echo "❌ Gagal mengunggah foto ke Google Drive: $err";
-        exit(); // Jangan lanjut simpan ke MySQL jika upload foto gagal
-    }
-} else {
-    echo "❌ Akses Kamera Ditolak / Foto Kosong.";
+if (empty($foto_raw)) {
+    echo "❌ Kamera gagal menangkap gambar. Silakan coba lagi.";
     exit();
 }
 
-// =====================================================
-// SIMPAN KE DATABASE MYSQL
-// =====================================================
-$foto_val = $nama_file_foto ? "'" . $conn->real_escape_string($nama_file_foto) . "'" : "NULL";
+// Bersihkan data foto untuk keamanan database
+$foto_final = $conn->real_escape_string($foto_raw);
 
+// Simpan ke database MySQL
 $sql = "INSERT INTO absensi (nik, waktu, jenis, lokasi, status, foto) 
-        VALUES ('$nik', '$waktu_lengkap', '$jenis', '$lokasi', '$status', $foto_val)";
+        VALUES ('$nik', '$waktu_lengkap', '$jenis', '$lokasi', '$status', '$foto_final')";
 
 if ($conn->query($sql) === TRUE) {
     $msg = "✅ Berhasil $jenis!";
     if ($status != '-') $msg .= " Status: $status.";
     echo $msg;
 } else {
-    echo "❌ Gagal menyimpan ke database MySQL: " . $conn->error;
+    echo "❌ Gagal menyimpan ke database: " . $conn->error;
 }
 ?>
