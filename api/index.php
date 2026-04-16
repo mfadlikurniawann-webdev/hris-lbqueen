@@ -96,6 +96,12 @@ if ($is_admin) {
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style/style.css">
     <link rel="icon" type="image/png" href="/logo/lbqueen_logo.PNG">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#C94F78">
+    <link rel="apple-touch-icon" href="/logo/lbqueen_logo.PNG">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="HRIS LBQueen">
     <style>
         .modal-content { border-radius: 20px; border: none; }
         .nav-pills .nav-link { color: #6c757d; border-radius: 10px; font-weight: bold; }
@@ -159,10 +165,9 @@ if ($is_admin) {
                             <h6 class="fw-bold mb-1">Kamera Belum Aktif</h6>
                             <p class="mb-0 small text-muted">Check In baru bisa dilakukan mulai pukul 08:30 WIB.</p>
                         <?php elseif (!$sudah_in && $lewat_batas_in): ?>
-    <h6 class="fw-bold mb-1 text-danger">Batas Waktu Habis</h6>
-<p class="mb-0 small text-danger">Batas Check In (13:00 WIB) telah terlewat.</p>    
-<?php elseif ($sudah_in && !$sudah_out && $belum_waktunya_out): ?>
-        <?php elseif ($sudah_in && !$sudah_out && $belum_waktunya_out): ?>
+                            <h6 class="fw-bold mb-1 text-danger">Batas Waktu Habis</h6>
+                            <p class="mb-0 small text-danger">Batas Check In (13:00 WIB) telah terlewat.</p>    
+                        <?php elseif ($sudah_in && !$sudah_out && $belum_waktunya_out): ?>
                             <h6 class="fw-bold mb-1">Belum Waktu Pulang</h6>
                             <p class="mb-0 small text-muted">Check Out baru bisa dilakukan mulai pukul 18:00 WIB.</p>
                         <?php elseif ($sudah_out): ?>
