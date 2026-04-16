@@ -50,21 +50,23 @@ if ($jenis == 'Check In') {
 }
 
 // =====================================================
-// UPLOAD FOTO KE CLOUDINARY (Pengganti folder uploads/)
-// Vercel tidak bisa simpan file, jadi pakai Cloudinary
+// UPLOAD FOTO KE CLOUDINARY DENGAN FALLBACK
 // =====================================================
 $nama_file_foto = NULL;
 
 if (isset($_POST['foto']) && !empty($_POST['foto'])) {
-    $cloud_name = getenv('CLOUDINARY_CLOUD_NAME');
-    $api_key    = getenv('CLOUDINARY_API_KEY');
-    $api_secret = getenv('CLOUDINARY_API_SECRET');
+    // Menggunakan teknik fallback seperti di koneksi.php
+    $cloud_name = $_ENV['CLOUDINARY_CLOUD_NAME'] ?? getenv('CLOUDINARY_CLOUD_NAME') ?: 'dr54qn228';
+    $api_key    = $_ENV['CLOUDINARY_API_KEY'] ?? getenv('CLOUDINARY_API_KEY') ?: '512863719148927';
+    $api_secret = $_ENV['CLOUDINARY_API_SECRET'] ?? getenv('CLOUDINARY_API_SECRET') ?: 'Ypn54AwSMFH0Tn_9SR5IPZ76dz8';
 
     if ($cloud_name && $api_key && $api_secret) {
         $img_data   = $_POST['foto'];
         $timestamp  = time();
         $jenis_slug = str_replace(' ', '', $jenis);
         $public_id  = "hris_absen/{$nik}_{$jenis_slug}_{$timestamp}";
+        
+        // Pembuatan Signature untuk keamanan Cloudinary
         $signature  = sha1("public_id={$public_id}&timestamp={$timestamp}{$api_secret}");
 
         $ch = curl_init("https://api.cloudinary.com/v1_1/{$cloud_name}/image/upload");
@@ -83,6 +85,8 @@ if (isset($_POST['foto']) && !empty($_POST['foto'])) {
         curl_close($ch);
 
         $result = json_decode($response, true);
+        
+        // Jika berhasil, ambil link gambarnya
         if (isset($result['secure_url'])) {
             $nama_file_foto = $result['secure_url'];
         }
