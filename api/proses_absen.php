@@ -62,8 +62,8 @@ if ($jenis == 'Check In') {
 // =====================================================
 $nama_file_foto = NULL;
 
-// PERHATIAN: Masukkan URL Aplikasi Web dari Apps Script kamu di bawah ini!
-$apps_script_url = "https://script.google.com/macros/s/AKfycbwAI0PZal-xWEZuec5GMUVfJIVWazMSjYg1G2j0W7mp8EEXjZQnVyy84zfUKRrr3NA5ag/exec";
+// URL Aplikasi Web (Apps Script) yang sudah disesuaikan dari screenshot
+$apps_script_url = "https://script.google.com/macros/s/AKfycbwAI0PZal-xWEZuec5GMUvfJIVWazMSjYg1G2j0W7mp8EEXjZQnVyy84zfUKRrr3NA5ag/exec";
 
 if (isset($_POST['foto']) && !empty($_POST['foto'])) {
     
@@ -83,7 +83,6 @@ if (isset($_POST['foto']) && !empty($_POST['foto'])) {
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
     
     $response = curl_exec($ch);
-    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
     $result = json_decode($response, true);
@@ -109,9 +108,9 @@ $sql = "INSERT INTO absensi (nik, waktu, jenis, lokasi, status, foto)
 
 if ($conn->query($sql) === TRUE) {
     // Tanda berhasil
-    $msg = "✅ Berhasil $jenis";
+    $msg = "✅ Berhasil $jenis ke Drive!";
     if ($status != '-') $msg .= " ($status)";
-    echo $msg . " pada " . date('H:i:s') . " WIB";
+    echo $msg;
 } else {
     echo "❌ Gagal menyimpan ke database MySQL: " . $conn->error;
 }
