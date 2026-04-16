@@ -30,7 +30,7 @@ function formatTanggalIndo($tanggal) {
 $hari_ini             = date('Y-m-d');
 $jam_sekarang         = date('H:i');
 $batas_check_in_awal  = '08:30';
-$batas_check_in_akhir = '12:00'; // <--- SUDAH DIUBAH KE JAM 11:00
+$batas_check_in_akhir = '13:00'; // <--- SUDAH DIUBAH KE JAM 11:00
 $batas_check_out_awal = '18:00';
 
 $belum_waktunya_in  = ($jam_sekarang < $batas_check_in_awal);
@@ -159,7 +159,8 @@ if ($is_admin) {
                             <p class="mb-0 small text-muted">Check In baru bisa dilakukan mulai pukul 08:30 WIB.</p>
                         <?php elseif (!$sudah_in && $lewat_batas_in): ?>
     <h6 class="fw-bold mb-1 text-danger">Batas Waktu Habis</h6>
-    <p class="mb-0 small text-danger">Batas Check In (12:00 WIB) telah terlewat.</p> <?php elseif ($sudah_in && !$sudah_out && $belum_waktunya_out): ?>
+    <p class="mb-0 small text-danger">Batas Check In (13:00 WIB) telah terlewat.</p> 
+    <?php elseif ($sudah_in && !$sudah_out && $belum_waktunya_out): ?>
         <?php elseif ($sudah_in && !$sudah_out && $belum_waktunya_out): ?>
                             <h6 class="fw-bold mb-1">Belum Waktu Pulang</h6>
                             <p class="mb-0 small text-muted">Check Out baru bisa dilakukan mulai pukul 18:00 WIB.</p>
