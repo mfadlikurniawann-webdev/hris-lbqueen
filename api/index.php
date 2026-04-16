@@ -98,7 +98,7 @@ if ($is_admin) {
     <link rel="icon" type="image/png" href="/logo/lbqueen_logo.PNG">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#C94F78">
-    <link rel="apple-touch-icon" href="/public/logo/lbqueen_logo.PNG">
+    <link rel="apple-touch-icon" href="/logo/lbqueen_logo.PNG">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="HRIS LBQueen">
