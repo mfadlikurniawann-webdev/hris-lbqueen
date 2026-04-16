@@ -1,20 +1,20 @@
 {
-  "name": "HRIS LBQueen Care Beauty",
-  "short_name": "HRIS LBQueen",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#FDF0F5",
-  "theme_color": "#C94F78",
-  "icons": [
-    {
-      "src": "/logo/lbqueen_logo.PNG",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/logo/lbqueen_logo.PNG",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+    "name": "HRIS LBQueen Care Beauty",
+    "short_name": "HRIS LBQueen",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#FDF0F5",
+    "theme_color": "#C94F78",
+    "icons": [
+        {
+            "src": "/public/logo/lbqueen_logo.PNG",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/public/logo/lbqueen_logo.PNG",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
 }
