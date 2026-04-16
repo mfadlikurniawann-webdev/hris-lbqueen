@@ -28,6 +28,14 @@ date_default_timezone_set('Asia/Jakarta');
 $waktu_lengkap = date('Y-m-d H:i:s');
 $hari_ini      = date('Y-m-d');
 $jam_menit     = date('H:i');
+$jam_file      = date('H-i-s'); // Format jam untuk nama file (tanpa titik dua)
+$tgl_file      = date('d-m-Y');
+
+// Ambil Nama Karyawan untuk penamaan file yang rapi
+$res_user = $conn->query("SELECT nama, penempatan FROM karyawan WHERE nik='$nik'");
+$u = $res_user->fetch_assoc();
+$nama_karyawan = $u['nama'] ?? 'Karyawan';
+$lokasi   = $u['penempatan'] ?? '-';
 
 // Cek duplikat absen hari ini
 $cek = $conn->query("SELECT id FROM absensi WHERE nik='$nik' AND jenis='$jenis' AND DATE(waktu)='$hari_ini'");
@@ -50,66 +58,61 @@ if ($jenis == 'Check In') {
 }
 
 // =====================================================
-// UPLOAD FOTO KE CLOUDINARY DENGAN FALLBACK
+// UPLOAD FOTO KE GOOGLE DRIVE VIA APPS SCRIPT
 // =====================================================
 $nama_file_foto = NULL;
 
+// PERHATIAN: Masukkan URL Aplikasi Web dari Apps Script kamu di bawah ini!
+$apps_script_url = "https://script.google.com/macros/s/AKfycbwAI0PZal-xWEZuec5GMUVfJIVWazMSjYg1G2j0W7mp8EEXjZQnVyy84zfUKRrr3NA5ag/exec";
+
 if (isset($_POST['foto']) && !empty($_POST['foto'])) {
-    // Menggunakan teknik fallback seperti di koneksi.php
-    $cloud_name = $_ENV['CLOUDINARY_CLOUD_NAME'] ?? getenv('CLOUDINARY_CLOUD_NAME') ?: 'dr54qn228';
-    $api_key    = $_ENV['CLOUDINARY_API_KEY'] ?? getenv('CLOUDINARY_API_KEY') ?: '512863719148927';
-    $api_secret = $_ENV['CLOUDINARY_API_SECRET'] ?? getenv('CLOUDINARY_API_SECRET') ?: 'Ypn54AwSMFH0Tn_9SR5IPZ76dz8';
+    
+    // FORMAT NAMA FILE YANG RAPI: [Check In] - M Fadli Kurniawan - 16-04-2026 08-30-00.jpg
+    $nama_file_rapi = "[$jenis] - $nama_karyawan - {$tgl_file} {$jam_file}.jpg";
+    
+    $postData = json_encode([
+        "foto" => $_POST['foto'],
+        "namaFile" => $nama_file_rapi
+    ]);
 
-    if ($cloud_name && $api_key && $api_secret) {
-        $img_data   = $_POST['foto'];
-        $timestamp  = time();
-        $jenis_slug = str_replace(' ', '', $jenis);
-        $public_id  = "hris_absen/{$nik}_{$jenis_slug}_{$timestamp}";
-        
-        // Pembuatan Signature untuk keamanan Cloudinary
-        $signature  = sha1("public_id={$public_id}&timestamp={$timestamp}{$api_secret}");
+    $ch = curl_init($apps_script_url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Wajib untuk mengikuti redirect Google
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    
+    $response = curl_exec($ch);
+    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-        $ch = curl_init("https://api.cloudinary.com/v1_1/{$cloud_name}/image/upload");
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => [
-                'file'      => $img_data,
-                'public_id' => $public_id,
-                'timestamp' => $timestamp,
-                'api_key'   => $api_key,
-                'signature' => $signature,
-            ],
-        ]);
-        $response = curl_exec($ch);
-        curl_close($ch);
-
-        $result = json_decode($response, true);
-        
-        // Jika berhasil, ambil link gambarnya
-        if (isset($result['secure_url'])) {
-            $nama_file_foto = $result['secure_url'];
-        }
+    $result = json_decode($response, true);
+    
+    // Cek apakah balasan dari Google Drive sukses
+    if (isset($result['status']) && $result['status'] === 'success') {
+        $nama_file_foto = $result['url'];
+    } else {
+        $err = $result['message'] ?? 'Koneksi ke Google Drive terputus / diblokir.';
+        echo "❌ Gagal mengunggah foto ke Google Drive: $err";
+        exit(); // Hentikan proses, JANGAN simpan ke database
     }
+} else {
+    echo "❌ Akses Kamera Ditolak / Foto Kosong.";
+    exit();
 }
 
-// Ambil lokasi dari data karyawan
-$res_kar  = $conn->query("SELECT penempatan FROM karyawan WHERE nik='$nik'");
-$kar_data = $res_kar->fetch_assoc();
-$lokasi   = $kar_data['penempatan'] ?? '-';
-
-// Simpan ke database
-$foto_sql = $nama_file_foto ? $conn->real_escape_string($nama_file_foto) : NULL;
-$foto_val = $foto_sql ? "'$foto_sql'" : "NULL";
+// Simpan ke database MySQL
+$foto_val = $nama_file_foto ? "'" . $conn->real_escape_string($nama_file_foto) . "'" : "NULL";
 
 $sql = "INSERT INTO absensi (nik, waktu, jenis, lokasi, status, foto) 
         VALUES ('$nik', '$waktu_lengkap', '$jenis', '$lokasi', '$status', $foto_val)";
 
 if ($conn->query($sql) === TRUE) {
+    // Tanda berhasil
     $msg = "✅ Berhasil $jenis";
     if ($status != '-') $msg .= " ($status)";
     echo $msg . " pada " . date('H:i:s') . " WIB";
 } else {
-    echo "❌ Gagal menyimpan: " . $conn->error;
+    echo "❌ Gagal menyimpan ke database MySQL: " . $conn->error;
 }
 ?>
