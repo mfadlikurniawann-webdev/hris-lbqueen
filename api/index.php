@@ -336,30 +336,43 @@ if ($is_admin) {
     }
 
     function kirimAbsen(jenis) {
-        if (!confirm("Kirim " + jenis + " sekarang?")) return;
-        const responseDiv = document.getElementById('absen-response');
-        responseDiv.innerText = "Memproses...";
+    if (!confirm("Kirim " + jenis + " sekarang?")) return;
+    const responseDiv = document.getElementById('absen-response');
+    responseDiv.innerText = "Memproses...";
+    
+    const formData = new FormData();
+    formData.append('jenis_absen', jenis);
+    formData.append('nik', userNIK);
+    
+    if (kameraAktif && video) {
+        // Gunakan canvas yang sudah ada di HTML
+        const canvas = document.getElementById('canvas_kamera');
+        // Set ukuran sesuai video yang sedang aktif
+        canvas.width = video.videoWidth || 320;
+        canvas.height = video.videoHeight || 480;
+        const ctx = canvas.getContext('2d');
         
-        const formData = new FormData();
-        formData.append('jenis_absen', jenis);
-        formData.append('nik', userNIK);
+        // Mirroring agar foto tidak terbalik (karena kamera depan)
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
         
-        if (kameraAktif && video && canvas) {
-            canvas.width = 320;
-            canvas.height = 480;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            formData.append('foto', canvas.toDataURL('image/jpeg', 0.7));
-        }
-
-        fetch('/proses_absen', { method: 'POST', body: formData })
-            .then(res => res.text())
-            .then(data => { 
-                responseDiv.innerText = data; 
-                if(data.includes('✅')) setTimeout(() => location.reload(), 1500); 
-            });
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Ambil data base64
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        formData.append('foto', imageData);
     }
 
+    fetch('/proses_absen', { method: 'POST', body: formData })
+        .then(res => res.text())
+        .then(data => { 
+            responseDiv.innerText = data; 
+            if(data.includes('✅')) setTimeout(() => location.reload(), 1500); 
+        })
+        .catch(err => {
+            responseDiv.innerText = "❌ Gagal koneksi ke server.";
+        });
+}
     // Jam Digital
     setInterval(() => {
         const now = new Date();

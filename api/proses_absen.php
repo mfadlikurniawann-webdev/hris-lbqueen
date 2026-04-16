@@ -60,10 +60,12 @@ if ($jenis == 'Check In') {
 // =====================================================
 // 2. PROSES FOTO - UPLOAD KE CLOUDINARY
 // =====================================================
-$foto_raw = $_POST['foto'] ?? '';
+// PASTIKAN BAGIAN INI SAMA
+$foto_raw = $_POST['foto'] ?? ''; // <--- Pastikan namanya 'foto' sesuai dengan JS
 $foto_url = null; 
 
-if (!empty($foto_raw)) {
+if (!empty($foto_raw) && strlen($foto_raw) > 100) { // Tambahkan pengecekan panjang string
+    
     $cloud_name = $_ENV['CLOUDINARY_CLOUD_NAME'] ?? getenv('CLOUDINARY_CLOUD_NAME') ?? '';
     $api_key    = $_ENV['CLOUDINARY_API_KEY']    ?? getenv('CLOUDINARY_API_KEY')    ?? '';
     $api_secret = $_ENV['CLOUDINARY_API_SECRET'] ?? getenv('CLOUDINARY_API_SECRET') ?? '';
