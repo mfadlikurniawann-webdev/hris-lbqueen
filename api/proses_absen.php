@@ -1,5 +1,5 @@
 <?php
-// api/proses_absen.php - VERSI FIXED (Batas Absen 12:00)
+// api/proses_absen.php - VERSI FOLDER LOKAL (Fix Tanpa Foto)
 include __DIR__ . '/koneksi.php';
 
 // =====================================================
@@ -32,7 +32,7 @@ $jam_menit     = date('H:i');
 
 // Ambil data karyawan
 $res_user = $conn->query("SELECT penempatan FROM karyawan WHERE nik='$nik'");
-$u         = $res_user ? $res_user->fetch_assoc() : null;
+$u        = $res_user ? $res_user->fetch_assoc() : null;
 $lokasi   = $u['penempatan'] ?? '-';
 
 // Cek duplikat
@@ -42,13 +42,11 @@ if ($cek->num_rows > 0) {
     exit();
 }
 
-// =====================================================
-// PERBAIKAN LOGIKA BATAS WAKTU (SUDAH DIUBAH KE 12:00)
-// =====================================================
+// Logika status Check In (Batas 12:00)
 $status = '-';
 if ($jenis == 'Check In') {
-    if ($jam_menit > '12:00') { // <--- SEBELUMNYA 11:00
-        echo "❌ Gagal: Batas waktu Check In (12:00 WIB) telah berakhir."; // <--- PESAN DISESUAIKAN
+    if ($jam_menit > '12:00') {
+        echo "❌ Gagal: Batas waktu Check In (12:00 WIB) telah berakhir.";
         exit();
     } elseif ($jam_menit > '09:15') {
         $status = 'Telat';
@@ -58,51 +56,38 @@ if ($jenis == 'Check In') {
 }
 
 // =====================================================
-// 2. PROSES FOTO - UPLOAD KE CLOUDINARY
+// 2. PROSES FOTO - SIMPAN KE FOLDER LOKAL /uploads
 // =====================================================
-// PASTIKAN BAGIAN INI SAMA
-$foto_raw = $_POST['foto'] ?? ''; // <--- Pastikan namanya 'foto' sesuai dengan JS
+$foto_raw = $_POST['foto'] ?? '';
 $foto_url = null; 
 
-if (!empty($foto_raw) && strlen($foto_raw) > 100) { // Tambahkan pengecekan panjang string
-    
-    $cloud_name = $_ENV['CLOUDINARY_CLOUD_NAME'] ?? getenv('CLOUDINARY_CLOUD_NAME') ?? '';
-    $api_key    = $_ENV['CLOUDINARY_API_KEY']    ?? getenv('CLOUDINARY_API_KEY')    ?? '';
-    $api_secret = $_ENV['CLOUDINARY_API_SECRET'] ?? getenv('CLOUDINARY_API_SECRET') ?? '';
-
-    if ($cloud_name && $api_key && $api_secret) {
-        $timestamp  = time();
-        $jenis_slug = str_replace(' ', '', $jenis); 
-        $public_id  = "hris_absen/{$nik}_{$jenis_slug}_{$timestamp}";
-
-        $params_to_sign = "public_id={$public_id}&timestamp={$timestamp}";
-        $signature      = sha1($params_to_sign . $api_secret);
-
-        $upload_url = "https://api.cloudinary.com/v1_1/{$cloud_name}/image/upload";
-
-        $post_data = [
-            'file'      => $foto_raw,
-            'public_id' => $public_id,
-            'timestamp' => $timestamp,
-            'api_key'   => $api_key,
-            'signature' => $signature,
-        ];
-
-        $ch = curl_init($upload_url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => $post_data,
-            CURLOPT_TIMEOUT        => 30,
-        ]);
-
-        $response = curl_exec($ch);
-        $result = json_decode($response, true);
-        curl_close($ch);
-
-        if (isset($result['secure_url'])) {
-            $foto_url = $result['secure_url'];
+if (!empty($foto_raw) && strpos($foto_raw, 'data:image') !== false) {
+    try {
+        // Tentukan path folder uploads (naik satu tingkat dari folder api)
+        $target_dir = __DIR__ . '/../uploads/';
+        
+        // Buat folder jika belum ada
+        if (!is_dir($target_dir)) {
+            mkdir($target_dir, 0777, true);
         }
+
+        // Olah data base64
+        $image_parts = explode(";base64,", $foto_raw);
+        $image_type_aux = explode("image/", $image_parts[0]);
+        $image_type = $image_type_aux[1];
+        $image_base64 = base64_decode($image_parts[1]);
+
+        // Nama file unik: nik_jenis_timestamp.jpg
+        $file_name = $nik . "_" . str_replace(' ', '', $jenis) . "_" . time() . "." . $image_type;
+        $file_path = $target_dir . $file_name;
+
+        // Simpan file ke sistem
+        if (file_put_contents($file_path, $image_base64)) {
+            // Simpan path relatif untuk database agar bisa dipanggil di HTML
+            $foto_url = "/uploads/" . $file_name;
+        }
+    } catch (Exception $e) {
+        $foto_url = null;
     }
 }
 
@@ -117,8 +102,10 @@ $sql = "INSERT INTO absensi (nik, waktu, jenis, lokasi, status, foto)
 if ($conn->query($sql) === TRUE) {
     $msg = "✅ Berhasil $jenis!";
     if ($status != '-') $msg .= " Status: $status.";
+    
+    // Beri info apakah foto masuk atau tidak
     if ($foto_url) {
-        $msg .= " 📸 Foto tersimpan.";
+        $msg .= " 📸 Foto tersimpan di server.";
     } else {
         $msg .= " (Tanpa foto)";
     }
