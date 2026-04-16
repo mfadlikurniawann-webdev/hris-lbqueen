@@ -1,12 +1,12 @@
 <?php
-// api/proses_absen.php - FINAL CLOUDINARY VERSION
+// api/proses_absen.php
 include __DIR__ . '/koneksi.php';
 
-// 1. VERIFIKASI JWT (Tetap seperti aslinya)
+// Verifikasi JWT
 $token   = get_token_from_cookie();
 $payload = jwt_verify($token);
 if (!$payload) {
-    echo "❌ Sesi tidak valid.";
+    echo "❌ Sesi tidak valid. Silakan login ulang.";
     exit();
 }
 
@@ -18,23 +18,34 @@ if (!isset($_POST['nik']) || !isset($_POST['jenis_absen'])) {
 $nik   = $conn->real_escape_string($_POST['nik']);
 $jenis = $conn->real_escape_string($_POST['jenis_absen']);
 
-date_default_timezone_set('Asia/Jakarta');
-$waktu_lengkap = date('Y-m-d H:i:s');
-$hari_ini      = date('Y-m-d');
-$jam_menit     = date('H:i:s');
-
-// Cek duplikat
-$cek = $conn->query("SELECT id FROM absensi WHERE nik='$nik' AND jenis='$jenis' AND DATE(waktu)='$hari_ini'");
-if ($cek->num_rows > 0) {
-    echo "⚠️ Anda sudah $jenis hari ini.";
+// Validasi NIK cocok dengan token
+if ($nik !== $payload['nik']) {
+    echo "❌ Akses tidak diizinkan.";
     exit();
 }
 
-// Logika status Check In (Batas 12:00)
+date_default_timezone_set('Asia/Jakarta');
+$waktu_lengkap = date('Y-m-d H:i:s');
+$hari_ini      = date('Y-m-d');
+$jam_menit     = date('H:i');
+
+// Ambil data karyawan untuk lokasi
+$res_user = $conn->query("SELECT penempatan FROM karyawan WHERE nik='$nik'");
+$u = $res_user->fetch_assoc();
+$lokasi = $u['penempatan'] ?? '-';
+
+// Cek duplikat absen hari ini
+$cek = $conn->query("SELECT id FROM absensi WHERE nik='$nik' AND jenis='$jenis' AND DATE(waktu)='$hari_ini'");
+if ($cek->num_rows > 0) {
+    echo "⚠️ Anda sudah melakukan $jenis hari ini.";
+    exit();
+}
+
+// Logika status Check In (Batas jam 11:00)
 $status = '-';
 if ($jenis == 'Check In') {
-    if ($jam_menit > '13:00') { // <--- UBAH DARI 12:00 KE 13:00
-        echo "❌ Gagal: Batas waktu Check In (13:00 WIB) telah berakhir.";
+    if ($jam_menit > '11:00') {
+        echo "❌ Gagal: Batas waktu Check In (11:00 WIB) telah berakhir.";
         exit();
     } elseif ($jam_menit > '09:15') {
         $status = 'Telat';
@@ -44,71 +55,27 @@ if ($jenis == 'Check In') {
 }
 
 // =====================================================
-// 2. PROSES FOTO KE CLOUDINARY
+// SIMPAN FOTO LANGSUNG KE DATABASE (BASE64)
 // =====================================================
 $foto_raw = $_POST['foto'] ?? '';
-$foto_url = null;
-$debug_msg = "";
 
-if (!empty($foto_raw) && strlen($foto_raw) > 100) {
-    
-    // Menggunakan getenv() untuk membaca Environment Variables Vercel
-    $c_name   = getenv('CLOUDINARY_CLOUD_NAME');
-    $c_key    = getenv('CLOUDINARY_API_KEY');
-    $c_secret = getenv('CLOUDINARY_API_SECRET');
-
-    if (!$c_name || !$c_key || !$c_secret) {
-        $debug_msg = " (Error: Env Vercel Kosong)";
-    } else {
-        $timestamp = time();
-        $public_id = "absen_{$nik}_{$timestamp}"; 
-$signature = sha1("public_id={$public_id}&timestamp={$timestamp}{$api_secret}");
-
-$ch = curl_init("https://api.cloudinary.com/v1_1/{$cloud_name}/image/upload");
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => [
-        'file'      => $img_data,
-        'public_id' => $public_id, // Pastikan ini sama persis dengan yang di Signature
-        'timestamp' => $timestamp,
-        'api_key'   => $api_key,
-        'signature' => $signature,
-    ],
-]);
-
-        $response = curl_exec($ch);
-        $result = json_decode($response, true);
-        curl_close($ch);
-
-        if (isset($result['secure_url'])) {
-            $foto_url = $result['secure_url'];
-        } else {
-            // Jika gagal, ambil pesan error dari Cloudinary
-            $err_desc = $result['error']['message'] ?? 'Upload Gagal';
-            $debug_msg = " (Cloudinary: $err_desc)";
-        }
-    }
-} else {
-    $debug_msg = " (Data foto kosong/tidak terkirim)";
+if (empty($foto_raw)) {
+    echo "❌ Kamera gagal menangkap gambar. Silakan coba lagi.";
+    exit();
 }
 
-// 3. SIMPAN KE DATABASE
-$foto_val = ($foto_url !== null) ? "'" . $conn->real_escape_string($foto_url) . "'" : "NULL";
+// Bersihkan data foto agar aman masuk ke query SQL
+$foto_final = $conn->real_escape_string($foto_raw);
 
-// Ambil lokasi penempatan
-$res_user = $conn->query("SELECT penempatan FROM karyawan WHERE nik='$nik'");
-$u = $res_user->fetch_assoc();
-$lokasi = $u['penempatan'] ?? '-';
-
+// Simpan ke database MySQL
 $sql = "INSERT INTO absensi (nik, waktu, jenis, lokasi, status, foto) 
-        VALUES ('$nik', '$waktu_lengkap', '$jenis', '$lokasi', '$status', $foto_val)";
+        VALUES ('$nik', '$waktu_lengkap', '$jenis', '$lokasi', '$status', '$foto_final')";
 
 if ($conn->query($sql) === TRUE) {
-    $out = "✅ Berhasil $jenis!";
-    if ($status != '-') $out .= " Status: $status.";
-    echo ($foto_url) ? $out . " 📸 Foto OK." : $out . $debug_msg;
+    $msg = "✅ Berhasil $jenis!";
+    if ($status != '-') $msg .= " Status: $status.";
+    echo $msg;
 } else {
-    echo "❌ DB Error: " . $conn->error;
+    echo "❌ Gagal menyimpan ke database: " . $conn->error;
 }
 ?>
