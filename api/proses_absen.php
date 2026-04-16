@@ -21,7 +21,7 @@ $jenis = $conn->real_escape_string($_POST['jenis_absen']);
 date_default_timezone_set('Asia/Jakarta');
 $waktu_lengkap = date('Y-m-d H:i:s');
 $hari_ini      = date('Y-m-d');
-$jam_menit     = date('H:i');
+$jam_menit     = date('H:i:i');
 
 // Cek duplikat
 $cek = $conn->query("SELECT id FROM absensi WHERE nik='$nik' AND jenis='$jenis' AND DATE(waktu)='$hari_ini'");
