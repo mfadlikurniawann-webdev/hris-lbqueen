@@ -44,8 +44,8 @@ if ($cek->num_rows > 0) {
 // Logika status Check In (Batas jam 11:00)
 $status = '-';
 if ($jenis == 'Check In') {
-    if ($jam_menit > '11:00') {
-        echo "❌ Gagal: Batas waktu Check In (11:00 WIB) telah berakhir.";
+    if ($jam_menit > '13:00') {
+        echo "❌ Gagal: Batas waktu Check In (13:00 WIB) telah berakhir.";
         exit();
     } elseif ($jam_menit > '09:15') {
         $status = 'Telat';
