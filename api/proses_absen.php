@@ -61,20 +61,21 @@ if (!empty($foto_raw) && strlen($foto_raw) > 100) {
         $debug_msg = " (Error: Env Vercel Kosong)";
     } else {
         $timestamp = time();
-        $public_id = "hris_absen/" . $nik . "_" . $timestamp;
-        $params_to_sign = "public_id=$public_id&timestamp=$timestamp";
-        $signature = sha1($params_to_sign . $c_secret);
+        $public_id = "absen_{$nik}_{$timestamp}"; 
+$signature = sha1("public_id={$public_id}&timestamp={$timestamp}{$api_secret}");
 
-        $ch = curl_init("https://api.cloudinary.com/v1_1/$c_name/image/upload");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, [
-            'file'      => $foto_raw,
-            'api_key'   => $c_key,
-            'timestamp' => $timestamp,
-            'public_id' => $public_id,
-            'signature' => $signature
-        ]);
+$ch = curl_init("https://api.cloudinary.com/v1_1/{$cloud_name}/image/upload");
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST           => true,
+    CURLOPT_POSTFIELDS     => [
+        'file'      => $img_data,
+        'public_id' => $public_id, // Pastikan ini sama persis dengan yang di Signature
+        'timestamp' => $timestamp,
+        'api_key'   => $api_key,
+        'signature' => $signature,
+    ],
+]);
 
         $response = curl_exec($ch);
         $result = json_decode($response, true);
