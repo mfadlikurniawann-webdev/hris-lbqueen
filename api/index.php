@@ -30,7 +30,7 @@ function formatTanggalIndo($tanggal) {
 $hari_ini             = date('Y-m-d');
 $jam_sekarang         = date('H:i');
 $batas_check_in_awal  = '08:30';
-$batas_check_in_akhir = '11:00'; // <--- SUDAH DIUBAH KE JAM 11:00
+$batas_check_in_akhir = '12:00'; // <--- SUDAH DIUBAH KE JAM 11:00
 $batas_check_out_awal = '18:00';
 
 $belum_waktunya_in  = ($jam_sekarang < $batas_check_in_awal);
