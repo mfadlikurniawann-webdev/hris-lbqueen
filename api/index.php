@@ -1,5 +1,5 @@
 <?php
-// api/index.php
+// api/index.php - VERSI UTUH (Fix Batas 12:00 tanpa hapus fitur)
 include __DIR__ . '/koneksi.php';
 date_default_timezone_set('Asia/Jakarta');
 
@@ -30,7 +30,7 @@ function formatTanggalIndo($tanggal) {
 $hari_ini             = date('Y-m-d');
 $jam_sekarang         = date('H:i');
 $batas_check_in_awal  = '08:30';
-$batas_check_in_akhir = '12:00'; // FIXED: Sudah ke jam 12:00
+$batas_check_in_akhir = '12:00'; // <--- SUDAH DIUBAH KE JAM 12:00
 $batas_check_out_awal = '18:00';
 
 $belum_waktunya_in  = ($jam_sekarang < $batas_check_in_awal);
@@ -120,8 +120,8 @@ if ($is_admin) {
             </div>
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <p class="mb-0 text-white-50" id="date-display">Memuat tanggal...</p>
-                    <h4 class="mb-0 fw-bold mt-1">Hai, <?= explode(" ", $karyawan['nama'])[0] ?>!</h4>
+                    <p class="mb-0 text-white-50" id="date-display" style="font-size:13px;">Memuat tanggal...</p>
+                    <h4 class="mb-0 fw-bold mt-1 text-white">Hai, <?= explode(" ", $karyawan['nama'])[0] ?>!</h4>
                 </div>
                 <i class="bi bi-bell fs-4 text-white"></i>
             </div>
@@ -293,8 +293,122 @@ if ($is_admin) {
                 </div>
                 <?php endwhile; ?>
             <?php else: ?>
-                <div class="text-center py-5 text-muted">Belum ada riwayat kehadiran.</div>
+                <div class="text-center py-5 text-muted">Belum ada riwayat kehadiran tersimpan.</div>
             <?php endif; ?>
+        </div>
+    </div>
+
+    <div id="screen-layanan" class="app-screen">
+        <div class="bg-pink p-3 text-center rounded-bottom-4 shadow-sm mb-3">
+            <h5 class="mb-0 text-white fw-bold mt-2">Layanan HRIS</h5>
+        </div>
+        <div class="p-3">
+            <?php if ($is_admin): ?>
+            <h6 class="section-title mt-0 text-pink"><i class="bi bi-shield-lock-fill me-2"></i>Menu HR & Owner</h6>
+            <div class="row g-3 mb-4">
+                <div class="col-12" onclick="switchScreen('admin-absen')">
+                    <div class="action-card shadow-sm" style="border-left:5px solid var(--lb-pink);">
+                        <i class="bi bi-people-fill action-icon"></i>
+                        <div><h6 class="fw-bold mb-0">Kehadiran Karyawan</h6><small class="text-muted">Pantau absensi seluruh tim & foto</small></div>
+                        <i class="bi bi-chevron-right ms-auto text-muted"></i>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+            <h6 class="section-title mt-0">Pengajuan & Dokumen</h6>
+            <div class="row g-3">
+                <div class="col-12" onclick="showModernAlert('Informasi Cuti','Status Anda <b><?= $karyawan['status_pegawai'] ?></b>.<br>Cuti tahunan baru dapat digunakan setelah <b><?= formatTanggal($karyawan['akhir_probation']) ?></b>.<br><br><span class=\'text-pink fw-bold\'>Fitur Izin Sakit akan segera hadir.</span>','bi bi-calendar-x-fill','var(--lb-pink)')">
+                    <div class="action-card shadow-sm">
+                        <i class="bi bi-calendar-event action-icon"></i>
+                        <div><h6 class="fw-bold mb-0">Pengajuan Cuti / Izin</h6><small class="text-muted">Cek kuota dan ajukan libur</small></div>
+                    </div>
+                </div>
+                <div class="col-12" onclick="aksesGajiDitolak()">
+                    <div class="action-card shadow-sm bg-light">
+                        <i class="bi bi-lock-fill action-icon text-secondary"></i>
+                        <div><h6 class="fw-bold mb-0 text-secondary">Slip Gaji <span class="badge bg-secondary ms-2" style="font-size:10px;">Terkunci</span></h6><small class="text-muted">Akses melalui portal HRD/Finance</small></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <?php if ($is_admin): ?>
+    <div id="screen-admin-absen" class="app-screen">
+        <div class="bg-pink p-3 position-relative rounded-bottom-4 shadow-sm text-center mb-3">
+            <button class="btn-back" onclick="switchScreen('layanan')"><i class="bi bi-arrow-left fs-3 text-white"></i></button>
+            <h5 class="mb-0 text-white fw-bold mt-2">Log Kehadiran Tim</h5>
+        </div>
+        <div class="p-3 pt-0">
+            <?php if ($admin_history && $admin_history->num_rows > 0): ?>
+                <div class="table-responsive bg-white rounded-4 shadow-sm border" style="overflow: hidden;">
+                    <table class="table table-hover table-admin align-middle mb-0" style="font-size: 13px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="px-3 py-3">Nama & Tgl</th>
+                                <th class="text-center py-3">Masuk</th>
+                                <th class="text-center py-3">Pulang</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while ($data = $admin_history->fetch_assoc()):
+                                $status_adm = $data['status_in'] ?: 'Tidak Hadir';
+                                $badge_adm  = 'bg-success';
+                                if ($status_adm=='Telat') $badge_adm='bg-warning text-dark';
+                                if ($status_adm=='Tidak Hadir') $badge_adm='bg-danger';
+                                $modalDataAdm = htmlspecialchars(json_encode([
+                                    'tanggal'    => formatTanggalIndo($data['tgl']),
+                                    'nama'       => $data['nama'],
+                                    'status'     => $status_adm,
+                                    'in_time'    => $data['in_time'] ? date('H:i', strtotime($data['in_time'])) : '-',
+                                    'out_time'   => $data['out_time'] ? date('H:i', strtotime($data['out_time'])) : '-',
+                                    'in_lokasi'  => $data['lok_in'] ?: 'Tidak ada lokasi',
+                                    'out_lokasi' => $data['lok_out'] ?: 'Tidak ada lokasi',
+                                    'in_foto'    => $data['foto_in'] ?: '',
+                                    'out_foto'   => $data['foto_out'] ?: ''
+                                ]));
+                            ?>
+                            <tr onclick="bukaDetail(<?= $modalDataAdm ?>)" style="cursor:pointer;">
+                                <td class="px-3 py-2">
+                                    <span class="fw-bold d-block text-dark text-truncate" style="max-width: 130px;"><?= $data['nama'] ?></span>
+                                    <small class="text-muted d-block"><?= date('d/m/Y', strtotime($data['tgl'])) ?></small>
+                                    <span class="badge <?= $badge_adm ?> rounded-pill mt-1" style="font-size:9px;"><?= $status_adm ?></span>
+                                </td>
+                                <td class="text-center text-success fw-bold"><?= $data['in_time'] ? date('H:i', strtotime($data['in_time'])) : '-' ?></td>
+                                <td class="text-center text-danger fw-bold"><?= $data['out_time'] ? date('H:i', strtotime($data['out_time'])) : '-' ?></td>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <div class="text-center py-5 text-muted">Belum ada data kehadiran dari tim.</div>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <div id="screen-profil" class="app-screen">
+        <div class="bg-pink p-4 pb-5 text-center rounded-bottom-4 shadow-sm">
+            <div class="avatar-initials mx-auto mt-2 mb-2 bg-white text-pink" style="width:80px; height:80px; font-size:32px;"><?= $inisial ?></div>
+            <h4 class="text-white fw-bold mb-0"><?= $karyawan['nama'] ?></h4>
+            <p class="text-white-50 mb-0"><?= $karyawan['posisi'] ?></p>
+        </div>
+        <div class="p-3" style="margin-top:-30px;">
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
+                <div class="card-body p-0">
+                    <div class="p-3 pb-0"><h6 class="section-title mt-0">Informasi Pribadi</h6></div>
+                    <ul class="list-group list-group-flush rounded-4">
+                        <li class="list-group-item d-flex justify-content-between p-3"><span class="text-muted">NIK</span><span class="fw-bold"><?= $karyawan['nik'] ?></span></li>
+                        <li class="list-group-item d-flex justify-content-between p-3"><span class="text-muted">Email</span><span class="fw-bold small text-end"><?= $karyawan['email'] ?></span></li>
+                        <li class="list-group-item d-flex justify-content-between p-3"><span class="text-muted">No. HP</span><span class="fw-bold"><?= $karyawan['no_hp'] ?></span></li>
+                        <li class="list-group-item d-flex justify-content-between p-3"><span class="text-muted">Tgl Bergabung</span><span class="fw-bold"><?= formatTanggal($karyawan['tgl_bergabung']) ?></span></li>
+                    </ul>
+                </div>
+            </div>
+            <a href="/logout" class="btn btn-outline-danger w-100 rounded-4 py-3 fw-bold mt-3 shadow-sm">
+                <i class="bi bi-box-arrow-right me-2"></i> Keluar Aplikasi
+            </a>
         </div>
     </div>
 
@@ -306,10 +420,59 @@ if ($is_admin) {
     </div>
 </div>
 
+<div class="modal fade" id="modalDetailAbsen" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0 d-flex justify-content-between align-items-center">
+                <h5 class="modal-title fw-bold">Detail Attendance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <p class="text-pink small fw-bold mb-3" id="mdl-header"></p>
+                <div id="mdl-status-box" class="status-box mb-3 shadow-sm">
+                    <div class="d-flex align-items-center gap-2">
+                        <i id="mdl-status-icon" class="bi fs-4"></i>
+                        <span class="fw-bold fs-5" id="mdl-status-text"></span>
+                    </div>
+                </div>
+                <ul class="nav nav-pills nav-fill bg-light p-1 rounded-3 mb-3 shadow-sm" role="tablist">
+                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pills-in" type="button">In</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-out" type="button">Out</button></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="pills-in">
+                        <div class="detail-box mb-2">Pukul: <span id="mdl-in-time" class="fw-bold"></span></div>
+                        <div class="detail-box mb-2">Lokasi: <span id="mdl-in-lokasi" class="small"></span></div>
+                        <img id="mdl-in-foto" src="" class="img-fluid rounded-3 shadow-sm" style="max-height: 250px; width: 100%; object-fit: cover;">
+                    </div>
+                    <div class="tab-pane fade" id="pills-out">
+                        <div class="detail-box mb-2">Pukul: <span id="mdl-out-time" class="fw-bold"></span></div>
+                        <div class="detail-box mb-2">Lokasi: <span id="mdl-out-lokasi" class="small"></span></div>
+                        <img id="mdl-out-foto" src="" class="img-fluid rounded-3 shadow-sm" style="max-height: 250px; width: 100%; object-fit: cover;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modernAlertModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-body text-center p-4 pt-5">
+                <div id="modernAlertIcon" class="mb-3"></div>
+                <h5 class="fw-bold mb-3" id="modernAlertTitle"></h5>
+                <p class="text-muted mb-4" id="modernAlertMessage" style="font-size:14px;"></p>
+                <button type="button" class="btn btn-pink w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal">Mengerti</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const userNIK = '<?= $karyawan['nik'] ?>';
-    const screens = ['beranda','riwayat','layanan','profil'];
+    const screens = ['beranda','riwayat','layanan','profil','admin-absen'];
 
     function switchScreen(target) {
         screens.forEach(s => {
@@ -319,10 +482,48 @@ if ($is_admin) {
             if (nav) nav.classList.remove('active');
         });
         document.getElementById('screen-'+target).classList.add('active');
-        document.getElementById('nav-'+target).classList.add('active');
+        const n = document.getElementById('nav-'+target);
+        if (n) n.classList.add('active');
+        window.scrollTo(0,0);
     }
 
-    // Kamera Logic
+    function bukaDetail(data) {
+        document.getElementById('mdl-header').innerText = data.nama + ' • ' + data.tanggal;
+        document.getElementById('mdl-status-text').innerText = data.status;
+        const box = document.getElementById('mdl-status-box');
+        const icon = document.getElementById('mdl-status-icon');
+        
+        if (data.status === 'Telat') {
+            box.className = 'status-box terlambat mb-3';
+            icon.className = 'bi bi-exclamation-circle-fill fs-4';
+        } else if (data.status === 'Hadir') {
+            box.className = 'status-box hadir mb-3';
+            icon.className = 'bi bi-check-circle-fill fs-4';
+        } else {
+            box.className = 'status-box bg-light mb-3';
+            icon.className = 'bi bi-x-circle-fill fs-4';
+        }
+
+        document.getElementById('mdl-in-time').innerText = data.in_time;
+        document.getElementById('mdl-out-time').innerText = data.out_time;
+        document.getElementById('mdl-in-lokasi').innerText = data.in_lokasi;
+        document.getElementById('mdl-out-lokasi').innerText = data.out_lokasi;
+        document.getElementById('mdl-in-foto').src = data.in_foto || 'https://placehold.co/300x400?text=Tidak+Ada+Foto';
+        document.getElementById('mdl-out-foto').src = data.out_foto || 'https://placehold.co/300x400?text=Tidak+Ada+Foto';
+        new bootstrap.Modal(document.getElementById('modalDetailAbsen')).show();
+    }
+
+    function showModernAlert(title, message, iconClass, iconColor) {
+        document.getElementById('modernAlertTitle').innerText = title;
+        document.getElementById('modernAlertMessage').innerHTML = message;
+        document.getElementById('modernAlertIcon').innerHTML = `<i class="${iconClass}" style="font-size:3.5rem; color:${iconColor};"></i>`;
+        new bootstrap.Modal(document.getElementById('modernAlertModal')).show();
+    }
+
+    function aksesGajiDitolak() {
+        showModernAlert('Akses Terkunci','Gaji hanya dapat diakses melalui portal resmi.','bi bi-lock-fill','#6c757d');
+    }
+
     const video = document.getElementById('kamera');
     const canvas = document.getElementById('canvas_kamera');
     let kameraAktif = false;
@@ -331,53 +532,37 @@ if ($is_admin) {
             .then(stream => { video.srcObject = stream; kameraAktif = true; })
             .catch(() => {
                 const w = document.getElementById('camera-wrapper');
-                if (w) w.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 bg-light"><small class="text-danger fw-bold text-center">Izin Kamera Ditolak</small></div>';
+                if (w) w.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 bg-light text-danger small">Kamera Error</div>';
             });
     }
 
     function kirimAbsen(jenis) {
-    if (!confirm("Kirim " + jenis + " sekarang?")) return;
-    const responseDiv = document.getElementById('absen-response');
-    responseDiv.innerText = "Memproses...";
-    
-    const formData = new FormData();
-    formData.append('jenis_absen', jenis);
-    formData.append('nik', userNIK);
-    
-    if (kameraAktif && video) {
-        // Gunakan canvas yang sudah ada di HTML
-        const canvas = document.getElementById('canvas_kamera');
-        // Set ukuran sesuai video yang sedang aktif
-        canvas.width = video.videoWidth || 320;
-        canvas.height = video.videoHeight || 480;
-        const ctx = canvas.getContext('2d');
+        if (!confirm("Kirim " + jenis + "?")) return;
+        const resp = document.getElementById('absen-response');
+        resp.innerText = "Mengirim...";
         
-        // Mirroring agar foto tidak terbalik (karena kamera depan)
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
+        const fd = new FormData();
+        fd.append('jenis_absen', jenis);
+        fd.append('nik', userNIK);
         
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        // Ambil data base64
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
-        formData.append('foto', imageData);
+        if (kameraAktif && video && canvas) {
+            canvas.width = video.videoWidth || 300;
+            canvas.height = video.videoHeight || 400;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            fd.append('foto', canvas.toDataURL('image/jpeg', 0.8));
+        }
+
+        fetch('/proses_absen', { method: 'POST', body: fd })
+            .then(res => res.text())
+            .then(data => { resp.innerText = data; setTimeout(() => location.reload(), 1500); });
     }
 
-    fetch('/proses_absen', { method: 'POST', body: formData })
-        .then(res => res.text())
-        .then(data => { 
-            responseDiv.innerText = data; 
-            if(data.includes('✅')) setTimeout(() => location.reload(), 1500); 
-        })
-        .catch(err => {
-            responseDiv.innerText = "❌ Gagal koneksi ke server.";
-        });
-}
-    // Jam Digital
     setInterval(() => {
         const now = new Date();
-        document.getElementById('clock-display').innerText = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' }) + ' WIB';
-        document.getElementById('date-display').innerText = now.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+        if (document.getElementById('clock-display'))
+            document.getElementById('clock-display').innerText = now.toLocaleTimeString('id-ID') + ' WIB';
+        if (document.getElementById('date-display'))
+            document.getElementById('date-display').innerText = now.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
     }, 1000);
 </script>
 </body>
