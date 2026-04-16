@@ -514,12 +514,18 @@ if ($is_admin) {
         showModernAlert('Akses Terkunci','Slip gaji bersifat rahasia dan saat ini hanya dapat diakses melalui portal HRD / Finance.','bi bi-lock-fill','#6c757d');
     }
 
+    // =======================================================
+    // FUNGSI TAMPIL DETAIL (SUDAH DIPERBAIKI LOGIKA FOTONYA)
+    // =======================================================
     function bukaDetail(data) {
         document.getElementById('mdl-header').innerText = data.nama + ' • ' + data.tanggal;
+        
         const boxStatus = document.getElementById('mdl-status-box');
         const iconStatus = document.getElementById('mdl-status-icon');
+        
         document.getElementById('mdl-status-text').innerText = data.status;
         document.getElementById('mdl-durasi').innerText = data.durasi;
+        
         if (data.status === 'Telat') {
             boxStatus.className = 'status-box terlambat mb-3 shadow-sm';
             iconStatus.className = 'bi bi-exclamation-circle-fill fs-4';
@@ -531,12 +537,27 @@ if ($is_admin) {
             boxStatus.className = 'status-box mb-3 shadow-sm bg-light text-secondary border';
             iconStatus.className = 'bi bi-x-circle-fill fs-4';
         }
+        
         document.getElementById('mdl-in-time').innerText    = data.in_time;
         document.getElementById('mdl-out-time').innerText   = data.out_time;
         document.getElementById('mdl-in-lokasi').innerText  = data.in_lokasi;
         document.getElementById('mdl-out-lokasi').innerText = data.out_lokasi;
-        document.getElementById('mdl-in-foto').src  = data.in_foto  || 'blank';
-        document.getElementById('mdl-out-foto').src = data.out_foto || 'blank';
+        
+        // PERBAIKAN LOGIKA TAMPILAN FOTO AGAR BISA TERBACA DI WEB
+        const inFotoEl = document.getElementById('mdl-in-foto');
+        if (data.in_foto && data.in_foto !== '' && data.in_foto !== 'NULL' && data.in_foto !== '-') {
+            inFotoEl.src = data.in_foto;
+        } else {
+            inFotoEl.src = 'https://placehold.co/300x400?text=Tidak+Ada+Foto';
+        }
+
+        const outFotoEl = document.getElementById('mdl-out-foto');
+        if (data.out_foto && data.out_foto !== '' && data.out_foto !== 'NULL' && data.out_foto !== '-') {
+            outFotoEl.src = data.out_foto;
+        } else {
+            outFotoEl.src = 'https://placehold.co/300x400?text=Tidak+Ada+Foto';
+        }
+        
         new bootstrap.Modal(document.getElementById('modalDetailAbsen')).show();
     }
 
