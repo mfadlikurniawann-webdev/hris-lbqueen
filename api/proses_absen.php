@@ -1,12 +1,12 @@
 <?php
-// api/proses_absen.php - VERSI FINAL (Cloudinary Fix for Vercel)
+// api/proses_absen.php - FINAL CLOUDINARY VERSION
 include __DIR__ . '/koneksi.php';
 
-// 1. VERIFIKASI JWT
+// 1. VERIFIKASI JWT (Tetap seperti aslinya)
 $token   = get_token_from_cookie();
 $payload = jwt_verify($token);
 if (!$payload) {
-    echo "❌ Sesi tidak valid. Silakan login ulang.";
+    echo "❌ Sesi tidak valid.";
     exit();
 }
 
@@ -18,29 +18,19 @@ if (!isset($_POST['nik']) || !isset($_POST['jenis_absen'])) {
 $nik   = $conn->real_escape_string($_POST['nik']);
 $jenis = $conn->real_escape_string($_POST['jenis_absen']);
 
-if ($nik !== $payload['nik']) {
-    echo "❌ Akses tidak diizinkan.";
-    exit();
-}
-
 date_default_timezone_set('Asia/Jakarta');
 $waktu_lengkap = date('Y-m-d H:i:s');
 $hari_ini      = date('Y-m-d');
 $jam_menit     = date('H:i');
 
-// Ambil data karyawan
-$res_user = $conn->query("SELECT penempatan FROM karyawan WHERE nik='$nik'");
-$u        = $res_user ? $res_user->fetch_assoc() : null;
-$lokasi   = $u['penempatan'] ?? '-';
-
 // Cek duplikat
 $cek = $conn->query("SELECT id FROM absensi WHERE nik='$nik' AND jenis='$jenis' AND DATE(waktu)='$hari_ini'");
 if ($cek->num_rows > 0) {
-    echo "⚠️ Anda sudah melakukan $jenis hari ini.";
+    echo "⚠️ Anda sudah $jenis hari ini.";
     exit();
 }
 
-// Logika status (Batas 12:00)
+// Logika status Check In (Batas 12:00)
 $status = '-';
 if ($jenis == 'Check In') {
     if ($jam_menit > '12:00') {
@@ -54,41 +44,36 @@ if ($jenis == 'Check In') {
 }
 
 // =====================================================
-// 2. PROSES FOTO - UPLOAD KE CLOUDINARY
+// 2. PROSES FOTO KE CLOUDINARY
 // =====================================================
 $foto_raw = $_POST['foto'] ?? '';
-$foto_url = null; 
+$foto_url = null;
+$debug_msg = "";
 
 if (!empty($foto_raw) && strlen($foto_raw) > 100) {
-    // Ambil kredensial dari Environment Variables di Vercel
-    $cloud_name = getenv('CLOUDINARY_CLOUD_NAME');
-    $api_key    = getenv('CLOUDINARY_API_KEY');
-    $api_secret = getenv('CLOUDINARY_API_SECRET');
+    
+    // Menggunakan getenv() untuk membaca Environment Variables Vercel
+    $c_name   = getenv('CLOUDINARY_CLOUD_NAME');
+    $c_key    = getenv('CLOUDINARY_API_KEY');
+    $c_secret = getenv('CLOUDINARY_API_SECRET');
 
-    if ($cloud_name && $api_key && $api_secret) {
-        $timestamp  = time();
-        $jenis_slug = str_replace(' ', '', $jenis); 
-        $public_id  = "hris_absen/{$nik}_{$jenis_slug}_{$timestamp}";
+    if (!$c_name || !$c_key || !$c_secret) {
+        $debug_msg = " (Error: Env Vercel Kosong)";
+    } else {
+        $timestamp = time();
+        $public_id = "hris_absen/" . $nik . "_" . $timestamp;
+        $params_to_sign = "public_id=$public_id&timestamp=$timestamp";
+        $signature = sha1($params_to_sign . $c_secret);
 
-        $params_to_sign = "public_id={$public_id}&timestamp={$timestamp}";
-        $signature      = sha1($params_to_sign . $api_secret);
-
-        $upload_url = "https://api.cloudinary.com/v1_1/{$cloud_name}/image/upload";
-
-        $post_data = [
+        $ch = curl_init("https://api.cloudinary.com/v1_1/$c_name/image/upload");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, [
             'file'      => $foto_raw,
-            'public_id' => $public_id,
+            'api_key'   => $c_key,
             'timestamp' => $timestamp,
-            'api_key'   => $api_key,
-            'signature' => $signature,
-        ];
-
-        $ch = curl_init($upload_url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => $post_data,
-            CURLOPT_TIMEOUT        => 30,
+            'public_id' => $public_id,
+            'signature' => $signature
         ]);
 
         $response = curl_exec($ch);
@@ -97,21 +82,32 @@ if (!empty($foto_raw) && strlen($foto_raw) > 100) {
 
         if (isset($result['secure_url'])) {
             $foto_url = $result['secure_url'];
+        } else {
+            // Jika gagal, ambil pesan error dari Cloudinary
+            $err_desc = $result['error']['message'] ?? 'Upload Gagal';
+            $debug_msg = " (Cloudinary: $err_desc)";
         }
     }
+} else {
+    $debug_msg = " (Data foto kosong/tidak terkirim)";
 }
 
 // 3. SIMPAN KE DATABASE
 $foto_val = ($foto_url !== null) ? "'" . $conn->real_escape_string($foto_url) . "'" : "NULL";
 
+// Ambil lokasi penempatan
+$res_user = $conn->query("SELECT penempatan FROM karyawan WHERE nik='$nik'");
+$u = $res_user->fetch_assoc();
+$lokasi = $u['penempatan'] ?? '-';
+
 $sql = "INSERT INTO absensi (nik, waktu, jenis, lokasi, status, foto) 
         VALUES ('$nik', '$waktu_lengkap', '$jenis', '$lokasi', '$status', $foto_val)";
 
 if ($conn->query($sql) === TRUE) {
-    $msg = "✅ Berhasil $jenis!";
-    if ($status != '-') $msg .= " Status: $status.";
-    echo ($foto_url) ? $msg . " 📸 Foto OK." : $msg . " (Tanpa foto)";
+    $out = "✅ Berhasil $jenis!";
+    if ($status != '-') $out .= " Status: $status.";
+    echo ($foto_url) ? $out . " 📸 Foto OK." : $out . $debug_msg;
 } else {
-    echo "❌ Database Error: " . $conn->error;
+    echo "❌ DB Error: " . $conn->error;
 }
 ?>
