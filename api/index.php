@@ -443,12 +443,12 @@ if ($is_admin) {
                     <div class="tab-pane fade show active" id="pills-in">
                         <div class="detail-box"><h6 class="fw-bold small text-muted"><i class="bi bi-clock me-2"></i>Waktu Check In</h6><div class="d-flex justify-content-between text-success fw-bold fs-5"><span>Pukul</span><span id="mdl-in-time">00:00</span></div></div>
                         <div class="detail-box"><h6 class="fw-bold small text-muted"><i class="bi bi-geo-alt me-2"></i>Lokasi Absen</h6><p class="mb-0 small fw-bold" id="mdl-in-lokasi">-</p></div>
-                        <div class="detail-box border-0 p-0 overflow-hidden text-center bg-dark" style="border-radius:15px;"><img id="mdl-in-foto" src="" alt="Foto Check In" style="width:100%; height:auto; max-height:250px; object-fit:cover;" onerror="this.src='https://via.placeholder.com/300x400?text=Tidak+Ada+Foto'"></div>
+                        <div class="detail-box border-0 p-0 overflow-hidden text-center bg-dark" style="border-radius:15px;"><img id="mdl-in-foto" src="" alt="Foto Check In" style="width:100%; height:auto; max-height:250px; object-fit:cover;" onerror="this.src='https://placehold.co/300x400?text=Tidak+Ada+Foto'"></div>
                     </div>
                     <div class="tab-pane fade" id="pills-out">
                         <div class="detail-box"><h6 class="fw-bold small text-muted"><i class="bi bi-clock me-2"></i>Waktu Check Out</h6><div class="d-flex justify-content-between text-danger fw-bold fs-5"><span>Pukul</span><span id="mdl-out-time">00:00</span></div></div>
                         <div class="detail-box"><h6 class="fw-bold small text-muted"><i class="bi bi-geo-alt me-2"></i>Lokasi Absen</h6><p class="mb-0 small fw-bold" id="mdl-out-lokasi">-</p></div>
-                        <div class="detail-box border-0 p-0 overflow-hidden text-center bg-dark" style="border-radius:15px;"><img id="mdl-out-foto" src="" alt="Foto Check Out" style="width:100%; height:auto; max-height:250px; object-fit:cover;" onerror="this.src='https://via.placeholder.com/300x400?text=Tidak+Ada+Foto'"></div>
+                        <div class="detail-box border-0 p-0 overflow-hidden text-center bg-dark" style="border-radius:15px;"><img id="mdl-out-foto" src="" alt="Foto Check Out" style="width:100%; height:auto; max-height:250px; object-fit:cover;" onerror="this.src='https://placehold.co/300x400?text=Tidak+Ada+Foto'"></div>
                     </div>
                 </div>
             </div>
