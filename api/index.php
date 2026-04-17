@@ -106,7 +106,7 @@ if ($is_admin) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HRIS - <?= $karyawan['nama'] ?></title>
+    <title>HRIS Mobile - <?= $karyawan['nama'] ?></title>
     
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#C94F78">
@@ -119,11 +119,11 @@ if ($is_admin) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-    
+    <link rel="stylesheet" href="/style/style.css">
     <style>
         /* BASE STYLE */
         :root { --lb-pink: #C94F78; --lb-pink-hover: #A83E60; }
-        body { background-color: #f4f6f9; font-family: 'DM Sans', sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f4f6f9; } /* Subtle background for desktop */
         
         .modal-content { border-radius: 20px; border: none; }
         .nav-pills .nav-link { color: #6c757d; border-radius: 10px; font-weight: bold; }
@@ -138,16 +138,16 @@ if ($is_admin) {
         .table-admin td { vertical-align: middle; }
         .employee-card { transition: transform 0.2s; border: 1px solid #f0f0f0; cursor: pointer; }
         .employee-card:active { transform: scale(0.98); background-color: #f8f9fa; }
-        .bg-pink { background-color: var(--lb-pink); }
-        .text-pink { color: var(--lb-pink); }
-        
+
         /* ========================================= */
         /* RESPONSIVE LAYOUT (MOBILE VS DESKTOP)     */
         /* ========================================= */
-        .app-wrapper {
+        .mobile-container {
             display: flex;
             flex-direction: column;
+            background-color: #fff;
             min-height: 100vh;
+            max-width: 100%;
         }
 
         .main-content {
@@ -156,8 +156,8 @@ if ($is_admin) {
             width: 100%;
         }
 
-        /* BOTTOM NAV (MOBILE DEFAULT) */
-        .sidebar-nav {
+        /* BOTTOM NAV (MOBILE) */
+        .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
@@ -170,7 +170,7 @@ if ($is_admin) {
             z-index: 999;
         }
 
-        .sidebar-logo { display: none; }
+        .sidebar-logo { display: none; } /* Sembunyikan logo sidebar di mobile */
 
         .nav-item-btn {
             background: transparent;
@@ -188,25 +188,28 @@ if ($is_admin) {
         .nav-item-btn.active { color: var(--lb-pink); }
         .nav-item-btn.active i { color: var(--lb-pink); }
 
-        .app-screen { display: none; }
-        .app-screen.active { display: block; }
-
         /* SIDEBAR (TABLET & DESKTOP) */
-        @media (min-width: 992px) {
-            .app-wrapper {
-                flex-direction: row;
+        @media (min-width: 768px) {
+            .mobile-container {
+                flex-direction: row; /* Berubah jadi bersebelahan */
+                max-width: 1000px;
+                margin: 20px auto;
+                box-shadow: 0 0 30px rgba(0,0,0,0.08);
+                border-radius: 20px;
+                overflow: hidden;
+                min-height: calc(100vh - 40px);
             }
-            .sidebar-nav {
-                position: fixed;
+            .bottom-nav {
+                position: sticky;
                 top: 0;
-                left: 0;
                 width: 250px;
-                height: 100vh;
+                height: 100%;
                 flex-direction: column;
                 justify-content: flex-start;
                 padding: 30px 0;
-                border-right: 1px solid #e0e0e0;
-                box-shadow: 2px 0 15px rgba(0,0,0,0.03);
+                border-right: 1px solid #f0f0f0;
+                box-shadow: none;
+                z-index: 1;
             }
             .sidebar-logo {
                 display: block;
@@ -221,38 +224,34 @@ if ($is_admin) {
                 justify-content: flex-start;
                 gap: 15px;
                 transition: all 0.2s;
-                border-right: 4px solid transparent;
             }
             .nav-item-btn i { font-size: 20px; margin-bottom: 0; }
             .nav-item-btn:hover { background-color: #fdf0f5; color: var(--lb-pink); }
-            .nav-item-btn.active { background-color: #fdf0f5; border-right-color: var(--lb-pink); }
-
+            .nav-item-btn.active { background-color: #fdf0f5; border-right: 4px solid var(--lb-pink); }
+            
             .main-content {
-                margin-left: 250px; /* Geser konten ke kanan sebesar lebar sidebar */
-                padding: 30px;
-                padding-bottom: 30px;
-                display: flex;
-                justify-content: center;
+                padding-bottom: 0;
+                height: 100%;
+                overflow-y: auto;
+                background-color: #fafafa;
+                position: relative;
             }
-
-            .app-screen.active {
-                width: 100%;
-                max-width: 1000px; /* Agar konten tidak melar terlalu lebar */
-                background: #fff;
-                border-radius: 20px;
-                box-shadow: 0 5px 20px rgba(0,0,0,0.03);
-                overflow: hidden;
-                min-height: calc(100vh - 60px);
+            .app-screen {
+                max-width: 600px;
+                margin: 0 auto;
+                background-color: #fff;
+                min-height: 100%;
+                box-shadow: -5px 0 15px rgba(0,0,0,0.02), 5px 0 15px rgba(0,0,0,0.02);
             }
         }
     </style>
 </head>
 <body>
-<div class="app-wrapper">
+<div class="mobile-container">
 
-    <div class="sidebar-nav">
+    <div class="bottom-nav shadow-sm">
         <div class="sidebar-logo">
-            <img src="/logo/lbqueen_logo.PNG" alt="LBQueen" style="width:80px; margin-bottom:10px; border-radius:10px;">
+            <img src="/logo/lbqueen_logo.PNG" alt="LBQueen" style="width:80px; margin-bottom:10px;">
             <h6 class="fw-bold text-pink mb-0">HRIS LBQueen</h6>
             <small class="text-muted" style="font-size:11px;">Care & Beauty</small>
         </div>
@@ -265,7 +264,7 @@ if ($is_admin) {
     <div class="main-content">
 
         <div id="screen-beranda" class="app-screen active">
-            <div class="bg-pink p-4 rounded-bottom-4 shadow-sm" style="border-radius: 0 0 20px 20px;">
+            <div class="bg-pink p-4 rounded-bottom-4 shadow-sm">
                 <div class="d-flex align-items-center justify-content-center mb-3 pb-3 border-bottom border-light border-opacity-25">
                     <img src="/logo/lbqueen_logo.PNG" alt="Logo LBQueen" onerror="this.style.display='none'" style="height:40px; margin-right:12px; background:white; border-radius:8px; padding:4px;">
                     <h5 class="mb-0 fw-bold text-white" style="font-size:16px;">HRIS LBQueen Care Beauty</h5>
@@ -273,18 +272,16 @@ if ($is_admin) {
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <p class="mb-0 text-white-50" id="date-display" style="font-size:13px;">Memuat tanggal...</p>
-                        <h4 class="mb-0 fw-bold mt-1 text-white">Hai, <?= htmlspecialchars($karyawan['nama']) ?>!</h4>
+                        <h4 class="mb-0 fw-bold mt-1">Hai, <?= explode(" ", $karyawan['nama'])[0] ?>!</h4>
                     </div>
                     <i class="bi bi-bell fs-4 text-white"></i>
                 </div>
             </div>
 
             <div class="p-3">
-                <div class="card border-0 shadow-sm rounded-4 mb-4" style="margin-top:-25px; z-index: 10; position:relative;">
+                <div class="card border-0 shadow-sm rounded-4 mb-4" style="margin-top:-25px;">
                     <div class="card-body d-flex align-items-center gap-3">
-                        <div class="avatar-initials bg-pink text-white d-flex align-items-center justify-content-center rounded-circle fw-bold" style="width: 50px; height: 50px; font-size: 20px;">
-                            <?= $inisial ?>
-                        </div>
+                        <div class="avatar-initials"><?= $inisial ?></div>
                         <div>
                             <h6 class="fw-bold mb-1"><?= $karyawan['posisi'] ?></h6>
                             <span class="badge bg-warning text-dark"><?= $karyawan['status_pegawai'] ?></span>
@@ -300,7 +297,7 @@ if ($is_admin) {
                     </div>
 
                     <?php if ($show_camera): ?>
-                        <div id="camera-wrapper" class="mb-3 mx-auto shadow-sm" style="width:200px; height:200px; border-radius:50%; overflow:hidden; border:4px solid #fdf0f5; background:#eee;">
+                        <div id="camera-wrapper" class="mb-3 mx-auto shadow-sm" style="width:200px; height:200px; border-radius:50%; overflow:hidden; border:4px solid var(--lb-pink-light); background:#eee;">
                             <video id="kamera" autoplay playsinline style="width:100%; height:100%; object-fit:cover; transform:scaleX(-1);"></video>
                             <canvas id="canvas_kamera" style="display:none;"></canvas>
                         </div>
@@ -326,7 +323,7 @@ if ($is_admin) {
 
                     <div id="absen-response" class="mb-3 fw-bold text-primary"></div>
 
-                    <div class="d-flex justify-content-center gap-3 mb-4 mx-auto" style="max-width: 400px;">
+                    <div class="d-flex gap-3 mb-4">
                         <button class="btn <?= (!$sudah_in && !$belum_waktunya_in && !$lewat_batas_in) ? 'btn-success' : 'btn-secondary' ?> flex-fill rounded-4 py-3 fw-bold shadow-sm"
                                 <?= (!$sudah_in && !$belum_waktunya_in && !$lewat_batas_in) ? "onclick=\"kirimAbsen('Check In')\"" : 'disabled' ?>>
                             <i class="bi bi-box-arrow-in-right me-1"></i> Check In
@@ -402,8 +399,8 @@ if ($is_admin) {
         </div>
 
         <div id="screen-riwayat" class="app-screen">
-            <div class="bg-pink p-3 position-relative shadow-sm text-center mb-3" style="border-radius: 0 0 20px 20px;">
-                <h5 class="mb-0 text-white fw-bold mt-2 pb-2">Riwayat Kehadiran</h5>
+            <div class="bg-pink p-3 position-relative rounded-bottom-4 shadow-sm text-center mb-3">
+                <h5 class="mb-0 text-white fw-bold mt-2">Riwayat Kehadiran</h5>
             </div>
             <div class="p-3 pt-0">
                 <?php if ($full_history->num_rows > 0): ?>
@@ -456,17 +453,17 @@ if ($is_admin) {
         </div>
 
         <div id="screen-layanan" class="app-screen">
-            <div class="bg-pink p-3 text-center shadow-sm mb-3" style="border-radius: 0 0 20px 20px;">
-                <h5 class="mb-0 text-white fw-bold mt-2 pb-2">Layanan HRIS</h5>
+            <div class="bg-pink p-3 text-center rounded-bottom-4 shadow-sm mb-3">
+                <h5 class="mb-0 text-white fw-bold mt-2">Layanan HRIS</h5>
             </div>
             <div class="p-3">
                 <?php if ($is_admin): ?>
                 <h6 class="section-title mt-0 text-pink"><i class="bi bi-shield-lock-fill me-2"></i>Menu HR & Owner</h6>
                 <div class="row g-3 mb-4">
                     <div class="col-12" onclick="switchScreen('admin-absen')">
-                        <div class="action-card shadow-sm p-3 bg-white rounded-3 d-flex align-items-center cursor-pointer" style="border-left:5px solid var(--lb-pink); cursor:pointer;">
-                            <i class="bi bi-people-fill text-pink fs-3 me-3"></i>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0">Kehadiran Karyawan</h6><small class="text-muted">Pantau absensi seluruh tim & foto</small></div>
+                        <div class="action-card shadow-sm" style="border-left:5px solid var(--lb-pink);">
+                            <i class="bi bi-people-fill action-icon"></i>
+                            <div><h6 class="fw-bold mb-0">Kehadiran Karyawan</h6><small class="text-muted">Pantau absensi seluruh tim & foto</small></div>
                             <i class="bi bi-chevron-right ms-auto text-muted"></i>
                         </div>
                     </div>
@@ -475,14 +472,14 @@ if ($is_admin) {
                 <h6 class="section-title mt-0">Pengajuan & Dokumen</h6>
                 <div class="row g-3">
                     <div class="col-12" onclick="showModernAlert('Informasi Cuti','Status Anda <b><?= $karyawan['status_pegawai'] ?></b>.<br>Cuti tahunan baru dapat digunakan setelah <b><?= formatTanggal($karyawan['akhir_probation']) ?></b>.<br><br><span class=\'text-pink fw-bold\'>Fitur Izin Sakit akan segera hadir.</span>','bi bi-calendar-x-fill','var(--lb-pink)')">
-                        <div class="action-card shadow-sm p-3 bg-white rounded-3 d-flex align-items-center" style="cursor:pointer;">
-                            <i class="bi bi-calendar-event text-dark fs-3 me-3"></i>
+                        <div class="action-card shadow-sm">
+                            <i class="bi bi-calendar-event action-icon"></i>
                             <div><h6 class="fw-bold mb-0">Pengajuan Cuti / Izin</h6><small class="text-muted">Cek kuota dan ajukan libur</small></div>
                         </div>
                     </div>
                     <div class="col-12" onclick="aksesGajiDitolak()">
-                        <div class="action-card shadow-sm p-3 bg-light rounded-3 d-flex align-items-center" style="cursor:pointer;">
-                            <i class="bi bi-lock-fill text-secondary fs-3 me-3"></i>
+                        <div class="action-card shadow-sm bg-light">
+                            <i class="bi bi-lock-fill action-icon text-secondary"></i>
                             <div><h6 class="fw-bold mb-0 text-secondary">Slip Gaji <span class="badge bg-secondary ms-2" style="font-size:10px;">Terkunci</span></h6><small class="text-muted">Akses melalui portal HRD/Finance</small></div>
                         </div>
                     </div>
@@ -494,16 +491,16 @@ if ($is_admin) {
         <div id="screen-admin-absen" class="app-screen">
             
             <div id="admin-view-list">
-                <div class="bg-pink p-3 position-relative shadow-sm text-center mb-3" style="border-radius: 0 0 20px 20px;">
-                    <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-2" onclick="switchScreen('layanan')"><i class="bi bi-arrow-left fs-3"></i></button>
-                    <h5 class="mb-0 text-white fw-bold mt-2 pb-2">Pilih Karyawan</h5>
+                <div class="bg-pink p-3 position-relative rounded-bottom-4 shadow-sm text-center mb-3">
+                    <button class="btn-back" onclick="switchScreen('layanan')"><i class="bi bi-arrow-left fs-3"></i></button>
+                    <h5 class="mb-0 text-white fw-bold mt-2">Pilih Karyawan</h5>
                 </div>
                 <div class="p-3 pt-0">
                     <p class="text-muted small mb-3">Ketuk nama karyawan untuk melihat riwayat absensinya.</p>
                     <?php foreach ($semua_karyawan as $kar): ?>
                     <div class="card employee-card rounded-4 mb-3 shadow-sm" onclick="showEmployeeLog('<?= $kar['nik'] ?>', '<?= htmlspecialchars($kar['nama']) ?>')">
                         <div class="card-body p-3 d-flex align-items-center gap-3">
-                            <div class="avatar-initials bg-pink text-white d-flex align-items-center justify-content-center rounded-circle fw-bold" style="width: 45px; height: 45px; font-size: 18px;">
+                            <div class="avatar-initials bg-pink text-white" style="width: 45px; height: 45px; font-size: 18px;">
                                 <?= $kar['inisial'] ?>
                             </div>
                             <div class="flex-grow-1">
@@ -519,9 +516,9 @@ if ($is_admin) {
             </div>
 
             <div id="admin-view-detail" style="display:none;">
-                <div class="bg-pink p-3 position-relative shadow-sm text-center mb-3" style="border-radius: 0 0 20px 20px;">
-                    <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-2" onclick="backToAdminList()"><i class="bi bi-arrow-left fs-3"></i></button>
-                    <h5 class="mb-0 text-white fw-bold mt-2 pb-2" id="detail-nama-karyawan">Log Kehadiran</h5>
+                <div class="bg-pink p-3 position-relative rounded-bottom-4 shadow-sm text-center mb-3">
+                    <button class="btn-back" onclick="backToAdminList()"><i class="bi bi-arrow-left fs-3"></i></button>
+                    <h5 class="mb-0 text-white fw-bold mt-2" id="detail-nama-karyawan">Log Kehadiran</h5>
                 </div>
                 <div class="p-3 pt-0">
                     
@@ -564,8 +561,8 @@ if ($is_admin) {
         <?php endif; ?>
 
         <div id="screen-profil" class="app-screen">
-            <div class="bg-pink p-4 pb-5 text-center shadow-sm" style="border-radius: 0 0 20px 20px;">
-                <div class="avatar-initials mx-auto mt-2 mb-2 bg-white text-pink d-flex align-items-center justify-content-center rounded-circle fw-bold" style="width:80px; height:80px; font-size:32px;"><?= $inisial ?></div>
+            <div class="bg-pink p-4 pb-5 text-center rounded-bottom-4 shadow-sm">
+                <div class="avatar-initials mx-auto mt-2 mb-2 bg-white text-pink" style="width:80px; height:80px; font-size:32px;"><?= $inisial ?></div>
                 <h4 class="text-white fw-bold mb-0"><?= $karyawan['nama'] ?></h4>
                 <p class="text-white-50 mb-0"><?= $karyawan['posisi'] ?></p>
             </div>
@@ -615,14 +612,14 @@ if ($is_admin) {
                         <div class="detail-box"><h6 class="fw-bold small text-muted"><i class="bi bi-clock me-2"></i>Waktu Check In</h6><div class="d-flex justify-content-between text-success fw-bold fs-5"><span>Pukul</span><span id="mdl-in-time">00:00</span></div></div>
                         <div class="detail-box"><h6 class="fw-bold small text-muted"><i class="bi bi-geo-alt me-2"></i>Lokasi Absen</h6><p class="mb-0 small fw-bold" id="mdl-in-lokasi">-</p></div>
                         <div class="detail-box border-0 p-0 overflow-hidden text-center bg-light" style="border-radius:15px;">
-                            <img id="mdl-in-foto" src="" alt="Foto Check In" style="width:100%; height:auto; max-height:500px; object-fit:contain;" onerror="this.src='https://placehold.co/300x400?text=Tidak+Ada+Foto'">
+                            <img id="mdl-in-foto" src="" alt="Foto Check In" style="width:100%; height:auto; max-height:400px; object-fit:contain;" onerror="this.src='https://placehold.co/300x400?text=Tidak+Ada+Foto'">
                         </div>
                     </div>
                     <div class="tab-pane fade" id="pills-out">
                         <div class="detail-box"><h6 class="fw-bold small text-muted"><i class="bi bi-clock me-2"></i>Waktu Check Out</h6><div class="d-flex justify-content-between text-danger fw-bold fs-5"><span>Pukul</span><span id="mdl-out-time">00:00</span></div></div>
                         <div class="detail-box"><h6 class="fw-bold small text-muted"><i class="bi bi-geo-alt me-2"></i>Lokasi Absen</h6><p class="mb-0 small fw-bold" id="mdl-out-lokasi">-</p></div>
                         <div class="detail-box border-0 p-0 overflow-hidden text-center bg-light" style="border-radius:15px;">
-                            <img id="mdl-out-foto" src="" alt="Foto Check Out" style="width:100%; height:auto; max-height:500px; object-fit:contain;" onerror="this.src='https://placehold.co/300x400?text=Tidak+Ada+Foto'">
+                            <img id="mdl-out-foto" src="" alt="Foto Check Out" style="width:100%; height:auto; max-height:400px; object-fit:contain;" onerror="this.src='https://placehold.co/300x400?text=Tidak+Ada+Foto'">
                         </div>
                     </div>
                 </div>
