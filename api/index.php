@@ -51,15 +51,12 @@ $data_out  = $cek_out->fetch_assoc();
 $sudah_out = $cek_out->num_rows > 0;
 $waktu_out = $sudah_out ? date('H:i', strtotime($data_out['waktu'])) : '--:--';
 
-// PENENTUAN KAMERA AKTIF
+// PENENTUAN KAMERA AKTIF ATAU TIDAK
 $show_camera = false;
-$jenis_absen_sekarang = '';
 if (!$sudah_in && !$belum_waktunya_in && !$lewat_batas_in) {
     $show_camera = true; 
-    $jenis_absen_sekarang = 'Check In';
 } elseif ($sudah_in && !$sudah_out && !$belum_waktunya_out) {
     $show_camera = true; 
-    $jenis_absen_sekarang = 'Check Out';
 }
 
 // RIWAYAT ABSENSI PRIBADI
@@ -124,79 +121,150 @@ if ($is_admin) {
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
+        /* BASE STYLE */
         :root { --lb-pink: #C94F78; --lb-pink-hover: #A83E60; }
         body { background-color: #f4f6f9; font-family: 'DM Sans', sans-serif; margin: 0; padding: 0; }
         
-        .bg-pink { background-color: var(--lb-pink); }
-        .text-pink { color: var(--lb-pink); }
+        .modal-content { border-radius: 20px; border: none; }
+        .nav-pills .nav-link { color: #6c757d; border-radius: 10px; font-weight: bold; }
+        .nav-pills .nav-link.active { background-color: var(--lb-pink); color: white; }
+        .detail-box { border: 1px solid #eee; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .status-box { border-radius: 15px; padding: 15px; display: flex; align-items: center; justify-content: space-between; }
+        .status-box.terlambat { background-color: #fff4e5; border: 1px solid #ffe0b2; color: #e65100; }
+        .status-box.hadir { background-color: #e8f5e9; border: 1px solid #c8e6c9; color: #2e7d32; }
         .btn-pink { background-color: var(--lb-pink); color: white; transition: 0.3s; }
         .btn-pink:hover { background-color: var(--lb-pink-hover); color: white; }
+        .activity-box { background: #fff; border: 1px solid #eaeaea; border-radius: 15px; padding: 15px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+        .table-admin td { vertical-align: middle; }
+        .employee-card { transition: transform 0.2s; border: 1px solid #f0f0f0; cursor: pointer; }
+        .employee-card:active { transform: scale(0.98); background-color: #f8f9fa; }
+        .bg-pink { background-color: var(--lb-pink); }
+        .text-pink { color: var(--lb-pink); }
+        
+        /* ========================================= */
+        /* RESPONSIVE LAYOUT (MOBILE VS DESKTOP)     */
+        /* ========================================= */
+        .app-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
-        .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
-        .main-content { flex: 1; padding-bottom: 75px; width: 100%; }
+        .main-content {
+            flex: 1;
+            padding-bottom: 75px; /* Ruang untuk bottom nav di mobile */
+            width: 100%;
+        }
+
         .app-screen { display: none; }
         .app-screen.active { display: block; }
 
+        /* Kustomisasi Ukuran Kamera */
+        #camera-wrapper { width: 220px; height: 220px; }
+
+        /* BOTTOM NAV (MOBILE DEFAULT) */
         .sidebar-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; background-color: #fff;
-            display: flex; justify-content: space-around; padding: 10px 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 999;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 999;
         }
+
         .sidebar-logo { display: none; }
+
         .nav-item-btn {
-            background: transparent; border: none; color: #6c757d; display: flex;
-            flex-direction: column; align-items: center; font-size: 12px; font-weight: 500;
-            width: 100%; outline: none;
+            background: transparent;
+            border: none;
+            color: #6c757d;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 500;
+            width: 100%;
+            outline: none;
         }
         .nav-item-btn i { font-size: 22px; margin-bottom: 3px; }
-        .nav-item-btn.active, .nav-item-btn.active i { color: var(--lb-pink); }
+        .nav-item-btn.active { color: var(--lb-pink); }
+        .nav-item-btn.active i { color: var(--lb-pink); }
 
-        /* KUSTOMISASI KAMERA BLACK BOX */
-        .camera-box {
-            background-color: #000; border-radius: 16px; overflow: hidden;
-            width: 100%; max-width: 400px; aspect-ratio: 3/4; /* Proporsi standar HP */
-            display: flex; justify-content: center; align-items: center; position: relative;
-            margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .camera-box video, .camera-box img {
-            width: 100%; height: 100%; object-fit: contain; /* Tidak terpotong, sisa ruang jadi hitam */
-        }
-
-        /* TABLE RIWAYAT */
-        .table-riwayat th { font-size: 13px; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .table-riwayat td { font-size: 14px; vertical-align: middle; color: #333; }
-        
-        .badge-status { padding: 6px 12px; font-size: 11px; font-weight: 600; border-radius: 6px; }
-        .bg-terlambat { background-color: #ff9800; color: #fff; }
-        .bg-hadir { background-color: #20c997; color: #fff; }
-        .bg-checkin { background-color: #0dcaf0; color: #fff; }
-        .bg-libur { background-color: #6f42c1; color: #fff; }
-        .bg-izin { background-color: #0d6efd; color: #fff; }
-        
-        /* MODAL TABS */
-        .nav-pills.custom-tabs { background-color: #fff; border-bottom: 2px solid #eee; border-radius: 0; padding: 0; }
-        .nav-pills.custom-tabs .nav-link { color: #6c757d; border-radius: 0; font-weight: 600; padding: 12px 20px; border-bottom: 3px solid transparent; }
-        .nav-pills.custom-tabs .nav-link.active { background-color: transparent; color: #198754; border-bottom-color: #198754; }
-
+        /* ========================================= */
+        /* SIDEBAR (TABLET & DESKTOP - MIN 992px)    */
+        /* ========================================= */
         @media (min-width: 992px) {
-            .app-wrapper { flex-direction: row; }
-            .sidebar-nav {
-                position: fixed; top: 0; left: 0; width: 250px; height: 100vh;
-                flex-direction: column; justify-content: flex-start; padding: 30px 0;
-                border-right: 1px solid #e0e0e0; box-shadow: 2px 0 15px rgba(0,0,0,0.03);
+            .app-wrapper {
+                flex-direction: row;
             }
-            .sidebar-logo { display: block; text-align: center; margin-bottom: 40px; padding: 0 20px; }
-            .nav-item-btn { flex-direction: row; padding: 15px 30px; font-size: 15px; justify-content: flex-start; gap: 15px; border-right: 4px solid transparent; }
+            .sidebar-nav {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 250px;
+                height: 100vh;
+                flex-direction: column;
+                justify-content: flex-start;
+                padding: 30px 0;
+                border-right: 1px solid #e0e0e0;
+                box-shadow: 2px 0 15px rgba(0,0,0,0.03);
+            }
+            .sidebar-logo {
+                display: block;
+                text-align: center;
+                margin-bottom: 40px;
+                padding: 0 20px;
+            }
+            .nav-item-btn {
+                flex-direction: row;
+                padding: 15px 30px;
+                font-size: 15px;
+                justify-content: flex-start;
+                gap: 15px;
+                transition: all 0.2s;
+                border-right: 4px solid transparent;
+            }
             .nav-item-btn i { font-size: 20px; margin-bottom: 0; }
             .nav-item-btn:hover { background-color: #fdf0f5; color: var(--lb-pink); }
             .nav-item-btn.active { background-color: #fdf0f5; border-right-color: var(--lb-pink); }
-            
-            .main-content { margin-left: 250px; width: calc(100% - 250px); padding-bottom: 30px; }
-            .desktop-px { padding-left: 50px !important; padding-right: 50px !important; }
-            .bg-pink { border-radius: 0 0 40px 40px !important; padding-top: 40px !important; padding-bottom: 60px !important; }
-            .overlap-card { max-width: 450px; }
-            
-            .camera-box { aspect-ratio: 16/9; max-width: 600px; } /* Landscape di layar besar */
+
+            /* Konten Utama memanjang memenuhi sisa layar di kanan */
+            .main-content {
+                margin-left: 250px; 
+                width: calc(100% - 250px);
+                padding-bottom: 30px;
+            }
+
+            .app-screen.active {
+                display: block;
+                width: 100%;
+                background: transparent;
+            }
+
+            /* Container padding & pembatas max-width untuk isi konten agar rapi */
+            .desktop-px {
+                padding-left: 50px !important;
+                padding-right: 50px !important;
+            }
+
+            /* Desain Header Desktop Full Width */
+            .bg-pink {
+                border-radius: 0 0 40px 40px !important;
+                padding-top: 40px !important;
+                padding-bottom: 60px !important;
+            }
+
+            /* Penyesuaian kartu informasi pengguna */
+            .overlap-card {
+                max-width: 450px;
+            }
+
+            /* Penyesuaian Kamera di Desktop */
+            #camera-wrapper { width: 320px; height: 320px; }
         }
     </style>
 </head>
@@ -219,7 +287,11 @@ if ($is_admin) {
 
         <div id="screen-beranda" class="app-screen active">
             <div class="bg-pink p-4 desktop-px shadow-sm" style="border-radius: 0 0 25px 25px;">
-                <div class="d-flex justify-content-between align-items-center mx-auto mb-2" style="max-width:1200px;">
+                <div class="d-flex align-items-center justify-content-center mb-3 pb-3 border-bottom border-light border-opacity-25 mx-auto" style="max-width:1200px;">
+                    <img src="/logo/lbqueen_logo.PNG" alt="Logo LBQueen" onerror="this.style.display='none'" style="height:40px; margin-right:12px; background:white; border-radius:8px; padding:4px;">
+                    <h5 class="mb-0 fw-bold text-white" style="font-size:16px;">HRIS LBQueen Care Beauty</h5>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mx-auto" style="max-width:1200px;">
                     <div>
                         <p class="mb-0 text-white-50" id="date-display" style="font-size:13px;">Memuat tanggal...</p>
                         <h4 class="mb-0 fw-bold mt-1 text-white">Hai, <?= htmlspecialchars($karyawan['nama']) ?>!</h4>
@@ -236,7 +308,7 @@ if ($is_admin) {
                             <?= $inisial ?>
                         </div>
                         <div>
-                            <h6 class="fw-bold mb-1 text-dark"><?= $karyawan['posisi'] ?></h6>
+                            <h6 class="fw-bold mb-1"><?= $karyawan['posisi'] ?></h6>
                             <span class="badge bg-warning text-dark"><?= $karyawan['status_pegawai'] ?></span>
                             <span class="badge bg-secondary"><?= $karyawan['penempatan'] ?></span>
                         </div>
@@ -245,122 +317,167 @@ if ($is_admin) {
 
                 <div class="text-center mt-2">
                     <h1 class="display-3 fw-bold text-pink" id="clock-display">00:00:00</h1>
-                    <div class="alert alert-success d-inline-flex align-items-center gap-2 rounded-pill px-4 py-2 mt-2 mb-4 shadow-sm border-0">
-                        <i class="bi bi-geo-alt-fill"></i> Lokasi Kerja: <strong><?= $karyawan['penempatan'] ?></strong>
+                    <div class="alert alert-success d-inline-flex align-items-center gap-2 rounded-pill px-4 py-2 mt-2 mb-4">
+                        <i class="bi bi-geo-alt-fill"></i> Lokasi Kerja: <?= $karyawan['penempatan'] ?>
                     </div>
 
                     <?php if ($show_camera): ?>
-                        <div class="mb-2">
-                            <small class="text-muted d-block mb-2">Pastikan wajah terlihat jelas sebelum absen.</small>
-                            <div class="camera-box">
-                                <video id="kamera" autoplay playsinline></video>
-                                <img id="kamera-preview" style="display:none;" />
-                                <canvas id="canvas_kamera" style="display:none;"></canvas>
-                            </div>
+                        <div id="camera-wrapper" class="mb-3 mx-auto shadow-sm" style="border-radius:50%; overflow:hidden; border:4px solid #fdf0f5; background:#eee;">
+                            <video id="kamera" autoplay playsinline style="width:100%; height:100%; object-fit:cover; transform:scaleX(-1);"></video>
+                            <canvas id="canvas_kamera" style="display:none;"></canvas>
                         </div>
-
-                        <div id="btn-action-group" class="d-flex justify-content-center gap-3 mb-5 mx-auto mt-4" style="max-width: 450px;">
-                            <button class="btn btn-success flex-fill rounded-4 py-3 fw-bold shadow-sm" onclick="ambilFoto('<?= $jenis_absen_sekarang ?>')">
-                                <i class="bi bi-camera-fill me-2"></i> Ambil Foto <?= $jenis_absen_sekarang ?>
-                            </button>
-                        </div>
-
-                        <div id="btn-confirm-group" class="d-flex justify-content-center gap-3 mb-5 mx-auto mt-4" style="max-width: 450px; display:none !important;">
-                            <button class="btn btn-outline-secondary flex-fill rounded-4 py-3 fw-bold" onclick="batalFoto()">
-                                Batal
-                            </button>
-                            <button class="btn btn-pink flex-fill rounded-4 py-3 fw-bold shadow-sm" onclick="submitAbsen()">
-                                <span id="confirm-text">Kirim Absen</span> <i class="bi bi-send-fill ms-2"></i>
-                            </button>
-                        </div>
+                        <small class="text-muted d-block mb-3">Pastikan wajah terlihat jelas sebelum absen.</small>
                     <?php else: ?>
-                        <div class="alert alert-light text-center p-5 rounded-4 mb-4 mx-auto shadow-sm border" style="max-width: 400px;">
-                            <i class="bi bi-calendar2-check text-success" style="font-size: 3rem;"></i>
-                            <h5 class="fw-bold mt-3 text-dark">Absensi Selesai</h5>
-                            <p class="mb-0 text-muted">Anda sudah menyelesaikan absensi untuk hari ini. Selamat beristirahat!</p>
+                        <div class="alert alert-secondary text-center p-4 rounded-4 mb-4 mx-auto shadow-sm" style="max-width: 300px;">
+                            <i class="bi bi-camera-video-off fs-1 text-muted mb-2 d-block"></i>
+                            <?php if (!$sudah_in && $belum_waktunya_in): ?>
+                                <h6 class="fw-bold mb-1">Kamera Belum Aktif</h6>
+                                <p class="mb-0 small text-muted">Check In baru bisa dilakukan mulai pukul 08:30 WIB.</p>
+                            <?php elseif (!$sudah_in && $lewat_batas_in): ?>
+                                <h6 class="fw-bold mb-1 text-danger">Batas Waktu Habis</h6>
+                                <p class="mb-0 small text-danger">Batas Check In (13:00 WIB) telah terlewat.</p>
+                            <?php elseif ($sudah_in && !$sudah_out && $belum_waktunya_out): ?>
+                                <h6 class="fw-bold mb-1">Belum Waktu Pulang</h6>
+                                <p class="mb-0 small text-muted">Check Out baru bisa dilakukan mulai pukul 18:00 WIB.</p>
+                            <?php elseif ($sudah_out): ?>
+                                <h6 class="fw-bold mb-1 text-success">Absensi Selesai</h6>
+                                <p class="mb-0 small text-muted">Terima kasih, selamat beristirahat!</p>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
 
                     <div id="absen-response" class="mb-3 fw-bold text-primary"></div>
+
+                    <div class="d-flex justify-content-center gap-3 mb-5 mx-auto" style="max-width: 450px;">
+                        <button class="btn <?= (!$sudah_in && !$belum_waktunya_in && !$lewat_batas_in) ? 'btn-success' : 'btn-secondary' ?> flex-fill rounded-4 py-3 fw-bold shadow-sm"
+                                <?= (!$sudah_in && !$belum_waktunya_in && !$lewat_batas_in) ? "onclick=\"kirimAbsen('Check In')\"" : 'disabled' ?>>
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Check In
+                        </button>
+                        <button class="btn <?= ($sudah_in && !$sudah_out && !$belum_waktunya_out) ? 'btn-outline-danger' : 'btn-secondary' ?> flex-fill rounded-4 py-3 fw-bold shadow-sm"
+                                <?= ($sudah_in && !$sudah_out && !$belum_waktunya_out) ? "onclick=\"kirimAbsen('Check Out')\"" : 'disabled' ?>>
+                            <i class="bi bi-box-arrow-right me-1"></i> Check Out
+                        </button>
+                    </div>
                 </div>
 
+                <div class="d-flex justify-content-between align-items-center mt-2 mb-3">
+                    <h6 class="section-title mb-0 mt-0">Aktivitas Hari Ini</h6>
+                    <button class="btn btn-sm btn-link text-pink text-decoration-none fw-bold p-0" onclick="switchScreen('riwayat')">Lihat Riwayat</button>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center mb-3 border-bottom pb-3">
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width:40px; height:40px;">
+                                <i class="bi bi-clock-history text-pink fs-5"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted fw-bold d-block" style="font-size:11px; letter-spacing:0.5px;">JADWAL KERJA KAMU</small>
+                                <span class="fw-bold fs-6">09:00 - 19:00 <small class="text-muted">WIB</small></span>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="activity-box bg-light border-0">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <i class="bi bi-check-circle-fill fs-5 me-2 <?= $sudah_in ? 'text-success' : 'text-secondary opacity-50' ?>"></i>
+                                        <div>
+                                            <small class="fw-bold d-block text-dark lh-1 mb-1">Status</small>
+                                            <small class="text-muted" style="font-size:11px;"><?= $sudah_in ? 'Sudah Check In' : 'Belum Check In' ?></small>
+                                        </div>
+                                    </div>
+                                    <h4 class="fw-bold mb-1 <?= $sudah_in ? 'text-dark' : 'text-muted' ?>"><?= $waktu_in ?> <small class="text-muted" style="font-size:12px;">WIB</small></h4>
+                                    <div class="d-flex justify-content-between align-items-end mt-2">
+                                        <small class="text-success fw-bold">Masuk</small>
+                                        <?php if ($sudah_in):
+                                            $b = 'bg-success';
+                                            if ($status_in=='Telat') $b='bg-warning text-dark';
+                                            if ($status_in=='Tidak Hadir') $b='bg-danger';
+                                        ?>
+                                            <span class="badge <?= $b ?> rounded-pill" style="font-size:10px; padding:4px 8px;"><?= $status_in ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="activity-box bg-light border-0">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <i class="bi bi-check-circle-fill fs-5 me-2 <?= $sudah_out ? 'text-success' : 'text-secondary opacity-50' ?>"></i>
+                                        <div>
+                                            <small class="fw-bold d-block text-dark lh-1 mb-1">Status</small>
+                                            <small class="text-muted" style="font-size:11px;"><?= $sudah_out ? 'Sudah Check Out' : 'Belum Check Out' ?></small>
+                                        </div>
+                                    </div>
+                                    <h4 class="fw-bold mb-1 <?= $sudah_out ? 'text-dark' : 'text-muted' ?>"><?= $waktu_out ?> <small class="text-muted" style="font-size:12px;">WIB</small></h4>
+                                    <div class="d-flex justify-content-between align-items-end mt-2">
+                                        <small class="text-secondary fw-bold">Pulang</small>
+                                        <?php if ($sudah_out): ?>
+                                            <span class="badge bg-info text-white rounded-pill" style="font-size:10px; padding:4px 8px;">Selesai</span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div id="screen-riwayat" class="app-screen">
-            <div class="bg-white p-4 desktop-px d-flex justify-content-between align-items-center border-bottom">
-                <h4 class="mb-0 text-dark fw-bold">Riwayat Kehadiran</h4>
-                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3"><i class="bi bi-funnel"></i> Filter</button>
+            <div class="bg-pink p-4 desktop-px shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+                <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Riwayat Kehadiran</h4>
             </div>
-            <div class="p-3 desktop-px mx-auto mt-3" style="max-width: 1200px;">
-                
-                <div class="table-responsive bg-white rounded-4 shadow-sm border" style="overflow: hidden;">
-                    <table class="table table-hover table-riwayat align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="py-3 px-4">Tanggal</th>
-                                <th class="py-3">Check In — Out</th>
-                                <th class="py-3">Durasi</th>
-                                <th class="py-3">Lembur</th>
-                                <th class="py-3">Status</th>
-                                <th class="py-3 text-end px-4">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if ($full_history->num_rows > 0): ?>
-                                <?php while ($data = $full_history->fetch_assoc()):
-                                    $durasi_teks = '-';
-                                    if ($data['in_time'] && $data['out_time']) {
-                                        $diff = strtotime($data['out_time']) - strtotime($data['in_time']);
-                                        $durasi_teks = floor($diff/3600).' jam '.floor(($diff%3600)/60).' mnt';
-                                    }
-                                    
-                                    $w_in  = $data['in_time']  ? date('H.i', strtotime($data['in_time']))  : '-';
-                                    $w_out = $data['out_time'] ? date('H.i', strtotime($data['out_time'])) : '-';
-                                    
-                                    $status_in = $data['status_in'] ?: 'Tidak Hadir';
-                                    $badge_class = 'bg-hadir';
-                                    if ($status_in == 'Telat') $badge_class = 'bg-terlambat';
-                                    if ($status_in == 'Tidak Hadir') $badge_class = 'bg-danger';
-                                    // Jika belum check out, kita set statusnya 'Check In'
-                                    if ($data['in_time'] && !$data['out_time']) {
-                                        $status_in = 'Check In';
-                                        $badge_class = 'bg-checkin';
-                                    }
-
-                                    $modalData = htmlspecialchars(json_encode([
-                                        'tanggal'    => formatTanggalIndo($data['tgl']),
-                                        'nama'       => $karyawan['nama'],
-                                        'status'     => $status_in,
-                                        'durasi'     => $durasi_teks,
-                                        'in_time'    => $data['in_time']  ? date('H.i', strtotime($data['in_time']))  : '-',
-                                        'out_time'   => $data['out_time'] ? date('H.i', strtotime($data['out_time'])) : '-',
-                                        'in_lokasi'  => $data['lok_in']  ?: 'HO (Head Office)',
-                                        'out_lokasi' => $data['lok_out'] ?: 'HO (Head Office)',
-                                        'in_foto'    => $data['foto_in']  ?: '',
-                                        'out_foto'   => $data['foto_out'] ?: '',
-                                        'penempatan' => $karyawan['penempatan']
-                                    ]));
-                                ?>
-                                <tr>
-                                    <td class="py-3 px-4 fw-bold text-dark"><?= formatTanggalIndo($data['tgl']) ?></td>
-                                    <td><i class="bi bi-clock text-success me-1"></i> <?= $w_in ?> &nbsp;&mdash;&nbsp; <?= $w_out ?></td>
-                                    <td><?= $durasi_teks ?></td>
-                                    <td class="text-muted">-</td>
-                                    <td><span class="badge-status <?= $badge_class ?>"><?= $status_in ?></span></td>
-                                    <td class="text-end px-4">
-                                        <button class="btn btn-sm btn-light rounded-circle" onclick="bukaDetail(<?= $modalData ?>)">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr><td colspan="6" class="text-center py-5 text-muted">Belum ada data kehadiran.</td></tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
+                <?php if ($full_history->num_rows > 0): ?>
+                    <div class="row g-3">
+                    <?php while ($data = $full_history->fetch_assoc()):
+                        $durasi_teks = '-';
+                        if ($data['in_time'] && $data['out_time']) {
+                            $diff = strtotime($data['out_time']) - strtotime($data['in_time']);
+                            $durasi_teks = floor($diff/3600).' jam '.floor(($diff%3600)/60).' menit';
+                        }
+                        $waktu_in_view  = $data['in_time']  ? date('H.i', strtotime($data['in_time']))  : '-';
+                        $waktu_out_view = $data['out_time'] ? date('H.i', strtotime($data['out_time'])) : '-';
+                        $status_in = $data['status_in'] ?: 'Tidak Hadir';
+                        $badge_bg  = 'bg-success';
+                        if ($status_in=='Telat') $badge_bg='bg-warning text-dark';
+                        if ($status_in=='Tidak Hadir') $badge_bg='bg-danger';
+                        $modalData = htmlspecialchars(json_encode([
+                            'tanggal'    => formatTanggalIndo($data['tgl']),
+                            'nama'       => $karyawan['nama'],
+                            'status'     => $status_in,
+                            'durasi'     => $durasi_teks,
+                            'in_time'    => $data['in_time']  ? date('H:i', strtotime($data['in_time']))  : '-',
+                            'out_time'   => $data['out_time'] ? date('H:i', strtotime($data['out_time'])) : '-',
+                            'in_lokasi'  => $data['lok_in']  ?: 'Tidak ada data lokasi',
+                            'out_lokasi' => $data['lok_out'] ?: 'Tidak ada data lokasi',
+                            'in_foto'    => $data['foto_in']  ?: '',
+                            'out_foto'   => $data['foto_out'] ?: ''
+                        ]));
+                    ?>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 employee-card" onclick="bukaDetail(<?= $modalData ?>)">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                                    <span class="fw-bold"><i class="bi bi-calendar-event me-2 text-pink"></i><?= formatTanggalIndo($data['tgl']) ?></span>
+                                    <span class="badge <?= $badge_bg ?> rounded-pill px-3"><?= $status_in ?></span>
+                                </div>
+                                <div class="row text-center mt-2">
+                                    <div class="col-5"><small class="text-muted d-block">Check In</small><span class="fw-bold fs-5 text-success"><?= $waktu_in_view ?></span></div>
+                                    <div class="col-2 d-flex align-items-center justify-content-center"><i class="bi bi-arrow-right text-muted"></i></div>
+                                    <div class="col-5"><small class="text-muted d-block">Check Out</small><span class="fw-bold fs-5 text-danger"><?= $waktu_out_view ?></span></div>
+                                </div>
+                                <div class="mt-3 bg-light rounded-3 p-2 text-center text-muted small">
+                                    <i class="bi bi-stopwatch"></i> Durasi Kerja: <strong class="text-dark"><?= $durasi_teks ?></strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endwhile; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="text-center py-5 text-muted">Belum ada riwayat kehadiran tersimpan.</div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -376,24 +493,108 @@ if ($is_admin) {
                         <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid var(--lb-pink);">
                             <i class="bi bi-people-fill text-pink fs-1 me-3"></i>
                             <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-5">Kehadiran Tim</h6><small class="text-muted">Pantau absensi & foto</small></div>
+                            <i class="bi bi-chevron-right ms-auto text-muted fs-5"></i>
                         </div>
                     </div>
                 </div>
                 <?php endif; ?>
                 <h6 class="section-title mt-0">Pengajuan & Dokumen</h6>
                 <div class="row g-3">
-                    <div class="col-md-6 col-lg-4" onclick="showModernAlert('Informasi','Sedang dalam pengembangan.','bi-tools','var(--lb-pink)')">
+                    <div class="col-md-6 col-lg-4" onclick="showModernAlert('Informasi Cuti','Status Anda <b><?= $karyawan['status_pegawai'] ?></b>.<br>Cuti tahunan baru dapat digunakan setelah <b><?= formatTanggal($karyawan['akhir_probation']) ?></b>.<br><br><span class=\'text-pink fw-bold\'>Fitur Izin Sakit akan segera hadir.</span>','bi bi-calendar-x-fill','var(--lb-pink)')">
                         <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card">
                             <i class="bi bi-calendar-event text-dark fs-1 me-3"></i>
-                            <div><h6 class="fw-bold mb-0 fs-5">Pengajuan Cuti</h6></div>
+                            <div><h6 class="fw-bold mb-0 fs-5">Pengajuan Cuti</h6><small class="text-muted">Cek kuota dan ajukan libur</small></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4" onclick="aksesGajiDitolak()">
+                        <div class="action-card shadow-sm p-4 bg-light rounded-4 d-flex align-items-center employee-card">
+                            <i class="bi bi-lock-fill text-secondary fs-1 me-3"></i>
+                            <div><h6 class="fw-bold mb-0 text-secondary fs-5">Slip Gaji <span class="badge bg-secondary ms-2" style="font-size:10px;">Terkunci</span></h6><small class="text-muted">Akses portal Finance</small></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <?php if ($is_admin): ?>
+        <div id="screen-admin-absen" class="app-screen">
+            
+            <div id="admin-view-list">
+                <div class="bg-pink p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+                    <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-md-4 ms-2" onclick="switchScreen('layanan')"><i class="bi bi-arrow-left fs-3"></i></button>
+                    <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Pilih Karyawan</h4>
+                </div>
+                <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
+                    <p class="text-muted small mb-3">Ketuk nama karyawan untuk melihat riwayat absensinya.</p>
+                    <div class="row g-3">
+                        <?php foreach ($semua_karyawan as $kar): ?>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card employee-card rounded-4 h-100 shadow-sm" onclick="showEmployeeLog('<?= $kar['nik'] ?>', '<?= htmlspecialchars($kar['nama']) ?>')">
+                                <div class="card-body p-3 d-flex align-items-center gap-3">
+                                    <div class="avatar-initials bg-pink text-white d-flex align-items-center justify-content-center rounded-circle fw-bold" style="width: 50px; height: 50px; font-size: 20px;">
+                                        <?= $kar['inisial'] ?>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-bold mb-1 text-dark"><?= $kar['nama'] ?></h6>
+                                        <div class="text-muted small mb-1"><i class="bi bi-briefcase me-1"></i><?= $kar['posisi'] ?></div>
+                                        <span class="badge bg-warning text-dark" style="font-size: 10px;"><?= $kar['status_pegawai'] ?></span>
+                                    </div>
+                                    <i class="bi bi-chevron-right text-muted fs-5"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
+            <div id="admin-view-detail" style="display:none;">
+                <div class="bg-pink p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+                    <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-md-4 ms-2" onclick="backToAdminList()"><i class="bi bi-arrow-left fs-3"></i></button>
+                    <h4 class="mb-0 text-white fw-bold mt-2 pb-2" id="detail-nama-karyawan">Log Kehadiran</h4>
+                </div>
+                <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
+                    
+                    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-light">
+                        <div class="card-body p-3 p-md-4">
+                            <h6 class="small fw-bold text-muted mb-2"><i class="bi bi-funnel-fill me-1"></i> Filter Tanggal</h6>
+                            <div class="d-flex flex-wrap gap-2 gap-md-4">
+                                <div class="flex-fill">
+                                    <small class="text-muted" style="font-size:11px;">Dari Tanggal</small>
+                                    <input type="date" id="filter-start" class="form-control form-control-lg border-0 shadow-sm rounded-3 fs-6">
+                                </div>
+                                <div class="flex-fill">
+                                    <small class="text-muted" style="font-size:11px;">Sampai Tanggal</small>
+                                    <input type="date" id="filter-end" class="form-control form-control-lg border-0 shadow-sm rounded-3 fs-6">
+                                </div>
+                                <div class="d-flex align-items-end mt-2 mt-md-0 w-100 w-md-auto">
+                                    <button class="btn btn-lg btn-pink shadow-sm rounded-3 px-4 w-100" onclick="renderAdminTable()"><i class="bi bi-search me-2"></i>Cari</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive bg-white rounded-4 shadow-sm border" style="overflow: hidden;">
+                        <table class="table table-hover table-admin align-middle mb-0" style="font-size: 14px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4 py-3">Tanggal & Status</th>
+                                    <th class="text-center py-3">Jam Masuk</th>
+                                    <th class="text-center py-3">Jam Pulang</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-detail-tbody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <?php endif; ?>
+
         <div id="screen-profil" class="app-screen">
-             <div class="bg-pink p-5 desktop-px text-center shadow-sm" style="border-radius: 0 0 25px 25px;">
+            <div class="bg-pink p-5 desktop-px text-center shadow-sm" style="border-radius: 0 0 25px 25px;">
                 <div class="avatar-initials mx-auto mt-2 mb-3 bg-white text-pink d-flex align-items-center justify-content-center rounded-circle fw-bold shadow" style="width:100px; height:100px; font-size:38px;"><?= $inisial ?></div>
                 <h3 class="text-white fw-bold mb-1"><?= htmlspecialchars($karyawan['nama']) ?></h3>
                 <p class="text-white-50 mb-0 fs-5"><?= $karyawan['posisi'] ?></p>
@@ -401,118 +602,73 @@ if ($is_admin) {
             <div class="p-3 desktop-px mx-auto" style="margin-top:-30px; max-width: 800px;">
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div class="card-body p-0">
+                        <div class="p-4 pb-0"><h6 class="section-title mt-0 text-muted">Informasi Pribadi</h6></div>
                         <ul class="list-group list-group-flush rounded-4">
                             <li class="list-group-item d-flex justify-content-between p-4"><span class="text-muted">NIK</span><span class="fw-bold"><?= $karyawan['nik'] ?></span></li>
                             <li class="list-group-item d-flex justify-content-between p-4"><span class="text-muted">Email</span><span class="fw-bold text-end"><?= $karyawan['email'] ?></span></li>
+                            <li class="list-group-item d-flex justify-content-between p-4"><span class="text-muted">No. Handphone</span><span class="fw-bold"><?= $karyawan['no_hp'] ?></span></li>
+                            <li class="list-group-item d-flex justify-content-between p-4"><span class="text-muted">Tgl Bergabung</span><span class="fw-bold"><?= formatTanggal($karyawan['tgl_bergabung']) ?></span></li>
                         </ul>
                     </div>
                 </div>
                 <a href="/logout" class="btn btn-outline-danger w-100 rounded-4 py-3 fw-bold mt-3 shadow-sm fs-5">
-                    Keluar Aplikasi
+                    <i class="bi bi-box-arrow-right me-2"></i> Keluar Aplikasi
                 </a>
             </div>
         </div>
 
     </div> </div> <div class="modal fade" id="modalDetailAbsen" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-        <div class="modal-content rounded-4 border-0">
-            <div class="modal-header border-bottom-0 pb-0 px-4 pt-4">
-                <h5 class="modal-title fw-bold text-dark fs-5">Detail Attendance</h5>
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0 d-flex justify-content-between align-items-center p-4">
+                <h5 class="modal-title fw-bold">Detail Attendance</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 pt-2">
-                <p class="text-success small fw-bold mb-3 fs-6" id="mdl-header">Nama Karyawan • Tanggal</p>
-                
-                <div class="rounded-3 p-3 mb-4" style="background-color: #e8f5e9; border: 1px solid #c8e6c9;">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-box-arrow-in-right text-success fs-4"></i>
-                            <span class="fw-bold fs-5 text-dark" id="mdl-status-text">Check In <span class="badge bg-success fw-normal ms-2" style="font-size:10px;">WFO</span></span>
-                        </div>
+                <p class="text-pink small fw-bold mb-3 fs-6" id="mdl-header">Nama Karyawan • Tanggal</p>
+                <div id="mdl-status-box" class="status-box hadir mb-4 shadow-sm">
+                    <div class="d-flex align-items-center gap-2">
+                        <i id="mdl-status-icon" class="bi bi-check-circle-fill fs-3"></i>
+                        <span class="fw-bold fs-4" id="mdl-status-text">Hadir</span>
+                    </div>
+                    <div class="text-end">
+                        <small class="d-block opacity-75">Jam Kerja</small>
+                        <span class="fw-bold fs-5" id="mdl-durasi">-</span>
                     </div>
                 </div>
-
-                <ul class="nav nav-pills custom-tabs mb-4 w-100 d-flex" id="pills-tab" role="tablist">
-                    <li class="nav-item flex-fill text-center">
-                        <button class="nav-link active w-100" data-bs-toggle="pill" data-bs-target="#pills-in" type="button"><i class="bi bi-box-arrow-in-right me-1"></i> Check In</button>
-                    </li>
-                    <li class="nav-item flex-fill text-center">
-                        <button class="nav-link w-100" data-bs-toggle="pill" data-bs-target="#pills-out" type="button"><i class="bi bi-box-arrow-right me-1"></i> Check Out</button>
-                    </li>
-                    <li class="nav-item flex-fill text-center">
-                        <button class="nav-link w-100" data-bs-toggle="pill" data-bs-target="#pills-data" type="button"><i class="bi bi-person me-1"></i> Data Karyawan</button>
-                    </li>
+                <ul class="nav nav-pills nav-fill bg-light p-2 rounded-4 mb-4 shadow-sm" id="pills-tab" role="tablist">
+                    <li class="nav-item"><button class="nav-link active py-2 fs-6" data-bs-toggle="pill" data-bs-target="#pills-in" type="button"><i class="bi bi-box-arrow-in-right me-2"></i> Check In</button></li>
+                    <li class="nav-item"><button class="nav-link py-2 fs-6" data-bs-toggle="pill" data-bs-target="#pills-out" type="button"><i class="bi bi-box-arrow-right me-2"></i> Check Out</button></li>
                 </ul>
-
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="pills-in">
-                        <div class="card border mb-3 rounded-3 shadow-sm">
-                            <div class="card-body p-3">
-                                <h6 class="fw-bold small text-dark mb-3"><i class="bi bi-clock text-muted me-2"></i>Waktu Check In</h6>
-                                <div class="d-flex justify-content-between text-success fw-bold fs-5">
-                                    <span class="text-muted fs-6 fw-normal">Pukul</span><span id="mdl-in-time">00.00</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card border mb-3 rounded-3 shadow-sm">
-                            <div class="card-body p-3">
-                                <h6 class="fw-bold small text-dark mb-3"><i class="bi bi-geo-alt text-muted me-2"></i>Lokasi</h6>
-                                <p class="mb-2 fs-6 fw-normal text-dark" id="mdl-in-lokasi">-</p>
-                                <hr class="text-muted" style="border-style: dashed;">
-                                <div class="d-flex justify-content-between small text-success"><span>IP Address</span><span class="text-dark fw-bold">Terdeteksi Jaringan Kantor</span></div>
-                            </div>
-                        </div>
-                        <div class="card border rounded-3 shadow-sm">
-                            <div class="card-body p-3">
-                                <h6 class="fw-bold small text-dark mb-3"><i class="bi bi-camera text-muted me-2"></i>Foto Selfie</h6>
-                                <div class="camera-box" style="aspect-ratio: auto; min-height:300px;">
-                                    <img id="mdl-in-foto" src="" onerror="this.src='https://placehold.co/400x500?text=Tidak+Ada+Foto'">
-                                </div>
-                            </div>
+                        <div class="detail-box p-4"><h6 class="fw-bold small text-muted"><i class="bi bi-clock me-2"></i>Waktu Check In</h6><div class="d-flex justify-content-between text-success fw-bold fs-4"><span>Pukul</span><span id="mdl-in-time">00:00</span></div></div>
+                        <div class="detail-box p-4"><h6 class="fw-bold small text-muted"><i class="bi bi-geo-alt me-2"></i>Lokasi Absen</h6><p class="mb-0 fs-6 fw-bold text-dark" id="mdl-in-lokasi">-</p></div>
+                        <div class="detail-box border-0 p-0 overflow-hidden text-center bg-light" style="border-radius:15px;">
+                            <img id="mdl-in-foto" src="" alt="Foto Check In" style="width:100%; height:auto; max-height:600px; object-fit:contain;" onerror="this.src='https://placehold.co/400x500?text=Tidak+Ada+Foto'">
                         </div>
                     </div>
-
                     <div class="tab-pane fade" id="pills-out">
-                        <div class="card border mb-3 rounded-3 shadow-sm">
-                            <div class="card-body p-3">
-                                <h6 class="fw-bold small text-dark mb-3"><i class="bi bi-clock text-muted me-2"></i>Waktu Check Out</h6>
-                                <div class="d-flex justify-content-between text-danger fw-bold fs-5">
-                                    <span class="text-muted fs-6 fw-normal">Pukul</span><span id="mdl-out-time">00.00</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card border mb-3 rounded-3 shadow-sm">
-                            <div class="card-body p-3">
-                                <h6 class="fw-bold small text-dark mb-3"><i class="bi bi-geo-alt text-muted me-2"></i>Lokasi</h6>
-                                <p class="mb-2 fs-6 fw-normal text-dark" id="mdl-out-lokasi">-</p>
-                            </div>
-                        </div>
-                        <div class="card border rounded-3 shadow-sm">
-                            <div class="card-body p-3">
-                                <h6 class="fw-bold small text-dark mb-3"><i class="bi bi-camera text-muted me-2"></i>Foto Selfie</h6>
-                                <div class="camera-box" style="aspect-ratio: auto; min-height:300px;">
-                                    <img id="mdl-out-foto" src="" onerror="this.src='https://placehold.co/400x500?text=Tidak+Ada+Foto'">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="tab-pane fade" id="pills-data">
-                        <div class="card border rounded-3 shadow-sm">
-                            <div class="card-body p-4 text-center">
-                                <div class="avatar-initials bg-pink text-white d-flex align-items-center justify-content-center rounded-circle fw-bold mx-auto mb-3" style="width: 80px; height: 80px; font-size: 30px;"><?= $inisial ?></div>
-                                <h5 class="fw-bold text-dark mb-1"><?= $karyawan['nama'] ?></h5>
-                                <p class="text-muted mb-4"><?= $karyawan['posisi'] ?></p>
-                                
-                                <div class="text-start">
-                                    <p class="mb-2 small"><span class="text-muted">NIK:</span> <strong class="float-end"><?= $karyawan['nik'] ?></strong></p>
-                                    <p class="mb-2 small"><span class="text-muted">Status:</span> <strong class="float-end"><?= $karyawan['status_pegawai'] ?></strong></p>
-                                    <p class="mb-0 small"><span class="text-muted">Penempatan:</span> <strong class="float-end"><?= $karyawan['penempatan'] ?></strong></p>
-                                </div>
-                            </div>
+                        <div class="detail-box p-4"><h6 class="fw-bold small text-muted"><i class="bi bi-clock me-2"></i>Waktu Check Out</h6><div class="d-flex justify-content-between text-danger fw-bold fs-4"><span>Pukul</span><span id="mdl-out-time">00:00</span></div></div>
+                        <div class="detail-box p-4"><h6 class="fw-bold small text-muted"><i class="bi bi-geo-alt me-2"></i>Lokasi Absen</h6><p class="mb-0 fs-6 fw-bold text-dark" id="mdl-out-lokasi">-</p></div>
+                        <div class="detail-box border-0 p-0 overflow-hidden text-center bg-light" style="border-radius:15px;">
+                            <img id="mdl-out-foto" src="" alt="Foto Check Out" style="width:100%; height:auto; max-height:600px; object-fit:contain;" onerror="this.src='https://placehold.co/400x500?text=Tidak+Ada+Foto'">
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modernAlertModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-body text-center p-4 pt-5">
+                <div id="modernAlertIcon" class="mb-3"><i class="bi bi-info-circle-fill" style="font-size:3.5rem; color:var(--lb-pink);"></i></div>
+                <h5 class="fw-bold mb-3" id="modernAlertTitle">Pemberitahuan</h5>
+                <p class="text-muted mb-4" id="modernAlertMessage" style="font-size:14px;">Pesan alert di sini.</p>
+                <button type="button" class="btn btn-pink w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal">Mengerti</button>
             </div>
         </div>
     </div>
@@ -537,109 +693,219 @@ if ($is_admin) {
         window.scrollTo(0,0);
     }
 
-    // =======================================================
-    // LOGIKA KAMERA: AMBIL, PREVIEW & BATAL (NEW)
-    // =======================================================
-    const video = document.getElementById('kamera');
-    const preview = document.getElementById('kamera-preview');
-    const canvas = document.getElementById('canvas_kamera');
-    let kameraAktif = false;
-    let fotoDataURL = '';
-    let absenJenisType = '';
-
-    if (video) {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-            .then(stream => { video.srcObject = stream; kameraAktif = true; })
-            .catch(() => {
-                const w = document.querySelector('.camera-box');
-                if (w) w.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 bg-dark w-100"><small class="text-danger fw-bold text-center px-2">Kamera Ditolak.</small></div>';
-            });
+    function showModernAlert(title, message, iconClass, iconColor) {
+        document.getElementById('modernAlertTitle').innerText = title;
+        document.getElementById('modernAlertMessage').innerHTML = message;
+        document.getElementById('modernAlertIcon').innerHTML = `<i class="${iconClass}" style="font-size:3.5rem; color:${iconColor};"></i>`;
+        new bootstrap.Modal(document.getElementById('modernAlertModal')).show();
     }
 
-    function ambilFoto(jenis) {
-        if (!kameraAktif) { alert("Kamera tidak aktif."); return; }
-        
-        absenJenisType = jenis;
-        
-        // Jepret Frame
-        canvas.width = video.videoWidth || 480;
-        canvas.height = video.videoHeight || 640;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        fotoDataURL = canvas.toDataURL('image/jpeg', 0.8);
-
-        // Ubah Tampilan ke Preview
-        video.style.display = 'none';
-        preview.src = fotoDataURL;
-        preview.style.display = 'block';
-
-        // Ganti Tombol
-        document.getElementById('btn-action-group').style.setProperty('display', 'none', 'important');
-        document.getElementById('btn-confirm-group').style.setProperty('display', 'flex', 'important');
-        document.getElementById('confirm-text').innerText = "Kirim " + jenis;
-    }
-
-    function batalFoto() {
-        fotoDataURL = '';
-        absenJenisType = '';
-        
-        preview.style.display = 'none';
-        video.style.display = 'block';
-
-        document.getElementById('btn-action-group').style.setProperty('display', 'flex', 'important');
-        document.getElementById('btn-confirm-group').style.setProperty('display', 'none', 'important');
-    }
-
-    function submitAbsen() {
-        const responseDiv = document.getElementById('absen-response');
-        responseDiv.innerHTML = '<span class="text-warning"><i class="spinner-border spinner-border-sm"></i> Mengirim data...</span>';
-        
-        // Sembunyikan tombol agar tidak di-klik 2x
-        document.getElementById('btn-confirm-group').style.setProperty('display', 'none', 'important');
-
-        const formData = new FormData();
-        formData.append('jenis_absen', absenJenisType);
-        formData.append('nik', userNIK);
-        formData.append('foto', fotoDataURL);
-
-        fetch('/proses_absen', { method: 'POST', body: formData })
-            .then(res => res.text())
-            .then(data => { responseDiv.innerHTML = data; setTimeout(() => location.reload(), 1500); })
-            .catch(() => { responseDiv.innerText = "Terjadi kesalahan server."; batalFoto(); });
+    function aksesGajiDitolak() {
+        showModernAlert('Akses Terkunci','Slip gaji bersifat rahasia dan saat ini hanya dapat diakses melalui portal HRD / Finance.','bi bi-lock-fill','#6c757d');
     }
 
     // =======================================================
-    // DETAIL MODAL (NEW TABS UI)
+    // LOGIKA ADMIN: FILTER & TAMPILAN KARTU KE TABEL
+    // =======================================================
+    const adminHistData = <?= json_encode($admin_hist_arr) ?>;
+    let selectedNikAdmin = null;
+    let selectedNamaAdmin = null;
+
+    function showEmployeeLog(nik, nama) {
+        selectedNikAdmin = nik;
+        selectedNamaAdmin = nama;
+        
+        document.getElementById('admin-view-list').style.display = 'none';
+        document.getElementById('admin-view-detail').style.display = 'block';
+        
+        const firstName = nama.split(' ')[0];
+        document.getElementById('detail-nama-karyawan').innerText = 'Log ' + firstName;
+        
+        document.getElementById('filter-start').value = '';
+        document.getElementById('filter-end').value = '';
+        
+        renderAdminTable();
+    }
+
+    function backToAdminList() {
+        document.getElementById('admin-view-list').style.display = 'block';
+        document.getElementById('admin-view-detail').style.display = 'none';
+    }
+
+    function formatTanggalIndoJS(tglStr) {
+        if (!tglStr) return '-';
+        const bln = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        const p = tglStr.split('-');
+        return p[2] + ' ' + bln[parseInt(p[1])-1] + ' ' + p[0];
+    }
+
+    window.bukaDetailDariAdmin = function(idx) {
+        const data = filteredDataAdmin[idx]; 
+        
+        let durasi_teks = '-';
+        if (data.in_time && data.out_time) {
+            const inDate = new Date(`1970-01-01T${data.in_time}Z`);
+            const outDate = new Date(`1970-01-01T${data.out_time}Z`);
+            const diffMs = outDate - inDate;
+            if(diffMs > 0) {
+                const diffHrs = Math.floor(diffMs / 3600000);
+                const diffMins = Math.floor((diffMs % 3600000) / 60000);
+                durasi_teks = `${diffHrs} jam ${diffMins} menit`;
+            }
+        }
+
+        const modalData = {
+            tanggal: formatTanggalIndoJS(data.tgl),
+            nama: data.nama,
+            status: data.status_in || 'Tidak Hadir',
+            durasi: durasi_teks,
+            in_time: data.in_time ? data.in_time.substring(11, 16) : '-',
+            out_time: data.out_time ? data.out_time.substring(11, 16) : '-',
+            in_lokasi: data.lok_in || 'Tidak ada data lokasi',
+            out_lokasi: data.lok_out || 'Tidak ada data lokasi',
+            in_foto: data.foto_in || '',
+            out_foto: data.foto_out || ''
+        };
+        bukaDetail(modalData);
+    };
+
+    let filteredDataAdmin = []; 
+
+    function renderAdminTable() {
+        const tbody = document.getElementById('admin-detail-tbody');
+        tbody.innerHTML = ''; 
+        
+        const start = document.getElementById('filter-start').value;
+        const end = document.getElementById('filter-end').value;
+
+        filteredDataAdmin = adminHistData.filter(d => d.nik === selectedNikAdmin);
+
+        if (start) filteredDataAdmin = filteredDataAdmin.filter(d => d.tgl >= start);
+        if (end) filteredDataAdmin = filteredDataAdmin.filter(d => d.tgl <= end);
+
+        if (filteredDataAdmin.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center py-5 text-muted"><i class="bi bi-folder-x fs-1 d-block mb-2"></i>Tidak ada data absensi di rentang tanggal ini.</td></tr>';
+            return;
+        }
+
+        let htmlRows = '';
+        filteredDataAdmin.forEach((data, index) => {
+            const inTimeView = data.in_time ? data.in_time.substring(11, 16) : '-';
+            const outTimeView = data.out_time ? data.out_time.substring(11, 16) : '-';
+            
+            const statusIn = data.status_in || 'Tidak Hadir';
+            let badgeBg = 'bg-success';
+            if (statusIn === 'Telat') badgeBg = 'bg-warning text-dark';
+            if (statusIn === 'Tidak Hadir') badgeBg = 'bg-danger';
+
+            const tglParts = data.tgl.split('-');
+            const ddmmyyyy = `${tglParts[2]}/${tglParts[1]}/${tglParts[0]}`;
+
+            htmlRows += `
+                <tr onclick="bukaDetailDariAdmin(${index})" style="cursor:pointer;">
+                    <td class="px-4 py-3">
+                        <span class="fw-bold d-block text-dark mb-1"><i class="bi bi-calendar-check me-2 text-pink"></i> ${ddmmyyyy}</span>
+                        <span class="badge ${badgeBg} rounded-pill" style="font-size:10px;">${statusIn}</span>
+                    </td>
+                    <td class="text-center text-success fw-bold fs-6">${inTimeView}</td>
+                    <td class="text-center text-danger fw-bold fs-6">${outTimeView}</td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = htmlRows;
+    }
+
+    // =======================================================
+    // FUNGSI TAMPIL DETAIL MODAL
     // =======================================================
     function bukaDetail(data) {
         document.getElementById('mdl-header').innerText = data.nama + ' • ' + data.tanggal;
         
-        let infoText = data.status === 'Check In' ? 'Sudah Check In' : data.status;
-        document.getElementById('mdl-status-text').innerHTML = `${infoText} <span class="badge bg-success fw-normal ms-2" style="font-size:10px;">${data.penempatan}</span>`;
+        const boxStatus = document.getElementById('mdl-status-box');
+        const iconStatus = document.getElementById('mdl-status-icon');
+        
+        document.getElementById('mdl-status-text').innerText = data.status;
         document.getElementById('mdl-durasi').innerText = data.durasi;
+        
+        if (data.status === 'Telat') {
+            boxStatus.className = 'status-box terlambat mb-4 shadow-sm';
+            iconStatus.className = 'bi bi-exclamation-circle-fill fs-3';
+            document.getElementById('mdl-status-text').innerText = 'Terlambat';
+        } else if (data.status === 'Hadir') {
+            boxStatus.className = 'status-box hadir mb-4 shadow-sm';
+            iconStatus.className = 'bi bi-check-circle-fill fs-3';
+        } else {
+            boxStatus.className = 'status-box mb-4 shadow-sm bg-light text-secondary border';
+            iconStatus.className = 'bi bi-x-circle-fill fs-3';
+        }
         
         document.getElementById('mdl-in-time').innerText    = data.in_time;
         document.getElementById('mdl-out-time').innerText   = data.out_time;
-        
-        document.getElementById('mdl-in-lokasi').innerText  = `Area Penempatan: ${data.in_lokasi}`;
-        document.getElementById('mdl-out-lokasi').innerText = `Area Penempatan: ${data.out_lokasi}`;
+        document.getElementById('mdl-in-lokasi').innerText  = data.in_lokasi;
+        document.getElementById('mdl-out-lokasi').innerText = data.out_lokasi;
         
         const inFotoEl = document.getElementById('mdl-in-foto');
-        if (data.in_foto && data.in_foto !== '' && data.in_foto !== 'NULL') { inFotoEl.src = data.in_foto; } 
-        else { inFotoEl.src = 'https://placehold.co/400x500?text=Tidak+Ada+Foto'; }
+        if (data.in_foto && data.in_foto !== '' && data.in_foto !== 'NULL' && data.in_foto !== '-') {
+            inFotoEl.src = data.in_foto;
+        } else {
+            inFotoEl.src = 'https://placehold.co/400x500?text=Tidak+Ada+Foto';
+        }
 
         const outFotoEl = document.getElementById('mdl-out-foto');
-        if (data.out_foto && data.out_foto !== '' && data.out_foto !== 'NULL') { outFotoEl.src = data.out_foto; } 
-        else { outFotoEl.src = 'https://placehold.co/400x500?text=Tidak+Ada+Foto'; }
+        if (data.out_foto && data.out_foto !== '' && data.out_foto !== 'NULL' && data.out_foto !== '-') {
+            outFotoEl.src = data.out_foto;
+        } else {
+            outFotoEl.src = 'https://placehold.co/400x500?text=Tidak+Ada+Foto';
+        }
         
-        // Pastikan tab "Check In" selalu aktif duluan saat modal dibuka
-        const tabIn = new bootstrap.Tab(document.querySelector('#pills-tab button[data-bs-target="#pills-in"]'));
-        tabIn.show();
-
         new bootstrap.Modal(document.getElementById('modalDetailAbsen')).show();
     }
 
-    // JAM
+    // Kamera
+    const video = document.getElementById('kamera');
+    const canvas = document.getElementById('canvas_kamera');
+    let kameraAktif = false;
+    if (video) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+            .then(stream => { video.srcObject = stream; kameraAktif = true; })
+            .catch(() => {
+                const w = document.getElementById('camera-wrapper');
+                if (w) w.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 bg-light"><small class="text-danger fw-bold text-center px-2">Kamera tidak diizinkan / tidak ditemukan.</small></div>';
+            });
+    }
+
+    function kirimAbsen(jenis) {
+        if (!confirm("Apakah Anda yakin ingin melakukan " + jenis + " sekarang?")) return;
+        const responseDiv = document.getElementById('absen-response');
+        responseDiv.innerText = "Mengambil data dan mengirim absen...";
+        
+        const formData = new FormData();
+        formData.append('jenis_absen', jenis);
+        formData.append('nik', userNIK);
+        
+        if (kameraAktif && video && canvas) {
+            try {
+                canvas.width = video.videoWidth || 300;
+                canvas.height = video.videoHeight || 400;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                formData.append('foto', imageData);
+            } catch (err) {
+                formData.append('foto', '');
+            }
+        } else {
+            formData.append('foto', '');
+        }
+
+        fetch('/proses_absen', { method: 'POST', body: formData })
+            .then(res => res.text())
+            .then(data => { responseDiv.innerText = data; setTimeout(() => location.reload(), 1500); })
+            .catch(() => { responseDiv.innerText = "Terjadi kesalahan saat memproses absensi."; });
+    }
+
+    // Jam & Tanggal
     setInterval(() => {
         const now = new Date();
         if (document.getElementById('clock-display'))
