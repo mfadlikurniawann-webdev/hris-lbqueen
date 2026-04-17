@@ -25,7 +25,11 @@ $conn->set_charset("utf8mb4");
 
 $jwt_secret = $_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET') ?: 'hris_lbqueen_rahasia_2026';
 define('JWT_SECRET', $jwt_secret);
-define('JWT_EXPIRE', 60 * 60 * 8); // 8 jam
+
+// --- PERUBAHAN DI SINI ---
+// Sebelumnya: 60 * 60 * 8 (8 Jam)
+// Sekarang: 60 Detik * 60 Menit * 24 Jam * 30 Hari = 30 Hari
+define('JWT_EXPIRE', 60 * 60 * 24 * 30); 
 
 function jwt_base64url_encode($data) {
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
@@ -65,7 +69,7 @@ function set_token_cookie($token) {
         'path'     => '/',
         'httponly' => true,
         'samesite' => 'Lax',
-        'secure'   => true,
+        'secure'   => true, // Vercel sudah pakai HTTPS otomatis
     ]);
 }
 
