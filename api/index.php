@@ -302,7 +302,7 @@ if ($is_admin) {
             </div>
             
             <div class="p-3 desktop-px mx-auto mt-2" style="max-width: 1200px;">
-                <div class="table-responsive bg-white rounded-4 shadow-sm border" style="overflow: hidden;">
+                <div class="table-responsive bg-white rounded-4 shadow-sm border">
                     <table class="table table-hover table-riwayat align-middle mb-0">
                         <thead class="table-light">
                             <tr>

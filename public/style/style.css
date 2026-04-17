@@ -417,4 +417,46 @@ body {
         aspect-ratio: 16/9;
         max-width: 600px;
     }
+
+    /* =========================================
+   PERBAIKAN TABEL RESPONSIVE MOBILE
+   ========================================= */
+
+    /* Pastikan tabel bisa digeser (scroll) ke kanan-kiri di HP */
+    .table-responsive {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        /* Smooth scroll untuk iOS */
+    }
+
+    /* Mencegah teks terlipat (turun ke bawah) dan berantakan */
+    .table-riwayat th,
+    .table-riwayat td,
+    .table-admin th,
+    .table-admin td {
+        white-space: nowrap !important;
+        vertical-align: middle !important;
+    }
+
+    .badge-status {
+        white-space: nowrap !important;
+        display: inline-block;
+    }
+
+    /* Mengecilkan ukuran teks dan jarak tabel khusus di HP (Layar kecil) */
+    @media (max-width: 767px) {
+
+        .table-riwayat th,
+        .table-riwayat td,
+        .table-admin th,
+        .table-admin td {
+            font-size: 12px !important;
+            padding: 12px 10px !important;
+        }
+
+        .badge-status {
+            font-size: 10px !important;
+            padding: 5px 10px !important;
+        }
+    }
 }
