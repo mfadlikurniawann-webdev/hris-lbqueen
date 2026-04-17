@@ -33,7 +33,7 @@ function formatTanggalIndo($tanggal) {
 $hari_ini             = date('Y-m-d');
 $jam_sekarang         = date('H:i');
 $batas_check_in_awal  = '08:30';
-$batas_check_in_akhir = '10:30'; // <-- BATAS WAKTU DIUBAH KE 10:30
+$batas_check_in_akhir = '10:30'; 
 $batas_check_out_awal = '18:00';
 
 $belum_waktunya_in  = ($jam_sekarang < $batas_check_in_awal);
@@ -121,93 +121,8 @@ if ($is_admin) {
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <style>
-        /* BASE STYLE */
-        :root { --lb-pink: #C94F78; --lb-pink-hover: #A83E60; }
-        body { background-color: #f4f6f9; font-family: 'DM Sans', sans-serif; margin: 0; padding: 0; overflow-x: hidden;}
-        
-        .bg-gradient-pink { background: linear-gradient(135deg, var(--lb-pink) 0%, #A83E60 100%); }
-        .text-pink { color: var(--lb-pink); }
-        .btn-pink { background-color: var(--lb-pink); color: white; transition: 0.3s; }
-        .btn-pink:hover { background-color: var(--lb-pink-hover); color: white; }
-
-        .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
-        .main-content { flex: 1; padding-bottom: 75px; width: 100%; }
-        .app-screen { display: none; }
-        .app-screen.active { display: block; }
-
-        /* NAVIGASI BAWAH / SIDEBAR */
-        .sidebar-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; background-color: #fff;
-            display: flex; justify-content: space-around; padding: 10px 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 999;
-        }
-        .sidebar-logo { display: none; }
-        .nav-item-btn {
-            background: transparent; border: none; color: #6c757d; display: flex;
-            flex-direction: column; align-items: center; font-size: 12px; font-weight: 500;
-            width: 100%; outline: none; transition: 0.2s;
-        }
-        .nav-item-btn i { font-size: 22px; margin-bottom: 3px; }
-        .nav-item-btn.active, .nav-item-btn.active i { color: var(--lb-pink); }
-
-        /* KAMERA BOX */
-        .camera-box {
-            background-color: #000; border-radius: 16px; overflow: hidden;
-            width: 100%; max-width: 450px; aspect-ratio: 3/4; 
-            display: flex; justify-content: center; align-items: center; position: relative;
-            margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .camera-box video, .camera-box img { width: 100%; height: 100%; object-fit: contain; }
-
-        /* TAMPILAN CARD HOME (STYLE BARU) */
-        .clock-banner {
-            background: linear-gradient(135deg, var(--lb-pink) 0%, #E87A9D 100%);
-            color: white; overflow: hidden;
-        }
-        .status-icon {
-            width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 50%;
-        }
-
-        /* TABLE RIWAYAT */
-        .table-riwayat th { font-size: 13px; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eee; }
-        .table-riwayat td { font-size: 14px; vertical-align: middle; color: #333; border-bottom: 1px solid #eee; }
-        
-        .badge-status { padding: 6px 12px; font-size: 11px; font-weight: 700; border-radius: 6px; letter-spacing: 0.3px; }
-        .bg-terlambat { background-color: #fd7e14; color: #fff; } 
-        .bg-hadir { background-color: #198754; color: #fff; } 
-        .bg-checkin { background-color: #20c997; color: #fff; } 
-        .bg-absen { background-color: #dc3545; color: #fff; } 
-        
-        /* MODAL TABS */
-        .nav-pills.custom-tabs { background-color: #fff; border-bottom: 2px solid #eee; border-radius: 0; padding: 0; }
-        .nav-pills.custom-tabs .nav-link { color: #6c757d; border-radius: 0; font-weight: 600; padding: 12px 10px; border-bottom: 3px solid transparent; transition: 0.3s; }
-        .nav-pills.custom-tabs .nav-link.active { background-color: transparent; color: #198754; border-bottom-color: #198754; }
-        .detail-box { background-color: #fff; border: 1px solid #eee; border-radius: 12px; margin-bottom: 15px; }
-
-        /* RESPONSIVE LAYOUT (DESKTOP) */
-        @media (min-width: 992px) {
-            .app-wrapper { flex-direction: row; }
-            .sidebar-nav {
-                position: fixed; top: 0; left: 0; width: 250px; height: 100vh;
-                flex-direction: column; justify-content: flex-start; padding: 30px 0;
-                border-right: 1px solid #e0e0e0; box-shadow: 2px 0 15px rgba(0,0,0,0.03);
-            }
-            .sidebar-logo { display: block; text-align: center; margin-bottom: 40px; padding: 0 20px; }
-            .nav-item-btn { flex-direction: row; padding: 15px 30px; font-size: 15px; justify-content: flex-start; gap: 15px; border-right: 4px solid transparent; }
-            .nav-item-btn i { font-size: 20px; margin-bottom: 0; }
-            .nav-item-btn:hover { background-color: #fdf0f5; color: var(--lb-pink); }
-            .nav-item-btn.active { background-color: #fdf0f5; border-right-color: var(--lb-pink); }
-            
-            .main-content { margin-left: 250px; width: calc(100% - 250px); padding-bottom: 30px; }
-            .desktop-px { padding-left: 50px !important; padding-right: 50px !important; }
-            .bg-gradient-pink.header-top { border-radius: 0 0 40px 40px !important; padding-top: 40px !important; padding-bottom: 60px !important; }
-            .overlap-card { max-width: 500px; }
-            .camera-box { aspect-ratio: 16/9; max-width: 600px; }
-        }
-    </style>
+    <link rel="stylesheet" href="/style/style.css">
 </head>
 <body>
 <div class="app-wrapper">
@@ -227,33 +142,31 @@ if ($is_admin) {
     <div class="main-content">
 
         <div id="screen-beranda" class="app-screen active">
-            
-            <div class="bg-gradient-pink header-top p-4 desktop-px shadow-sm" style="border-radius: 0 0 25px 25px;">
+            <div class="bg-pink-wave header-top p-4 desktop-px shadow-sm">
                 <div class="d-flex justify-content-between align-items-center mx-auto mb-2" style="max-width:1200px;">
                     <div>
                         <h4 class="mb-0 fw-bold mt-1 text-white">Hai, <?= htmlspecialchars($karyawan['nama']) ?>!</h4>
                         <p class="mb-0 text-white-50" style="font-size:13px;">Selamat datang di HRIS LBQueen</p>
                     </div>
-                    <img src="/logo/lbqueen_logo.PNG" alt="Logo" style="height:40px; background:white; border-radius:8px; padding:4px;">
+                    <img src="/logo/lbqueen_logo.PNG" alt="Logo" style="height:40px; background:white; border-radius:8px; padding:4px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                 </div>
             </div>
 
             <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
-                
-                <div class="card border-0 shadow-sm rounded-4 mb-3 overlap-card" style="margin-top:-35px; z-index: 10; position:relative;">
+                <div class="card mb-3 overlap-card" style="margin-top:-35px; z-index: 10; position:relative;">
                     <div class="card-body d-flex align-items-center gap-3">
-                        <div class="avatar-initials bg-gradient-pink text-white d-flex align-items-center justify-content-center rounded-circle fw-bold shadow-sm" style="width: 50px; height: 50px; font-size: 20px;">
+                        <div class="avatar-initials">
                             <?= $inisial ?>
                         </div>
                         <div>
-                            <h6 class="fw-bold mb-1 text-dark"><?= $karyawan['posisi'] ?></h6>
+                            <h6 class="fw-bold mb-1 text-dark section-title" style="margin-bottom:2px; font-size:16px;"><?= $karyawan['posisi'] ?></h6>
                             <span class="badge bg-warning text-dark me-1"><?= $karyawan['status_pegawai'] ?></span>
                             <span class="badge bg-secondary"><?= $karyawan['penempatan'] ?></span>
                         </div>
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-3 clock-banner position-relative">
+                <div class="card mb-3 clock-banner position-relative">
                     <div class="card-body p-4">
                         <div class="position-relative" style="z-index: 2;">
                             <p class="mb-1 text-white-50 small fw-bold text-uppercase tracking-wider">Kehadiran</p>
@@ -267,7 +180,7 @@ if ($is_admin) {
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-3">
+                <div class="card mb-3">
                     <div class="card-body p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
                         <div class="d-flex align-items-center gap-3">
                             <div class="status-icon bg-light text-secondary">
@@ -275,16 +188,16 @@ if ($is_admin) {
                             </div>
                             <div>
                                 <small class="text-muted fw-bold d-block" style="font-size:10px; letter-spacing:0.5px;">JADWAL KERJA KAMU</small>
-                                <span class="fw-bold fs-6 text-dark">09:00 - 18:00 <small class="text-muted">WIB</small></span>
+                                <span class="fw-bold fs-6 text-dark">09:00 - 19:00 <small class="text-muted">WIB</small></span>
                             </div>
                         </div>
                         <span class="badge bg-light text-success border border-success rounded-pill px-3 py-2 fw-normal"><i class="bi bi-info-circle me-1"></i> Sesuai Penempatan</span>
                     </div>
                 </div>
 
-                <div class="row g-3 mb-3">
+                <div class="row g-3 mb-4">
                     <div class="col-6">
-                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card h-100">
                             <div class="card-body p-3">
                                 <div class="d-flex align-items-center gap-2 mb-3">
                                     <div class="status-icon <?= $sudah_in ? 'bg-success text-white' : 'bg-light text-secondary' ?>"><i class="bi <?= $sudah_in ? 'bi-check-lg' : 'bi-x-lg' ?>"></i></div>
@@ -299,7 +212,7 @@ if ($is_admin) {
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card h-100">
                             <div class="card-body p-3">
                                 <div class="d-flex align-items-center gap-2 mb-3">
                                     <div class="status-icon <?= $sudah_out ? 'bg-danger text-white' : 'bg-light text-secondary' ?>"><i class="bi <?= $sudah_out ? 'bi-check-lg' : 'bi-x-lg' ?>"></i></div>
@@ -315,19 +228,9 @@ if ($is_admin) {
                     </div>
                 </div>
 
-                <div class="card border border-success border-opacity-25 shadow-sm rounded-4 mb-4" style="background-color: #f4fdf7;">
-                    <div class="card-body p-3 d-flex align-items-center gap-3">
-                        <i class="bi bi-geo-alt-fill text-success fs-3"></i>
-                        <div>
-                            <h6 class="fw-bold text-success mb-1 fs-6">Di Dalam Radius Hub</h6>
-                            <small class="text-muted d-block" style="font-size: 12px;">Area absensi valid di <strong><?= $karyawan['penempatan'] ?></strong>.</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card mb-4">
                     <div class="card-body p-4">
-                        <h5 class="fw-bold mb-1 text-dark"><?= $show_camera ? ($jenis_absen_sekarang == 'Check In' ? 'Check In' : 'Check Out') : 'Absensi Selesai' ?></h5>
+                        <h5 class="fw-bold mb-1 text-dark section-title" style="margin-bottom:5px; font-size:18px;"><?= $show_camera ? ($jenis_absen_sekarang == 'Check In' ? 'Check In' : 'Check Out') : 'Absensi Selesai' ?></h5>
                         <p class="text-muted small mb-4">Lakukan absensi untuk mencatat waktu kehadiran Anda.</p>
 
                         <?php if ($show_camera): ?>
@@ -367,7 +270,7 @@ if ($is_admin) {
                                 </button>
                             </div>
                         <?php else: ?>
-                            <div class="text-center p-4 rounded-4 mx-auto" style="max-width: 300px; background-color:#f8f9fa;">
+                            <div class="text-center p-4 rounded-4 mx-auto" style="max-width: 300px; background-color:var(--bg-body);">
                                 <?php if (!$sudah_in && $belum_waktunya_in): ?>
                                     <i class="bi bi-clock-history text-warning" style="font-size: 3rem;"></i>
                                     <h6 class="fw-bold mt-3 text-dark">Belum Waktunya</h6>
@@ -389,7 +292,6 @@ if ($is_admin) {
                         <?php endif; ?>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -424,19 +326,11 @@ if ($is_admin) {
                                     $w_in  = $data['in_time']  ? date('H.i', strtotime($data['in_time']))  : '-';
                                     $w_out = $data['out_time'] ? date('H.i', strtotime($data['out_time'])) : '-';
                                     
-                                    // Logika Status untuk Badge
                                     $status_in = $data['status_in'] ?: 'Tidak Hadir';
                                     $badge_class = 'bg-hadir';
-                                    
-                                    if ($status_in == 'Telat') {
-                                        $status_in = 'Terlambat'; 
-                                        $badge_class = 'bg-terlambat';
-                                    } elseif ($status_in == 'Tidak Hadir') {
-                                        $badge_class = 'bg-absen';
-                                    } elseif ($data['in_time'] && !$data['out_time']) {
-                                        $status_in = 'Check In';
-                                        $badge_class = 'bg-checkin';
-                                    }
+                                    if ($status_in == 'Telat') { $status_in = 'Terlambat'; $badge_class = 'bg-terlambat'; }
+                                    elseif ($status_in == 'Tidak Hadir') { $badge_class = 'bg-absen'; }
+                                    elseif ($data['in_time'] && !$data['out_time']) { $status_in = 'Check In'; $badge_class = 'bg-checkin'; }
 
                                     $modalData = htmlspecialchars(json_encode([
                                         'tanggal'    => formatTanggalIndo($data['tgl']),
@@ -454,9 +348,7 @@ if ($is_admin) {
                                 ?>
                                 <tr>
                                     <td class="py-3 px-4 fw-bold text-dark"><?= formatTanggalIndo($data['tgl']) ?></td>
-                                    <td>
-                                        <i class="bi bi-clock text-success me-1"></i> <?= $w_in ?> <span class="text-muted mx-1">&mdash;</span> <?= $w_out ?>
-                                    </td>
+                                    <td><i class="bi bi-clock text-success me-1"></i> <?= $w_in ?> <span class="text-muted mx-1">&mdash;</span> <?= $w_out ?></td>
                                     <td class="text-muted"><?= $durasi_teks ?></td>
                                     <td class="text-muted">-</td>
                                     <td><span class="badge-status <?= $badge_class ?>"><?= $status_in ?></span></td>
@@ -477,7 +369,7 @@ if ($is_admin) {
         </div>
 
         <div id="screen-layanan" class="app-screen">
-            <div class="bg-gradient-pink p-4 desktop-px shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+            <div class="bg-pink-wave p-4 desktop-px shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
                 <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Layanan HRIS</h4>
             </div>
             <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
@@ -485,9 +377,9 @@ if ($is_admin) {
                 <h6 class="section-title mt-0 text-pink fw-bold"><i class="bi bi-shield-lock-fill me-2"></i>Menu HR & Owner</h6>
                 <div class="row g-3 mb-4">
                     <div class="col-md-6 col-lg-4" onclick="switchScreen('admin-absen')">
-                        <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid var(--lb-pink);">
-                            <i class="bi bi-people-fill text-pink fs-1 me-3"></i>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-5 text-dark">Kehadiran Tim</h6><small class="text-muted">Pantau absensi & foto</small></div>
+                        <div class="action-card shadow-sm" style="border-left:6px solid var(--lb-pink);">
+                            <div class="action-icon"><i class="bi bi-people-fill"></i></div>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Kehadiran Tim</h6><small class="text-muted">Pantau absensi & foto</small></div>
                             <i class="bi bi-chevron-right ms-auto text-muted fs-5"></i>
                         </div>
                     </div>
@@ -497,15 +389,15 @@ if ($is_admin) {
                 <h6 class="section-title mt-0 fw-bold">Pengajuan & Dokumen</h6>
                 <div class="row g-3">
                     <div class="col-md-6 col-lg-4" onclick="showModernAlert('Informasi Cuti','Status Anda <b><?= $karyawan['status_pegawai'] ?></b>.<br>Cuti tahunan baru dapat digunakan setelah <b><?= formatTanggal($karyawan['akhir_probation']) ?></b>.<br><br><span class=\'text-pink fw-bold\'>Fitur Izin Sakit akan segera hadir.</span>','bi bi-calendar-x-fill','var(--lb-pink)')">
-                        <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card">
-                            <i class="bi bi-calendar-event text-dark fs-1 me-3"></i>
-                            <div><h6 class="fw-bold mb-0 fs-5 text-dark">Pengajuan Cuti</h6><small class="text-muted">Cek kuota dan ajukan libur</small></div>
+                        <div class="action-card shadow-sm">
+                            <div class="action-icon"><i class="bi bi-calendar-event text-dark"></i></div>
+                            <div><h6 class="fw-bold mb-0 fs-6 text-dark">Pengajuan Cuti</h6><small class="text-muted">Cek kuota dan ajukan libur</small></div>
                         </div>
                     </div>
                     <div class="col-md-6 col-lg-4" onclick="aksesGajiDitolak()">
-                        <div class="action-card shadow-sm p-4 bg-light rounded-4 d-flex align-items-center employee-card">
-                            <i class="bi bi-lock-fill text-secondary fs-1 me-3"></i>
-                            <div><h6 class="fw-bold mb-0 text-secondary fs-5">Slip Gaji <span class="badge bg-secondary ms-2" style="font-size:10px;">Terkunci</span></h6><small class="text-muted">Akses portal Finance</small></div>
+                        <div class="action-card shadow-sm bg-light">
+                            <div class="action-icon bg-secondary bg-opacity-10"><i class="bi bi-lock-fill text-secondary"></i></div>
+                            <div><h6 class="fw-bold mb-0 text-secondary fs-6">Slip Gaji <span class="badge bg-secondary ms-2" style="font-size:10px;">Terkunci</span></h6><small class="text-muted">Akses portal Finance</small></div>
                         </div>
                     </div>
                 </div>
@@ -514,9 +406,8 @@ if ($is_admin) {
 
         <?php if ($is_admin): ?>
         <div id="screen-admin-absen" class="app-screen">
-            
             <div id="admin-view-list">
-                <div class="bg-gradient-pink p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+                <div class="bg-pink-wave p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
                     <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-md-4 ms-2" onclick="switchScreen('layanan')"><i class="bi bi-arrow-left fs-3"></i></button>
                     <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Pilih Karyawan</h4>
                 </div>
@@ -525,18 +416,16 @@ if ($is_admin) {
                     <div class="row g-3">
                         <?php foreach ($semua_karyawan as $kar): ?>
                         <div class="col-md-6 col-lg-4">
-                            <div class="card employee-card rounded-4 h-100 shadow-sm" onclick="showEmployeeLog('<?= $kar['nik'] ?>', '<?= htmlspecialchars($kar['nama']) ?>')">
-                                <div class="card-body p-3 d-flex align-items-center gap-3">
-                                    <div class="avatar-initials bg-pink text-white d-flex align-items-center justify-content-center rounded-circle fw-bold" style="width: 50px; height: 50px; font-size: 20px;">
-                                        <?= $kar['inisial'] ?>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="fw-bold mb-1 text-dark"><?= $kar['nama'] ?></h6>
-                                        <div class="text-muted small mb-1"><i class="bi bi-briefcase me-1"></i><?= $kar['posisi'] ?></div>
-                                        <span class="badge bg-warning text-dark" style="font-size: 10px;"><?= $kar['status_pegawai'] ?></span>
-                                    </div>
-                                    <i class="bi bi-chevron-right text-muted fs-5"></i>
+                            <div class="card action-card rounded-4 h-100 shadow-sm" onclick="showEmployeeLog('<?= $kar['nik'] ?>', '<?= htmlspecialchars($kar['nama']) ?>')">
+                                <div class="avatar-initials" style="width: 50px; height: 50px; font-size: 20px;">
+                                    <?= $kar['inisial'] ?>
                                 </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-bold mb-1 text-dark"><?= $kar['nama'] ?></h6>
+                                    <div class="text-muted small mb-1"><i class="bi bi-briefcase me-1"></i><?= $kar['posisi'] ?></div>
+                                    <span class="badge bg-warning text-dark" style="font-size: 10px;"><?= $kar['status_pegawai'] ?></span>
+                                </div>
+                                <i class="bi bi-chevron-right text-muted fs-5"></i>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -545,23 +434,22 @@ if ($is_admin) {
             </div>
 
             <div id="admin-view-detail" style="display:none;">
-                <div class="bg-gradient-pink p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+                <div class="bg-pink-wave p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
                     <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-md-4 ms-2" onclick="backToAdminList()"><i class="bi bi-arrow-left fs-3"></i></button>
                     <h4 class="mb-0 text-white fw-bold mt-2 pb-2" id="detail-nama-karyawan">Log Kehadiran</h4>
                 </div>
                 <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
-                    
-                    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-light">
+                    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
                         <div class="card-body p-3 p-md-4">
                             <h6 class="small fw-bold text-muted mb-2"><i class="bi bi-funnel-fill me-1"></i> Filter Tanggal</h6>
                             <div class="d-flex flex-wrap gap-2 gap-md-4">
                                 <div class="flex-fill">
                                     <small class="text-muted" style="font-size:11px;">Dari Tanggal</small>
-                                    <input type="date" id="filter-start" class="form-control form-control-lg border-0 shadow-sm rounded-3 fs-6">
+                                    <input type="date" id="filter-start" class="form-control form-control-lg border-0 bg-light shadow-sm rounded-3 fs-6">
                                 </div>
                                 <div class="flex-fill">
                                     <small class="text-muted" style="font-size:11px;">Sampai Tanggal</small>
-                                    <input type="date" id="filter-end" class="form-control form-control-lg border-0 shadow-sm rounded-3 fs-6">
+                                    <input type="date" id="filter-end" class="form-control form-control-lg border-0 bg-light shadow-sm rounded-3 fs-6">
                                 </div>
                                 <div class="d-flex align-items-end mt-2 mt-md-0 w-100 w-md-auto">
                                     <button class="btn btn-lg btn-pink shadow-sm rounded-3 px-4 w-100" onclick="renderAdminTable()"><i class="bi bi-search me-2"></i>Cari</button>
@@ -569,34 +457,31 @@ if ($is_admin) {
                             </div>
                         </div>
                     </div>
-
                     <div class="table-responsive bg-white rounded-4 shadow-sm border" style="overflow: hidden;">
-                        <table class="table table-hover table-admin align-middle mb-0" style="font-size: 14px;">
+                        <table class="table table-hover table-admin align-middle mb-0 table-riwayat">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="px-4 py-3">Tanggal & Status</th>
-                                    <th class="text-center py-3">Jam Masuk</th>
-                                    <th class="text-center py-3">Jam Pulang</th>
+                                    <th class="px-4 py-3 border-0">Tanggal & Status</th>
+                                    <th class="text-center py-3 border-0">Jam Masuk</th>
+                                    <th class="text-center py-3 border-0">Jam Pulang</th>
                                 </tr>
                             </thead>
-                            <tbody id="admin-detail-tbody">
-                                </tbody>
+                            <tbody id="admin-detail-tbody"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
-
         </div>
         <?php endif; ?>
 
         <div id="screen-profil" class="app-screen">
-            <div class="bg-gradient-pink p-5 desktop-px text-center shadow-sm" style="border-radius: 0 0 25px 25px;">
-                <div class="avatar-initials mx-auto mt-2 mb-3 bg-white text-pink d-flex align-items-center justify-content-center rounded-circle fw-bold shadow" style="width:100px; height:100px; font-size:38px;"><?= $inisial ?></div>
+            <div class="bg-pink-wave p-5 desktop-px text-center shadow-sm" style="border-radius: 0 0 25px 25px;">
+                <div class="avatar-initials mx-auto mt-2 mb-3 bg-white text-pink shadow" style="width:100px; height:100px; font-size:38px; border:4px solid white;"><?= $inisial ?></div>
                 <h3 class="text-white fw-bold mb-1"><?= htmlspecialchars($karyawan['nama']) ?></h3>
                 <p class="text-white-50 mb-0 fs-5"><?= $karyawan['posisi'] ?></p>
             </div>
             <div class="p-3 desktop-px mx-auto" style="margin-top:-30px; max-width: 800px;">
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card mb-4">
                     <div class="card-body p-0">
                         <div class="p-4 pb-0"><h6 class="section-title mt-0 text-muted fw-bold">Informasi Pribadi</h6></div>
                         <ul class="list-group list-group-flush rounded-4">
@@ -607,15 +492,18 @@ if ($is_admin) {
                         </ul>
                     </div>
                 </div>
-                <a href="/logout" class="btn btn-outline-danger w-100 rounded-4 py-3 fw-bold mt-3 shadow-sm fs-5">
+                <a href="/logout" class="btn btn-outline-danger bg-white w-100 rounded-4 py-3 fw-bold mt-3 shadow-sm fs-5">
                     <i class="bi bi-box-arrow-right me-2"></i> Keluar Aplikasi
                 </a>
             </div>
         </div>
 
-    </div> </div> <div class="modal fade" id="modalDetailAbsen" tabindex="-1" aria-hidden="true">
+    </div> 
+</div> 
+
+<div class="modal fade" id="modalDetailAbsen" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-        <div class="modal-content rounded-4 border-0">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
             <div class="modal-header border-bottom-0 pb-0 px-4 pt-4">
                 <h5 class="modal-title fw-bold text-dark fs-5">Detail Attendance</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -636,19 +524,13 @@ if ($is_admin) {
 
                 <ul class="nav nav-pills custom-tabs mb-4 w-100 d-flex" id="pills-tab" role="tablist">
                     <li class="nav-item flex-fill text-center">
-                        <button class="nav-link active w-100" data-bs-toggle="pill" data-bs-target="#pills-in" type="button">
-                            <i class="bi bi-box-arrow-in-right me-1"></i> Check In
-                        </button>
+                        <button class="nav-link active w-100" data-bs-toggle="pill" data-bs-target="#pills-in" type="button"><i class="bi bi-box-arrow-in-right me-1"></i> Check In</button>
                     </li>
                     <li class="nav-item flex-fill text-center">
-                        <button class="nav-link w-100" data-bs-toggle="pill" data-bs-target="#pills-out" type="button">
-                            <i class="bi bi-box-arrow-right me-1"></i> Check Out
-                        </button>
+                        <button class="nav-link w-100" data-bs-toggle="pill" data-bs-target="#pills-out" type="button"><i class="bi bi-box-arrow-right me-1"></i> Check Out</button>
                     </li>
                     <li class="nav-item flex-fill text-center">
-                        <button class="nav-link w-100" data-bs-toggle="pill" data-bs-target="#pills-data" type="button">
-                            <i class="bi bi-person me-1"></i> Data Karyawan
-                        </button>
+                        <button class="nav-link w-100" data-bs-toggle="pill" data-bs-target="#pills-data" type="button"><i class="bi bi-person me-1"></i> Data Karyawan</button>
                     </li>
                 </ul>
 
@@ -699,12 +581,11 @@ if ($is_admin) {
 
                     <div class="tab-pane fade" id="pills-data">
                         <div class="detail-box p-4 shadow-sm border text-center">
-                            <div class="avatar-initials bg-pink text-white d-flex align-items-center justify-content-center rounded-circle fw-bold mx-auto mb-3" style="width: 80px; height: 80px; font-size: 30px;">
+                            <div class="avatar-initials mx-auto mb-3" style="width: 80px; height: 80px; font-size: 30px;">
                                 <?= $inisial ?>
                             </div>
                             <h5 class="fw-bold text-dark mb-1"><?= $karyawan['nama'] ?></h5>
                             <p class="text-muted mb-4"><?= $karyawan['posisi'] ?></p>
-                            
                             <div class="text-start bg-light p-3 rounded-3">
                                 <p class="mb-2 fs-6"><span class="text-muted">NIK</span> <strong class="float-end"><?= $karyawan['nik'] ?></strong></p>
                                 <p class="mb-2 fs-6"><span class="text-muted">Status</span> <strong class="float-end"><?= $karyawan['status_pegawai'] ?></strong></p>
@@ -731,277 +612,17 @@ if ($is_admin) {
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const userNIK = '<?= $karyawan['nik'] ?>';
-    const screens = ['beranda','riwayat','layanan','profil','admin-absen'];
-
-    function switchScreen(target) {
-        screens.forEach(s => {
-            const el = document.getElementById('screen-'+s);
-            const nav = document.getElementById('nav-'+s);
-            if (el) el.classList.remove('active');
-            if (nav) nav.classList.remove('active');
-        });
-        const t = document.getElementById('screen-'+target);
-        const n = document.getElementById('nav-'+target);
-        if (t) t.classList.add('active');
-        if (n) n.classList.add('active');
-        window.scrollTo(0,0);
-    }
-
-    function showModernAlert(title, message, iconClass, iconColor) {
-        document.getElementById('modernAlertTitle').innerText = title;
-        document.getElementById('modernAlertMessage').innerHTML = message;
-        document.getElementById('modernAlertIcon').innerHTML = `<i class="${iconClass}" style="font-size:3.5rem; color:${iconColor};"></i>`;
-        new bootstrap.Modal(document.getElementById('modernAlertModal')).show();
-    }
-
-    function aksesGajiDitolak() {
-        showModernAlert('Akses Terkunci','Slip gaji bersifat rahasia dan saat ini hanya dapat diakses melalui portal HRD / Finance.','bi bi-lock-fill','#6c757d');
-    }
-
-    // =======================================================
-    // LOGIKA ADMIN FILTER 
-    // =======================================================
-    const adminHistData = <?= json_encode($admin_hist_arr) ?>;
-    let selectedNikAdmin = null;
-    let selectedNamaAdmin = null;
-
-    function showEmployeeLog(nik, nama) {
-        selectedNikAdmin = nik;
-        selectedNamaAdmin = nama;
-        
-        document.getElementById('admin-view-list').style.display = 'none';
-        document.getElementById('admin-view-detail').style.display = 'block';
-        
-        const firstName = nama.split(' ')[0];
-        document.getElementById('detail-nama-karyawan').innerText = 'Log ' + firstName;
-        
-        document.getElementById('filter-start').value = '';
-        document.getElementById('filter-end').value = '';
-        
-        renderAdminTable();
-    }
-
-    function backToAdminList() {
-        document.getElementById('admin-view-list').style.display = 'block';
-        document.getElementById('admin-view-detail').style.display = 'none';
-    }
-
-    let filteredDataAdmin = []; 
-
-    function renderAdminTable() {
-        const tbody = document.getElementById('admin-detail-tbody');
-        tbody.innerHTML = ''; 
-        const start = document.getElementById('filter-start').value;
-        const end = document.getElementById('filter-end').value;
-
-        filteredDataAdmin = adminHistData.filter(d => d.nik === selectedNikAdmin);
-        if (start) filteredDataAdmin = filteredDataAdmin.filter(d => d.tgl >= start);
-        if (end) filteredDataAdmin = filteredDataAdmin.filter(d => d.tgl <= end);
-
-        if (filteredDataAdmin.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center py-5 text-muted"><i class="bi bi-folder-x fs-1 d-block mb-2"></i>Tidak ada data absensi di rentang tanggal ini.</td></tr>';
-            return;
-        }
-
-        let htmlRows = '';
-        filteredDataAdmin.forEach((data, index) => {
-            const inTimeView = data.in_time ? data.in_time.substring(11, 16) : '-';
-            const outTimeView = data.out_time ? data.out_time.substring(11, 16) : '-';
-            
-            let statusIn = data.status_in || 'Tidak Hadir';
-            let badgeBg = 'bg-hadir';
-            if (statusIn === 'Telat') { statusIn = 'Terlambat'; badgeBg = 'bg-terlambat'; }
-            if (statusIn === 'Tidak Hadir') badgeBg = 'bg-absen';
-            if (data.in_time && !data.out_time) { statusIn = 'Check In'; badgeBg = 'bg-checkin'; }
-
-            const tglParts = data.tgl.split('-');
-            const ddmmyyyy = `${tglParts[2]}/${tglParts[1]}/${tglParts[0]}`;
-
-            htmlRows += `
-                <tr onclick="bukaDetailDariAdmin(${index})" style="cursor:pointer;">
-                    <td class="px-4 py-3">
-                        <span class="fw-bold d-block text-dark mb-1"><i class="bi bi-calendar-check me-2 text-pink"></i> ${ddmmyyyy}</span>
-                        <span class="badge-status ${badgeBg}">${statusIn}</span>
-                    </td>
-                    <td class="text-center text-success fw-bold fs-6">${inTimeView}</td>
-                    <td class="text-center text-danger fw-bold fs-6">${outTimeView}</td>
-                </tr>
-            `;
-        });
-        tbody.innerHTML = htmlRows;
-    }
-
-    window.bukaDetailDariAdmin = function(idx) {
-        const data = filteredDataAdmin[idx]; 
-        
-        let durasi_teks = '-';
-        if (data.in_time && data.out_time) {
-            const inDate = new Date(`1970-01-01T${data.in_time}Z`);
-            const outDate = new Date(`1970-01-01T${data.out_time}Z`);
-            const diffMs = outDate - inDate;
-            if(diffMs > 0) {
-                const diffHrs = Math.floor(diffMs / 3600000);
-                const diffMins = Math.floor((diffMs % 3600000) / 60000);
-                durasi_teks = `${diffHrs} jam ${diffMins} menit`;
-            }
-        }
-
-        let stat = data.status_in || 'Tidak Hadir';
-        if(stat === 'Telat') stat = 'Terlambat';
-        if(data.in_time && !data.out_time) stat = 'Check In';
-
-        const tglParts = data.tgl.split('-');
-        const bln = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-        const formatTgl = tglParts[2] + ' ' + bln[parseInt(tglParts[1])-1] + ' ' + tglParts[0];
-
-        const modalData = {
-            tanggal: formatTgl,
-            nama: data.nama,
-            status: stat,
-            durasi: durasi_teks,
-            in_time: data.in_time ? data.in_time.substring(11, 16) : '-',
-            out_time: data.out_time ? data.out_time.substring(11, 16) : '-',
-            in_lokasi: data.lok_in || 'Tidak ada data lokasi',
-            out_lokasi: data.lok_out || 'Tidak ada data lokasi',
-            in_foto: data.foto_in || '',
-            out_foto: data.foto_out || '',
-            penempatan: 'HO'
-        };
-        bukaDetail(modalData);
+    window.HRIS_CONFIG = {
+        userNIK: '<?= $karyawan['nik'] ?>',
+        karyawanNama: <?= json_encode($karyawan['nama']) ?>,
+        karyawanPenempatan: <?= json_encode($karyawan['penempatan']) ?>,
+        adminHistData: <?= json_encode($admin_hist_arr) ?>
     };
-
-    // =======================================================
-    // LOGIKA KAMERA: AMBIL, PREVIEW & BATAL 
-    // =======================================================
-    const video = document.getElementById('kamera');
-    const preview = document.getElementById('kamera-preview');
-    const canvas = document.getElementById('canvas_kamera');
-    let kameraAktif = false;
-    let fotoDataURL = '';
-    let absenJenisType = '';
-
-    if (video) {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-            .then(stream => { video.srcObject = stream; kameraAktif = true; })
-            .catch(() => {
-                const w = document.querySelector('.camera-box');
-                if (w) w.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 bg-dark w-100"><small class="text-danger fw-bold text-center px-2">Kamera Ditolak / Tidak Ditemukan.</small></div>';
-            });
-    }
-
-    function ambilFoto(jenis) {
-        if (!kameraAktif) { alert("Kamera tidak aktif. Izinkan akses kamera browser Anda."); return; }
-        
-        absenJenisType = jenis;
-        
-        canvas.width = video.videoWidth || 480;
-        canvas.height = video.videoHeight || 640;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        fotoDataURL = canvas.toDataURL('image/jpeg', 0.8);
-
-        video.style.display = 'none';
-        preview.src = fotoDataURL;
-        preview.style.display = 'block';
-
-        document.getElementById('btn-action-group').style.setProperty('display', 'none', 'important');
-        document.getElementById('btn-confirm-group').style.setProperty('display', 'flex', 'important');
-        document.getElementById('confirm-text').innerText = "Kirim " + jenis;
-    }
-
-    function batalFoto() {
-        fotoDataURL = '';
-        absenJenisType = '';
-        
-        preview.style.display = 'none';
-        video.style.display = 'block';
-
-        document.getElementById('btn-action-group').style.setProperty('display', 'flex', 'important');
-        document.getElementById('btn-confirm-group').style.setProperty('display', 'none', 'important');
-    }
-
-    function submitAbsen() {
-        const responseDiv = document.getElementById('absen-response');
-        responseDiv.innerHTML = '<span class="text-warning"><i class="spinner-border spinner-border-sm"></i> Mengirim data absensi...</span>';
-        
-        document.getElementById('btn-confirm-group').style.setProperty('display', 'none', 'important');
-
-        const formData = new FormData();
-        formData.append('jenis_absen', absenJenisType);
-        formData.append('nik', userNIK);
-        formData.append('foto', fotoDataURL);
-
-        fetch('/proses_absen', { method: 'POST', body: formData })
-            .then(res => res.text())
-            .then(data => { responseDiv.innerHTML = data; setTimeout(() => location.reload(), 1500); })
-            .catch(() => { responseDiv.innerText = "Terjadi kesalahan server saat mengirim absen."; batalFoto(); });
-    }
-
-    // =======================================================
-    // TAMPILAN DETAIL MODAL (TABS)
-    // =======================================================
-    function bukaDetail(data) {
-        document.getElementById('mdl-header').innerText = data.nama + ' • ' + data.tanggal;
-        
-        const boxStatus = document.getElementById('mdl-status-box');
-        const iconStatus = document.getElementById('mdl-status-icon');
-        const textStatus = document.getElementById('mdl-status-text');
-        
-        let badgeWFO = `<span class="badge bg-success fw-normal ms-2" style="font-size:10px;">${data.penempatan || 'WFO'}</span>`;
-        if (data.status === 'Terlambat' || data.status === 'Telat') {
-            boxStatus.style.backgroundColor = '#fff4e5';
-            boxStatus.style.borderColor = '#ffe0b2';
-            iconStatus.className = 'bi bi-exclamation-circle-fill text-warning fs-3';
-            textStatus.innerHTML = `Terlambat ${badgeWFO}`;
-        } else if (data.status === 'Check In') {
-            boxStatus.style.backgroundColor = '#e0f8f1';
-            boxStatus.style.borderColor = '#b2ede0';
-            iconStatus.className = 'bi bi-box-arrow-in-right text-info fs-3';
-            textStatus.innerHTML = `Sudah Check In ${badgeWFO}`;
-        } else if (data.status === 'Tidak Hadir') {
-            boxStatus.style.backgroundColor = '#f8d7da';
-            boxStatus.style.borderColor = '#f5c2c7';
-            iconStatus.className = 'bi bi-x-circle-fill text-danger fs-3';
-            textStatus.innerHTML = `Tidak Hadir`;
-        } else {
-            boxStatus.style.backgroundColor = '#e8f5e9';
-            boxStatus.style.borderColor = '#c8e6c9';
-            iconStatus.className = 'bi bi-check-circle-fill text-success fs-3';
-            textStatus.innerHTML = `Hadir ${badgeWFO}`;
-        }
-        
-        document.getElementById('mdl-in-time').innerText    = data.in_time;
-        document.getElementById('mdl-out-time').innerText   = data.out_time;
-        
-        document.getElementById('mdl-in-lokasi').innerText  = `Jalan Alam Kurnia, ${data.in_lokasi}`;
-        document.getElementById('mdl-out-lokasi').innerText = `Jalan Alam Kurnia, ${data.out_lokasi}`;
-        
-        const inFotoEl = document.getElementById('mdl-in-foto');
-        if (data.in_foto && data.in_foto !== '' && data.in_foto !== 'NULL') { inFotoEl.src = data.in_foto; } 
-        else { inFotoEl.src = 'https://placehold.co/400x500?text=Tidak+Ada+Foto'; }
-
-        const outFotoEl = document.getElementById('mdl-out-foto');
-        if (data.out_foto && data.out_foto !== '' && data.out_foto !== 'NULL') { outFotoEl.src = data.out_foto; } 
-        else { outFotoEl.src = 'https://placehold.co/400x500?text=Tidak+Ada+Foto'; }
-        
-        const tabIn = new bootstrap.Tab(document.querySelector('#pills-tab button[data-bs-target="#pills-in"]'));
-        tabIn.show();
-
-        new bootstrap.Modal(document.getElementById('modalDetailAbsen')).show();
-    }
-
-    // JAM DIGITAL RESPONSIVE KE BANNER
-    setInterval(() => {
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' }).replace(/\./g, ':');
-        if (document.getElementById('clock-display'))
-            document.getElementById('clock-display').innerHTML = timeString + ' <span class="fs-4">WIB</span>';
-        if (document.getElementById('date-display'))
-            document.getElementById('date-display').innerText = now.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-    }, 1000);
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/style/script.js"></script>
+
 </body>
 </html>
