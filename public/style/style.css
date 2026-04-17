@@ -31,7 +31,7 @@ body {
    CONTAINER & LAYOUT APLIKASI
    ========================================= */
 .mobile-container {
-    max-width: 480px;
+    max-width: 0 auto;
     margin: 0 auto;
     background-color: var(--bg-body);
     min-height: 100vh;
