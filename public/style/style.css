@@ -1,205 +1,262 @@
+/* =========================================
+   HRIS LBQueen - Master Style CSS
+   ========================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
+
 :root {
+    /* Warna Utama Identitas LBQueen */
     --lb-pink: #C94F78;
-    --lb-pink-light: #FDF0F5;
     --lb-pink-hover: #A83E60;
+    --lb-pink-light: #FDF0F5;
+    --lb-pink-soft: #F9E4EB;
+
+    /* Warna Netral & Teks */
+    --text-dark: #2C3E50;
+    --text-muted: #8395A7;
+    --bg-body: #F4F7F6;
+    --white: #FFFFFF;
 }
 
 body {
+    background-color: var(--bg-body);
     font-family: 'DM Sans', sans-serif;
-    background-color: #f0f2f5;
+    color: var(--text-dark);
+    -webkit-font-smoothing: antialiased;
     margin: 0;
     padding: 0;
 }
 
 /* =========================================
-   CONTAINER MULTI-PLATFORM (RESPONSIF)
-========================================= */
+   CONTAINER & LAYOUT APLIKASI
+   ========================================= */
 .mobile-container {
-    max-width: 100%;
-    /* Penuh di layar HP */
-    min-height: 100vh;
+    max-width: 480px;
     margin: 0 auto;
-    background-color: #ffffff;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    background-color: var(--bg-body);
+    min-height: 100vh;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
     position: relative;
-    display: flex;
-    flex-direction: column;
-    transition: max-width 0.3s ease;
+    padding-bottom: 80px;
+    /* Ruang untuk bottom nav */
+    overflow-x: hidden;
 }
 
-/* Penyesuaian Lebar untuk Tablet */
-@media (min-width: 768px) {
-    .mobile-container {
-        max-width: 720px;
-        box-shadow: 0 0 25px rgba(0, 0, 0, 0.08);
-    }
-}
-
-/* Penyesuaian Lebar untuk Desktop/Laptop */
-@media (min-width: 992px) {
-    .mobile-container {
-        max-width: 960px;
-    }
-}
-
-.bg-pink {
-    background-color: var(--lb-pink) !important;
-    color: white;
-}
-
-.text-pink {
-    color: var(--lb-pink) !important;
-}
-
-/* =========================================
-   TOMBOL BACK (KEMBALI) PROFESIONAL
-========================================= */
-.btn-back {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: absolute;
-    left: 20px;
-    top: 20px;
-    z-index: 10;
-    backdrop-filter: blur(5px);
-    /* Efek blur/glassmorphism */
-}
-
-.btn-back:hover {
-    background: rgba(255, 255, 255, 0.4);
-    transform: scale(1.05);
-    /* Sedikit membesar saat disorot */
-}
-
-.avatar-initials {
-    width: 60px;
-    height: 60px;
-    background-color: var(--lb-pink-light);
-    color: var(--lb-pink);
-    font-size: 24px;
-    font-weight: bold;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.section-title {
-    font-size: 14px;
-    font-weight: 700;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 15px;
-    margin-top: 20px;
-}
-
-.action-card {
-    background: #fff;
-    border: 1px solid #eee;
-    border-radius: 15px;
-    padding: 15px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.action-card:hover {
-    background: var(--lb-pink-light);
-    transform: translateY(-2px);
-    /* Efek terangkat saat disorot */
-    box-shadow: 0 4px 10px rgba(201, 79, 120, 0.1);
-}
-
-.action-icon {
-    font-size: 24px;
-    color: var(--lb-pink);
-}
-
-/* =========================================
-   PENGATURAN LAYAR & NAVIGASI BAWAH
-========================================= */
 .app-screen {
     display: none;
-    flex: 1;
-    overflow-y: auto;
-    padding-bottom: 80px;
+    animation: fadeIn 0.3s ease-in-out;
 }
 
 .app-screen.active {
     display: block;
 }
 
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =========================================
+   GRADASI GELOMBANG BERLAPIS (HEADER)
+   ========================================= */
+.bg-pink {
+    /* Base Color */
+    background-color: var(--lb-pink);
+
+    /* Injeksi SVG Wave (Persis seperti contoh tapi Pink LBQueen) */
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23A83E60' fill-opacity='0.4' d='M0,64L48,85.3C96,107,192,150,288,149.3C384,149,480,107,576,96C672,85,768,107,864,133.3C960,160,1056,192,1152,192C1248,192,1344,160,1392,144L1440,128L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z'%3E%3C/path%3E%3Cpath fill='%23D45D85' fill-opacity='0.6' d='M0,192L48,176C96,160,192,128,288,138.7C384,149,480,203,576,213.3C672,224,768,192,864,165.3C960,139,1056,117,1152,128C1248,139,1344,181,1392,202.7L1440,224L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z'%3E%3C/path%3E%3C/svg%3E"),
+        linear-gradient(135deg, #E06C92 0%, #C94F78 60%, #A83E60 100%);
+    background-size: cover;
+    background-position: top center;
+    background-repeat: no-repeat;
+
+    /* Efek bayangan halus ke bawah */
+    box-shadow: 0 4px 15px rgba(201, 79, 120, 0.2);
+    border-bottom-left-radius: 25px !important;
+    border-bottom-right-radius: 25px !important;
+}
+
+.text-pink {
+    color: var(--lb-pink) !important;
+}
+
+.bg-pink-light {
+    background-color: var(--lb-pink-light) !important;
+}
+
+/* =========================================
+   KARTU & KOTAK AKTIVITAS (Modern UI)
+   ========================================= */
+.card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.activity-box {
+    background: var(--white);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    border-radius: 16px;
+    padding: 18px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.action-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    border: 1px solid transparent;
+}
+
+.action-card:hover,
+.action-card:active {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(201, 79, 120, 0.1);
+    border-color: var(--lb-pink-soft);
+}
+
+.action-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    background-color: var(--lb-pink-light);
+    color: var(--lb-pink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+/* =========================================
+   TOMBOL & INTERAKSI
+   ========================================= */
+.btn-pink {
+    background-color: var(--lb-pink);
+    color: var(--white);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-pink:hover {
+    background-color: var(--lb-pink-hover);
+    color: var(--white);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(201, 79, 120, 0.3);
+}
+
+.btn-outline-danger {
+    border-color: #ff4757;
+    color: #ff4757;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-danger:hover {
+    background-color: #ff4757;
+    color: var(--white);
+}
+
+.btn-back {
+    background: transparent;
+    border: none;
+    color: white;
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 5px;
+}
+
+/* =========================================
+   BOTTOM NAVIGATION (Glassmorphism)
+   ========================================= */
 .bottom-nav {
     position: fixed;
     bottom: 0;
-    width: 100%;
-    background: white;
-    border-top: 1px solid #eee;
-    display: flex;
-    justify-content: space-around;
-    padding: 10px 0;
-    z-index: 1000;
-    /* Agar selalu presisi di tengah mengikuti lebar layar desktop/tablet */
     left: 50%;
     transform: translateX(-50%);
-}
-
-/* Responsif Navigasi Bawah Mengikuti Container */
-@media (min-width: 768px) {
-    .bottom-nav {
-        max-width: 720px;
-        border-radius: 15px 15px 0 0;
-        border: 1px solid #eee;
-        border-bottom: none;
-    }
-}
-
-@media (min-width: 992px) {
-    .bottom-nav {
-        max-width: 960px;
-    }
+    width: 100%;
+    max-width: 480px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 5px 20px 5px;
+    /* Extra padding bottom for iPhone home bar */
+    z-index: 1000;
 }
 
 .nav-item-btn {
-    background: none;
+    background: transparent;
     border: none;
-    color: #adb5bd;
-    font-size: 12px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 500;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    transition: color 0.3s ease;
-    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.nav-item-btn i {
+    font-size: 22px;
+    margin-bottom: 2px;
+    transition: transform 0.2s ease;
 }
 
 .nav-item-btn.active {
     color: var(--lb-pink);
-    font-weight: bold;
-}
-
-.nav-item-btn:hover {
-    color: var(--lb-pink-hover);
-}
-
-.nav-item-btn i {
-    font-size: 20px;
-    transition: transform 0.2s ease;
 }
 
 .nav-item-btn.active i {
-    transform: translateY(-3px);
-    /* Ikon sedikit naik saat menu aktif */
+    transform: scale(1.1);
+}
+
+/* =========================================
+   KOMPONEN LAINNYA
+   ========================================= */
+.avatar-initials {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--lb-pink-light), #FFEAF0);
+    color: var(--lb-pink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    border: 2px solid var(--white);
+    box-shadow: 0 2px 8px rgba(201, 79, 120, 0.15);
+}
+
+.section-title {
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 15px;
+    font-size: 15px;
+    letter-spacing: 0.3px;
 }
