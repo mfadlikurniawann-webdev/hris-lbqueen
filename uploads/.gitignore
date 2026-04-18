@@ -1,1 +1,11 @@
-        
+        # Mengabaikan Folder
+/api/
+/convert sql/
+/public/
+/uploads/
+
+# Mengabaikan File
+database.sql
+output_supabase.sql
+README.md
+vercel.json
