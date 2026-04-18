@@ -14,10 +14,6 @@
       "dest": "/public/logo/$1"
     },
     {
-      "src": "/manifest.json",
-      "dest": "/public/manifest.json"
-    },
-    {
       "src": "/login",
       "dest": "/api/login.php"
     },
@@ -32,6 +28,14 @@
     {
       "src": "/proses_absen",
       "dest": "/api/proses_absen.php"
+    },
+    {
+      "src": "/proses_pengajuan",
+      "dest": "/api/proses_pengajuan.php"
+    },
+    {
+      "src": "/cetak_rekap",
+      "dest": "/api/cetak_rekap.php"
     },
     {
       "src": "/(.*)\\.php",

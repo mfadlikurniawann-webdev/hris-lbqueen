@@ -385,48 +385,52 @@ if ($is_admin) {
         </div>
 
         <div id="screen-layanan" class="app-screen">
-            <div class="bg-pink-wave p-4 desktop-px shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
-                <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Layanan HRIS</h4>
-            </div>
-            <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
-                <?php if ($is_admin): ?>
-                <h6 class="section-title mt-0 text-pink fw-bold"><i class="bi bi-shield-lock-fill me-2"></i>Menu HR & Owner</h6>
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6 col-lg-4" onclick="switchScreen('admin-absen')">
-                        <div class="action-card shadow-sm" style="border-left:6px solid var(--lb-pink);">
-                            <div class="action-icon"><i class="bi bi-people-fill"></i></div>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Kehadiran Tim</h6><small class="text-muted">Pantau absensi & foto</small></div>
-                            <i class="bi bi-chevron-right ms-auto text-muted fs-5"></i>
-                        </div>
-                    </div>
-                </div>
-                <?php endif; ?>
-                
-                <h6 class="section-title mt-0 fw-bold">Pengajuan & Dokumen</h6>
-                <div class="row g-3">
-                    <div class="col-md-6 col-lg-4" onclick="showModernAlert('Informasi Cuti','Status Anda <b><?= $karyawan['status_pegawai'] ?></b>.<br>Cuti tahunan baru dapat digunakan setelah <b><?= formatTanggal($karyawan['akhir_probation']) ?></b>.<br><br><span class=\'text-pink fw-bold\'>Fitur Izin Sakit akan segera hadir.</span>','bi bi-calendar-x-fill','var(--lb-pink)')">
-                        <div class="action-card shadow-sm">
-                            <div class="action-icon"><i class="bi bi-calendar-event text-dark"></i></div>
-                            <div><h6 class="fw-bold mb-0 fs-6 text-dark">Pengajuan Cuti</h6><small class="text-muted">Cek kuota dan ajukan libur</small></div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-4" onclick="aksesGajiDitolak()">
-                        <div class="action-card shadow-sm bg-light">
-                            <div class="action-icon bg-secondary bg-opacity-10"><i class="bi bi-lock-fill text-secondary"></i></div>
-                            <div><h6 class="fw-bold mb-0 text-secondary fs-6">Slip Gaji <span class="badge bg-secondary ms-2" style="font-size:10px;">Terkunci</span></h6><small class="text-muted">Akses portal Finance</small></div>
-                        </div>
-                    </div>
+    <div class="bg-gradient-pink p-4 desktop-px shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+        <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Layanan HRIS</h4>
+    </div>
+    <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
+        <?php if ($is_admin): ?>
+        <h6 class="section-title mt-0 text-pink fw-bold"><i class="bi bi-shield-lock-fill me-2"></i>Menu HR & Owner</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6 col-lg-4" onclick="switchScreen('admin-absen')">
+                <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid var(--lb-pink);">
+                    <i class="bi bi-people-fill text-pink fs-1 me-3"></i>
+                    <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-5 text-dark">Kehadiran Tim</h6><small class="text-muted">Pantau & Cetak Absensi</small></div>
                 </div>
             </div>
         </div>
-
+        <?php endif; ?>
+        
+        <h6 class="section-title mt-0 fw-bold">Pengajuan & Dokumen</h6>
+        <div class="row g-3">
+            <div class="col-md-6 col-lg-4" onclick="new bootstrap.Modal(document.getElementById('modalDinas')).show()">
+                <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card">
+                    <i class="bi bi-car-front-fill text-primary fs-1 me-3"></i>
+                    <div><h6 class="fw-bold mb-0 fs-5 text-dark">Perjalanan Dinas</h6><small class="text-muted">Formulir penugasan luar kota</small></div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4" onclick="new bootstrap.Modal(document.getElementById('modalReimburse')).show()">
+                <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card">
+                    <i class="bi bi-receipt text-success fs-1 me-3"></i>
+                    <div><h6 class="fw-bold mb-0 fs-5 text-dark">Reimbursement</h6><small class="text-muted">Pengajuan ganti dana operasional</small></div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4" onclick="showModernAlert('Informasi Cuti','Status Anda <b><?= $karyawan['status_pegawai'] ?></b>.<br>Cuti tahunan dapat digunakan setelah masa probation.','bi bi-calendar-x-fill','var(--lb-pink)')">
+                <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card">
+                    <i class="bi bi-calendar-event text-dark fs-1 me-3"></i>
+                    <div><h6 class="fw-bold mb-0 fs-5 text-dark">Pengajuan Cuti</h6><small class="text-muted">Cek kuota dan libur</small></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
         <?php if ($is_admin): ?>
         <div id="screen-admin-absen" class="app-screen">
             <div id="admin-view-list">
                 <div class="bg-pink-wave p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
                     <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-md-4 ms-2" onclick="switchScreen('layanan')"><i class="bi bi-arrow-left fs-3"></i></button>
-                    <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Pilih Karyawan</h4>
-                </div>
+<h4 class="mb-0 text-white fw-bold mt-2 pb-2">Pilih Karyawan</h4>
+<button class="btn btn-light text-pink fw-bold px-4 rounded-pill shadow-sm mt-2" onclick="new bootstrap.Modal(document.getElementById('modalCetakLaporan')).show()"><i class="bi bi-printer-fill me-2"></i>Cetak Rekap Bulanan</button>                </div>
                 <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
                     <p class="text-muted small mb-3">Ketuk nama karyawan untuk melihat riwayat absensinya.</p>
                     <div class="row g-3">
@@ -631,6 +635,101 @@ if ($is_admin) {
                 <h5 class="fw-bold mb-3" id="modernAlertTitle">Pemberitahuan</h5>
                 <p class="text-muted mb-4" id="modernAlertMessage" style="font-size:14px;">Pesan alert di sini.</p>
                 <button type="button" class="btn btn-pink w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal">Mengerti</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalDinas" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header border-bottom-0 pb-0 p-4">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-car-front-fill text-primary me-2"></i>Form Perjalanan Dinas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="formDinas" onsubmit="submitPengajuan(event, 'dinas')">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Tujuan / Kota</label>
+                        <input type="text" class="form-control bg-light" name="tujuan" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Tgl Berangkat</label>
+                            <input type="date" class="form-control bg-light" name="tgl_berangkat" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Tgl Kembali</label>
+                            <input type="date" class="form-control bg-light" name="tgl_kembali" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Keterangan Penugasan</label>
+                        <textarea class="form-control bg-light" name="keterangan" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-pink w-100 py-3 fw-bold rounded-pill">Kirim Pengajuan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalReimburse" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header border-bottom-0 pb-0 p-4">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-receipt text-success me-2"></i>Form Reimbursement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="formReimburse" onsubmit="submitPengajuan(event, 'reimburse')">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Kategori</label>
+                        <select class="form-select bg-light" name="kategori" required>
+                            <option value="Transportasi">Transportasi / Bensin</option>
+                            <option value="Konsumsi">Konsumsi / Makan</option>
+                            <option value="Akomodasi">Akomodasi / Penginapan</option>
+                            <option value="Operasional Lainnya">Operasional Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Nominal (Rp)</label>
+                        <input type="number" class="form-control bg-light" name="nominal" placeholder="Contoh: 150000" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Foto Bukti Nota / Struk</label>
+                        <input type="file" class="form-control bg-light" id="inputFotoReimburse" accept="image/*" required>
+                        <input type="hidden" name="foto_nota" id="base64Reimburse">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Keterangan / Rincian</label>
+                        <textarea class="form-control bg-light" name="keterangan" rows="2" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-pink w-100 py-3 fw-bold rounded-pill">Kirim Pengajuan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCetakLaporan" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-body p-4 text-center">
+                <i class="bi bi-printer text-pink" style="font-size: 3rem;"></i>
+                <h5 class="fw-bold mt-3 mb-4">Cetak Rekap Bulanan</h5>
+                <form action="/cetak_rekap" method="GET" target="_blank">
+                    <select name="bulan" class="form-select bg-light mb-2">
+                        <?php for($i=1; $i<=12; $i++): ?>
+                            <option value="<?= str_pad($i, 2, '0', STR_PAD_LEFT) ?>" <?= date('m') == $i ? 'selected' : '' ?>><?= date('F', mktime(0,0,0,$i,1)) ?></option>
+                        <?php endfor; ?>
+                    </select>
+                    <select name="tahun" class="form-select bg-light mb-4">
+                        <?php for($i=date('Y')-1; $i<=date('Y')+1; $i++): ?>
+                            <option value="<?= $i ?>" <?= date('Y') == $i ? 'selected' : '' ?>><?= $i ?></option>
+                        <?php endfor; ?>
+                    </select>
+                    <button type="submit" class="btn btn-pink w-100 rounded-pill py-2 fw-bold">Buka PDF</button>
+                </form>
             </div>
         </div>
     </div>

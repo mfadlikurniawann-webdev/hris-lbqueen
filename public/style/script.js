@@ -284,3 +284,57 @@ setInterval(() => {
     if (document.getElementById('date-display'))
         document.getElementById('date-display').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }, 1000);
+
+// =======================================================
+// LOGIKA PENGAJUAN DINAS & REIMBURSE
+// =======================================================
+
+// Converter Foto Nota ke Base64 (Untuk Reimburse)
+const inputFotoReimburse = document.getElementById('inputFotoReimburse');
+if (inputFotoReimburse) {
+    inputFotoReimburse.addEventListener('change', function () {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('base64Reimburse').value = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+function submitPengajuan(event, jenis) {
+    event.preventDefault(); // Cegah reload web
+
+    const form = event.target;
+    const formData = new FormData(form);
+    formData.append('jenis', jenis);
+
+    // Tampilkan Loading
+    const btnSubmit = form.querySelector('button[type="submit"]');
+    const originalText = btnSubmit.innerHTML;
+    btnSubmit.innerHTML = '<i class="spinner-border spinner-border-sm"></i> Mengirim...';
+    btnSubmit.disabled = true;
+
+    fetch('/proses_pengajuan', {
+        method: 'POST',
+        body: formData
+    })
+        .then(res => res.text())
+        .then(data => {
+            // Tutup modal form
+            bootstrap.Modal.getInstance(form.closest('.modal')).hide();
+            // Tampilkan pesan sukses di Alert Global
+            showModernAlert('Berhasil', data, 'bi bi-check-circle-fill', '#198754');
+            form.reset(); // Kosongkan form
+        })
+        .catch(err => {
+            showModernAlert('Gagal', 'Terjadi kesalahan jaringan.', 'bi bi-x-circle-fill', '#dc3545');
+        })
+        .finally(() => {
+            // Kembalikan tombol ke semula
+            btnSubmit.innerHTML = originalText;
+            btnSubmit.disabled = false;
+        });
+}
