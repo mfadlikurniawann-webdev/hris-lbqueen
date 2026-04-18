@@ -124,6 +124,19 @@ if ($is_admin) {
     <link rel="stylesheet" href="/style/style.css">
 </head>
 <body>
+    <div id="splash-screen" class="splash-screen">
+    <div class="splash-content">
+        <div class="logo-box-lg mb-3 mx-auto shadow-lg">
+            <img src="/logo/lbqueen_logo.PNG" alt="LBQueen Logo" onerror="this.style.display='none'">
+        </div>
+        <h3 class="text-white fw-bold mb-1 tracking-wider">HRIS LBQueen</h3>
+        <p class="text-white-50 small mb-4">Mempersiapkan ruang kerja Anda...</p>
+        
+        <div class="spinner-border text-white" role="status" style="width: 2.5rem; height: 2.5rem; border-width: 0.25em;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</div>
 <div class="app-wrapper">
 
     <div class="sidebar-nav">

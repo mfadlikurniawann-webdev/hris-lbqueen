@@ -447,3 +447,21 @@ setInterval(() => {
     if (document.getElementById('date-display'))
         document.getElementById('date-display').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }, 1000);
+
+// =======================================================
+// SPLASH SCREEN / LOADING LOGIC
+// =======================================================
+// Event 'load' memastikan web menunggu SEMUA gambar dan sinyal selesai dimuat
+window.addEventListener('load', function () {
+    const splash = document.getElementById('splash-screen');
+    if (splash) {
+        // Memberi sedikit delay (misal 500ms) agar transisinya terlihat elegan & tidak berkedip cepat
+        setTimeout(() => {
+            splash.classList.add('splash-hidden');
+            // Hapus elemen dari background memori setelah efek transisi (600ms) selesai
+            setTimeout(() => {
+                splash.remove();
+            }, 600);
+        }, 500);
+    }
+});

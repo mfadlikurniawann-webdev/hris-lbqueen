@@ -459,4 +459,65 @@ body {
             padding: 5px 10px !important;
         }
     }
+
+    /* =========================================
+   SPLASH SCREEN / LOADING ANIMATION
+   ========================================= */
+    .splash-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(135deg, var(--lb-pink) 0%, #A83E60 100%);
+        z-index: 999999;
+        /* Pastikan selalu berada paling atas */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.6s;
+    }
+
+    .splash-content {
+        text-align: center;
+        animation: pulseSplash 2s infinite ease-in-out;
+    }
+
+    .logo-box-lg {
+        background: white;
+        width: 100px;
+        height: 100px;
+        border-radius: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+    }
+
+    .logo-box-lg img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    @keyframes pulseSplash {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    /* Class ini akan disuntikkan oleh JavaScript saat loading selesai */
+    .splash-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
 }
