@@ -502,9 +502,13 @@ if ($is_admin) {
                             <li class="list-group-item d-flex justify-content-between p-4"><span class="text-muted">Email</span><span class="fw-bold text-end"><?= $karyawan['email'] ?></span></li>
                             <li class="list-group-item d-flex justify-content-between p-4"><span class="text-muted">No. Handphone</span><span class="fw-bold"><?= $karyawan['no_hp'] ?></span></li>
                             <li class="list-group-item d-flex justify-content-between p-4"><span class="text-muted">Tgl Bergabung</span><span class="fw-bold"><?= formatTanggal($karyawan['tgl_bergabung']) ?></span></li>
-                            <a href="/ganti_password" class="nav-link">
-    <i class="bi bi-shield-lock-fill"></i>
-    Ubah Kata Sandi
+                            <li class="list-group-item d-flex justify-content-between p-4"><span class="text-muted">Ubah Kata Sandi</span><span class="fw-bold"><?= formatTanggal($karyawan['tgl_bergabung']) ?></span></li>
+<a href="/ganti_password" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-4 text-decoration-none text-dark">
+    <div>
+        <i class="bi bi-shield-lock-fill text-muted me-2"></i>
+        <span>Ubah Kata Sandi</span>
+    </div>
+    <i class="bi bi-chevron-right text-muted"></i>
 </a>
                         </ul>
                     </div>
