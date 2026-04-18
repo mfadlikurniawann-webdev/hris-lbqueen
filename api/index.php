@@ -125,14 +125,14 @@ if ($is_admin) {
 </head>
 <body>
     <div id="splash-screen" class="splash-screen">
-    <div class="splash-content">
-        <div class="logo-box-lg mb-3 mx-auto shadow-lg">
+    <div class="splash-content px-4">
+        <div class="logo-box-splash mb-3 mx-auto shadow-lg">
             <img src="/logo/lbqueen_logo.PNG" alt="LBQueen Logo" onerror="this.style.display='none'">
         </div>
-        <h3 class="text-white fw-bold mb-1 tracking-wider">HRIS LBQueen</h3>
-        <p class="text-white-50 small mb-4">Mempersiapkan ruang kerja Anda...</p>
+        <h4 class="text-white fw-bold mb-1 tracking-wider splash-title">HRIS LBQueen</h4>
+        <p class="text-white-50 mb-4 splash-subtitle">Mempersiapkan ruang kerja...</p>
         
-        <div class="spinner-border text-white" role="status" style="width: 2.5rem; height: 2.5rem; border-width: 0.25em;">
+        <div class="spinner-border text-white opacity-75" role="status" style="width: 2rem; height: 2rem; border-width: 0.2em;">
             <span class="visually-hidden">Loading...</span>
         </div>
     </div>

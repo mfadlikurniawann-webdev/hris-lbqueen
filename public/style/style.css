@@ -461,52 +461,65 @@ body {
     }
 
     /* =========================================
-   SPLASH SCREEN / LOADING ANIMATION
+   SPLASH SCREEN / LOADING ANIMATION (RESPONSIF)
    ========================================= */
     .splash-screen {
         position: fixed;
         top: 0;
         left: 0;
-        width: 100vw;
-        height: 100vh;
+        width: 100%;
+        height: 100%;
+        /* Menggunakan % lebih stabil di HP ketimbang vh */
         background: linear-gradient(135deg, var(--lb-pink) 0%, #A83E60 100%);
         z-index: 999999;
-        /* Pastikan selalu berada paling atas */
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.6s;
+        transition: opacity 0.5s ease-out, visibility 0.5s;
     }
 
     .splash-content {
         text-align: center;
-        animation: pulseSplash 2s infinite ease-in-out;
+        animation: pulseSplash 2.5s infinite ease-in-out;
+        max-width: 320px;
+        /* Batasan lebar maksimal agar tidak melebar di layar besar */
     }
 
-    .logo-box-lg {
+    /* Ukuran box logo dikecilkan agar pas di HP */
+    .logo-box-splash {
         background: white;
-        width: 100px;
-        height: 100px;
-        border-radius: 25px;
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 12px;
+        padding: 10px;
     }
 
-    .logo-box-lg img {
+    .logo-box-splash img {
         max-width: 100%;
         max-height: 100%;
         object-fit: contain;
     }
 
+    /* Ukuran teks disesuaikan */
+    .splash-title {
+        font-size: 1.2rem;
+    }
+
+    .splash-subtitle {
+        font-size: 0.8rem;
+    }
+
+    /* Efek denyut diperhalus agar tidak terlalu membesar di HP */
     @keyframes pulseSplash {
         0% {
             transform: scale(1);
         }
 
         50% {
-            transform: scale(1.05);
+            transform: scale(1.03);
         }
 
         100% {
@@ -514,7 +527,6 @@ body {
         }
     }
 
-    /* Class ini akan disuntikkan oleh JavaScript saat loading selesai */
     .splash-hidden {
         opacity: 0;
         visibility: hidden;
