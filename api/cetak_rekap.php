@@ -59,12 +59,9 @@ $result = $conn->query($sql);
         .signature-box p.sign-title { color: #1a202c; font-weight: 800; font-size: 14px; margin-top: 60px; border-top: 1px solid #cbd5e1; padding-top: 10px; }
         
         @media print { 
-            body { padding: 0; background: #fff; margin: 0; }
+            body { padding: 0; margin: 0; -webkit-print-color-adjust: exact; color-adjust: exact; print-color-adjust: exact; }
             .page-container { border: none; padding: 0; box-shadow: none; border-radius: 0; max-width: 100%; }
             .no-print { display: none; } 
-            th { background-color: #f0f0f0 !important; color: #000 !important; -webkit-print-color-adjust: exact; }
-            table, th, td { border-color: #ddd; }
-            td, td b, .header h2, .header p { color: #000; }
         }
     </style>
 </head>
@@ -74,6 +71,10 @@ $result = $conn->query($sql);
     <div class="page-container">
         <div class="header">
             <h2>PT LBQueen Care Beauty</h2>
+            <div style="font-size: 13px; margin-bottom: 20px; color: #718096; line-height: 1.6;">
+                Jl. Hos Cokroaminoto no.17 Kebon Jeruk Tanjung Karang Timur, Bandar Lampung.<br>
+                Telp: +62 821-7617-1448 | Email: lbqueen.id@gmail.com
+            </div>
             <p>Rekapitulasi Kehadiran Karyawan - Periode: <b><?= $nama_bulan[$bulan-1] ?> <?= $tahun ?></b></p>
         </div>
 

@@ -78,14 +78,9 @@ $total_penerima = $gaji_pokok + $uang_kerajinan + $uang_bonus + $uang_makan;
         .print-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #C94F78, #b03d64); color: white; text-align: center; font-weight: 800; margin-bottom: 25px; border: none; cursor: pointer; border-radius: 50px; font-size: 16px; box-shadow: 0 10px 20px rgba(201, 79, 120, 0.25); text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; }
         .print-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(201, 79, 120, 0.35); }
         @media print { 
-            body { background: #fff; padding: 0; color: #000; }
+            body { padding: 0; margin: 0; -webkit-print-color-adjust: exact; color-adjust: exact; print-color-adjust: exact; }
             .print-btn { display: none; } 
-            .container { border: none; padding: 0; box-shadow: none; border-radius: 0; max-width: 100%; }
-            .header { border-bottom-color: #000; }
-            table, .signature-box, .signature-box .title, .signature-box .name { border-color: #ddd; box-shadow: none; color: #000; }
-            td { color: #000; }
-            .bg-pink { background-color: #f0f0f0 !important; color: #000 !important; -webkit-print-color-adjust: exact; }
-            .notes td { color: #000; }
+            .container { border: none; padding: 0; box-shadow: none; max-width: 100%; }
         }
     </style>
 </head>
@@ -97,7 +92,8 @@ $total_penerima = $gaji_pokok + $uang_kerajinan + $uang_bonus + $uang_makan;
             <div class="header-text">
                 <h2>SLIP GAJI KARYAWAN</h2>
                 <h1>PT LBQUEEN CARE BEAUTY</h1>
-                <p>Jl. Hos Cokroaminoto no.17 Kebon Jeruk Tanjung Karang Timur, Bandar Lampung</p>
+                <p>Jl. Hos Cokroaminoto no.17 Kebon Jeruk Tanjung Karang Timur, Bandar Lampung.<br>
+                Telp: +62 821-7617-1448 | Email: lbqueen.id@gmail.com</p>
             </div>
         </div>
 

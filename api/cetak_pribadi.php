@@ -218,12 +218,9 @@ if ($total_menit_lembur > 0) {
         .print-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(201, 79, 120, 0.35); }
         
         @media print {
-            body { padding: 0; margin: 0; background: #fff; color: #000; }
+            body { padding: 0; margin: 0; -webkit-print-color-adjust: exact; color-adjust: exact; print-color-adjust: exact; }
             .page-container { padding: 0; width: 100%; max-width: 100%; box-shadow: none; border: none; }
             .print-btn { display: none; }
-            table, th, td { border-color: #ccc; }
-            .tabel-harian th { background-color: #f0f0f0 !important; color: #000 !important; -webkit-print-color-adjust: exact; }
-            .bg-green-soft, .bg-red-soft, .bg-blue-soft, .bg-orange-soft, .bg-yellow-soft { background-color: transparent !important; color: #000 !important; }
         }
     </style>
 </head>
@@ -233,11 +230,11 @@ if ($total_menit_lembur > 0) {
     <div class="page-container">
         <table class="header-table">
             <tr>
-                <td style="width: 150px;"><img src="/logo/lbqueen_logo.PNG" style="max-height: 60px;"></td>
+                <td style="width: 150px;"><img src="/logo/lbqueen_logo.PNG" class="header-logo"></td>
                 <td style="text-align: right;">
-                    <div class="comp-name">LBQueen Care Beauty</div>
-                    <div class="comp-addr">Jalan Alam Kurnia, Kalibalau Kencana, Bandar Lampung, Lampung 35133<br>
-                    Telp: (+62) 812-3456-7890 | Email: hrd@lbqueen.com</div>
+                    <div class="comp-name">PT LBQueen Care Beauty</div>
+                    <div class="comp-addr">Jl. Hos Cokroaminoto no.17 Kebon Jeruk Tanjung Karang Timur, Bandar Lampung.<br>
+                    Telp: +62 821-7617-1448 | Email: lbqueen.id@gmail.com</div>
                 </td>
             </tr>
         </table>
