@@ -15,7 +15,7 @@ $result = $conn->query("SELECT * FROM karyawan WHERE email = '$email'");
 if ($result && $result->num_rows > 0) {
     $user = $result->fetch_assoc();
 
-    // Cek password (plain text sesuai database kamu)
+    // Cek password (plain text sesuai database)
     if ($password === $user['password']) {
         $token = jwt_create(['email' => $user['email'], 'nik' => $user['nik']]);
         set_token_cookie($token);

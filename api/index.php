@@ -3,6 +3,12 @@
 include __DIR__ . '/koneksi.php';
 date_default_timezone_set('Asia/Jakarta');
 
+// Route halaman ganti password
+$router->get('/ganti_password',       'api/ganti_password.php');
+
+// Route proses ganti password (AJAX POST)
+$router->post('/proses_ganti_password', 'api/proses_ganti_password.php');
+
 // PROTEKSI HALAMAN - Pakai JWT
 $karyawan = auth_required($conn);
 
@@ -489,6 +495,10 @@ if ($is_admin) {
                             <li class="list-group-item d-flex justify-content-between p-4"><span class="text-muted">Email</span><span class="fw-bold text-end"><?= $karyawan['email'] ?></span></li>
                             <li class="list-group-item d-flex justify-content-between p-4"><span class="text-muted">No. Handphone</span><span class="fw-bold"><?= $karyawan['no_hp'] ?></span></li>
                             <li class="list-group-item d-flex justify-content-between p-4"><span class="text-muted">Tgl Bergabung</span><span class="fw-bold"><?= formatTanggal($karyawan['tgl_bergabung']) ?></span></li>
+                            <a href="/ganti_password" class="nav-link">
+    <i class="bi bi-shield-lock-fill"></i>
+    Ubah Kata Sandi
+</a>
                         </ul>
                     </div>
                 </div>
