@@ -6,10 +6,12 @@ date_default_timezone_set('Asia/Jakarta');
 // PROTEKSI HALAMAN - Pakai JWT
 $karyawan = auth_required($conn);
 
-// HAK AKSES ADMIN/HR
-$posisi   = strtoupper($karyawan['posisi']);
-$level    = strtoupper($karyawan['level_jabatan']);
-$is_admin = in_array($posisi, ['HCG','HRD','HR']) || in_array($level, ['OWNER','DIREKTUR']);
+// HAK AKSES ADMIN/HR (ANTI GAGAL & KEBAL SPASI)
+$posisi   = trim(strtoupper($karyawan['posisi'] ?? ''));
+$level    = trim(strtoupper($karyawan['level_jabatan'] ?? ''));
+
+// Jika posisinya mengandung kata "HC" (HCG/HCGA) atau "HR" (HRD/HR), otomatis terbuka!
+$is_admin = (strpos($posisi, 'HC') !== false || strpos($posisi, 'HR') !== false || in_array($level, ['OWNER','DIREKTUR']));
 
 // FUNGSI BANTUAN
 function getInitials($nama) {
