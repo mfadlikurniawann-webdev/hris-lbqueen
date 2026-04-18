@@ -106,7 +106,7 @@ $total_penerima = $gaji_pokok + $uang_kerajinan + $uang_bonus + $uang_makan;
         <div class="signature-box">
             <div class="title">Best Regards</div>
             <div class="sign-area">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/f/f8/Fictional_signature.svg" alt="Sign">
+                <img src="/logo/ttd.png" alt="Sign">
             </div>
             <div class="name">HR & Digital Ops</div>
         </div>
