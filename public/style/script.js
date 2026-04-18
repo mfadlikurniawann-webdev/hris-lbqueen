@@ -354,6 +354,33 @@ function submitPengajuan(event, jenis) {
 }
 
 // =======================================================
+// LOGIKA APPROVAL LEMBUR (KHUSUS HR)
+// =======================================================
+function prosesApprovalLembur(id, status) {
+    if (!confirm('Anda yakin ingin mengubah status pengajuan lembur ini menjadi ' + status + '?')) return;
+
+    const formData = new FormData();
+    formData.append('id', id);
+    formData.append('status', status);
+    formData.append('jenis', 'lembur');
+
+    fetch('/proses_approval', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+        alert(data);
+        if (data.includes('✅') || data.toLowerCase().includes('berhasil')) {
+            location.reload();
+        }
+    })
+    .catch(err => {
+        alert('Gagal menghubungi server.');
+    });
+}
+
+// =======================================================
 // LOGIKA UBAH KATA SANDI (DENGAN ANIMASI)
 // =======================================================
 function checkStrength(val) {
