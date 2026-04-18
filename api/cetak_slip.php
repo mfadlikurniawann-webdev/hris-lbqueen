@@ -51,26 +51,42 @@ $total_penerima = $gaji_pokok + $uang_kerajinan + $uang_bonus + $uang_makan;
     <meta charset="UTF-8">
     <title>Slip Gaji - <?= htmlspecialchars($data_kar['nama']) ?></title>
     <style>
-        body { font-family: 'Arial', sans-serif; background: #fff; padding: 20px; color: #000; }
-        .container { max-width: 800px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; }
-        .header { display: flex; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-        .header img { width: 80px; height: 80px; object-fit: contain; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #fdfdfd; padding: 20px; color: #2d3748; line-height: 1.5; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; border: 1px solid #edf2f7; border-radius: 20px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .header { display: flex; align-items: center; border-bottom: 2px dashed #edf2f7; padding-bottom: 25px; margin-bottom: 30px; }
+        .header img { width: 85px; height: 85px; object-fit: contain; border-radius: 16px; padding: 5px; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #edf2f7; }
         .header-text { flex: 1; text-align: center; }
-        .header-text h2 { margin: 0; font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-        .header-text h1 { margin: 5px 0; font-size: 20px; font-weight: bold; }
-        .header-text p { margin: 0; font-size: 12px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
-        th, td { border: 1px solid #000; padding: 8px 12px; text-align: left; }
-        .bg-pink { background-color: #d8a2b5; font-weight: bold; }
-        .text-right { text-align: right; }
-        .signature-box { float: right; width: 250px; text-align: center; border: 1px solid #000; margin-top: 20px; font-size: 13px; }
-        .signature-box .title { border-bottom: 1px solid #000; padding: 8px; font-weight: bold; }
-        .signature-box .sign-area { height: 80px; position: relative; }
-        .signature-box .sign-area img { height: 60px; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); opacity: 0.8; }
-        .signature-box .name { border-top: 1px solid #000; padding: 8px; font-weight: bold; }
-        .notes { margin-top: 150px; font-size: 12px; }
-        .print-btn { display: block; width: 100%; padding: 15px; background: #C94F78; color: white; text-align: center; font-weight: bold; margin-bottom: 20px; border: none; cursor: pointer; }
-        @media print { .print-btn { display: none; } .container { border: none; padding: 0; } }
+        .header-text h2 { margin: 0; font-size: 14px; font-weight: 800; color: #C94F78; text-transform: uppercase; letter-spacing: 2px; }
+        .header-text h1 { margin: 8px 0; font-size: 24px; font-weight: 800; color: #1a202c; letter-spacing: -0.5px; }
+        .header-text p { margin: 0; font-size: 13px; color: #718096; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 30px; font-size: 13.5px; border: 1px solid #edf2f7; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        th, td { padding: 14px 20px; text-align: left; border-bottom: 1px solid #edf2f7; }
+        tr:last-child th, tr:last-child td { border-bottom: none; }
+        .bg-pink { background-color: #C94F78; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; font-size: 12px; font-weight: 700; border-bottom: none; }
+        td { color: #4a5568; font-weight: 600; }
+        td.text-right, th.text-right { text-align: right; }
+        .signature-box { float: right; width: 260px; text-align: center; border: 1px solid #edf2f7; border-radius: 16px; margin-top: 30px; font-size: 13.5px; background: #fff; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .signature-box .title { border-bottom: 1px dashed #edf2f7; padding: 12px; font-weight: 700; color: #718096; background: #f8fafc; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .signature-box .sign-area { height: 90px; position: relative; background: #fff; }
+        .signature-box .sign-area img { height: 70px; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); opacity: 0.9; }
+        .signature-box .name { border-top: 1px dashed #edf2f7; padding: 12px; font-weight: 800; color: #C94F78; background: #FDF0F5; }
+        .notes { margin-top: 180px; font-size: 13px; }
+        .notes table { border: none; box-shadow: none; border-radius: 12px; overflow: hidden; }
+        .notes th { background-color: #f8fafc; color: #C94F78; border-bottom: 1px solid #edf2f7; }
+        .notes td { color: #718096; border-bottom: 1px dashed #edf2f7; font-weight: 500; font-size: 12.5px; }
+        .print-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #C94F78, #b03d64); color: white; text-align: center; font-weight: 800; margin-bottom: 25px; border: none; cursor: pointer; border-radius: 50px; font-size: 16px; box-shadow: 0 10px 20px rgba(201, 79, 120, 0.25); text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; }
+        .print-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(201, 79, 120, 0.35); }
+        @media print { 
+            body { background: #fff; padding: 0; color: #000; }
+            .print-btn { display: none; } 
+            .container { border: none; padding: 0; box-shadow: none; border-radius: 0; max-width: 100%; }
+            .header { border-bottom-color: #000; }
+            table, .signature-box, .signature-box .title, .signature-box .name { border-color: #ddd; box-shadow: none; color: #000; }
+            td { color: #000; }
+            .bg-pink { background-color: #f0f0f0 !important; color: #000 !important; -webkit-print-color-adjust: exact; }
+            .notes td { color: #000; }
+        }
     </style>
 </head>
 <body>

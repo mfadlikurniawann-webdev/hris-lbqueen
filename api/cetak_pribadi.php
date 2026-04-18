@@ -174,44 +174,56 @@ if ($total_menit_lembur > 0) {
     <meta charset="UTF-8">
     <title>Laporan Kehadiran - <?= htmlspecialchars($data_karyawan['nama']) ?></title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Arial:wght@400;700&display=swap');
-        body { font-family: Arial, sans-serif; font-size: 11px; color: #000; line-height: 1.4; }
-        .page-container { width: 100%; max-width: 800px; margin: 0 auto; padding: 20px; background: white; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; font-size: 12px; color: #2d3748; line-height: 1.5; background: #fdfdfd; }
+        .page-container { width: 100%; max-width: 850px; margin: 0 auto; padding: 40px; background: white; box-shadow: 0 10px 40px rgba(0,0,0,0.05); border-radius: 20px; border: 1px solid #edf2f7; }
         
-        .header-table { width: 100%; margin-bottom: 20px; }
-        .comp-name { font-size: 14px; font-weight: bold; margin-bottom: 2px; }
-        .comp-addr { font-size: 10px; color: #333; }
+        .header-table { width: 100%; margin-bottom: 20px; border-bottom: 2px dashed #edf2f7; padding-bottom: 15px; }
+        .header-table td { border: none; padding: 0; }
+        .comp-name { font-size: 18px; font-weight: 800; margin-bottom: 4px; color: #1a202c; letter-spacing: -0.5px; }
+        .comp-addr { font-size: 11px; color: #718096; line-height: 1.6; }
+        .header-logo { max-height: 70px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #edf2f7; padding: 4px; }
         
         .title-box { text-align: center; margin: 30px 0; }
-        .title-box h2 { margin: 0; font-size: 18px; font-weight: bold; }
-        .title-box p { margin: 5px 0 0 0; font-size: 12px; font-weight: bold; }
+        .title-box h2 { margin: 0; font-size: 20px; font-weight: 800; color: #C94F78; text-transform: uppercase; letter-spacing: 1.5px; }
+        .title-box p { margin: 8px 0 0 0; font-size: 12px; font-weight: 600; color: #718096; background: #f8fafc; display: inline-block; padding: 6px 16px; border-radius: 50px; border: 1px solid #edf2f7; }
         
-        .info-table { width: 60%; margin-bottom: 20px; }
-        .info-table td { padding: 3px 0; }
-        .info-table td:first-child { width: 130px; font-weight: bold; }
+        .info-table { width: 100%; max-width: 500px; margin-bottom: 25px; border: none; }
+        .info-table td { padding: 5px 0; border: none; color: #4a5568; font-size: 13px; }
+        .info-table td:first-child { width: 150px; font-weight: 700; color: #718096; }
+        .info-table td strong { color: #1a202c; }
         
-        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        th, td { border: 1px solid #000; padding: 6px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 25px; border: 1px solid #edf2f7; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        th, td { padding: 10px 14px; border-bottom: 1px solid #edf2f7; border-right: 1px solid #edf2f7; }
+        th:last-child, td:last-child { border-right: none; }
+        tr:last-child td { border-bottom: none; }
         .text-center { text-align: center; }
-        .fw-bold { font-weight: bold; }
+        .fw-bold { font-weight: 700; color: #1a202c; }
         
-        .bg-green-soft { background-color: #d1e7dd; }
-        .bg-red-soft { background-color: #f8d7da; }
-        .bg-blue-soft { background-color: #cfe2ff; }
-        .bg-orange-soft { background-color: #ffe69c; }
-        .bg-yellow-soft { background-color: #fff3cd; }
+        .bg-green-soft { background-color: #f0fdf4; color: #166534; }
+        .bg-red-soft { background-color: #fef2f2; color: #991b1b; }
+        .bg-blue-soft { background-color: #eff6ff; color: #1e3a8a; }
+        .bg-orange-soft { background-color: #fffbeb; color: #92400e; }
+        .bg-yellow-soft { background-color: #fefce8; color: #854d0e; }
         
-        .tabel-harian th { background-color: #C94F78; color: white; border-color: #C94F78; }
+        .tabel-harian th { background-color: #C94F78; color: white; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; border-bottom: none; }
+        .tabel-harian td { font-size: 12px; font-weight: 500; color: #4a5568; }
         
-        .footer-notes { font-size: 10px; margin-top: 20px; }
-        .auto-approve { border: 1px solid #0d6efd; padding: 10px; text-align: center; color: #0d6efd; width: 300px; }
-        .auto-approve p { margin: 2px; font-size: 10px; }
-        .print-btn { display: block; width: 100%; padding: 15px; background: #C94F78; color: white; text-align: center; text-decoration: none; font-weight: bold; font-size: 16px; margin-bottom: 20px; border: none; cursor: pointer;}
+        .footer-notes { font-size: 11px; margin-top: 30px; color: #718096; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px dashed #cbd5e1; }
+        .footer-notes b { color: #4a5568; }
+        .auto-approve { border: 1px dashed #93c5fd; padding: 15px; text-align: center; border-radius: 16px; width: 300px; background: #eff6ff; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.05); }
+        .auto-approve p { margin: 5px 0 0 0; font-size: 10px; color: #64748b; line-height: 1.5; }
+        
+        .print-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #C94F78, #b03d64); color: white; text-align: center; text-decoration: none; font-weight: 800; font-size: 16px; margin-bottom: 25px; border: none; cursor: pointer; border-radius: 50px; box-shadow: 0 10px 20px rgba(201, 79, 120, 0.25); text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; }
+        .print-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(201, 79, 120, 0.35); }
         
         @media print {
-            body { padding: 0; margin: 0; }
-            .page-container { padding: 0; width: 100%; max-width: 100%; box-shadow: none; }
+            body { padding: 0; margin: 0; background: #fff; color: #000; }
+            .page-container { padding: 0; width: 100%; max-width: 100%; box-shadow: none; border: none; }
             .print-btn { display: none; }
+            table, th, td { border-color: #ccc; }
+            .tabel-harian th { background-color: #f0f0f0 !important; color: #000 !important; -webkit-print-color-adjust: exact; }
+            .bg-green-soft, .bg-red-soft, .bg-blue-soft, .bg-orange-soft, .bg-yellow-soft { background-color: transparent !important; color: #000 !important; }
         }
     </style>
 </head>
