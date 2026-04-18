@@ -33,8 +33,8 @@ function formatTanggalIndo($tanggal) {
 $hari_ini             = date('Y-m-d');
 $jam_sekarang         = date('H:i');
 $batas_check_in_awal  = '08:30';
-$batas_check_in_akhir = '10:30'; // Batas Check In jam 10:30
-$batas_check_out_awal = '18:00'; // Batas Pulang jam 18:00
+$batas_check_in_akhir = '10:30'; 
+$batas_check_out_awal = '18:00'; 
 
 $belum_waktunya_in  = ($jam_sekarang < $batas_check_in_awal);
 $lewat_batas_in     = ($jam_sekarang > $batas_check_in_akhir);
@@ -121,7 +121,6 @@ if ($is_admin) {
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    
     <link rel="stylesheet" href="/style/style.css">
 </head>
 <body>
@@ -133,18 +132,10 @@ if ($is_admin) {
             <h6 class="fw-bold text-pink mb-0">HRIS LBQueen</h6>
             <small class="text-muted" style="font-size:11px;">Care & Beauty</small>
         </div>
-        <button class="nav-item-btn active" id="nav-beranda" onclick="switchScreen('beranda')">
-            <i class="bi bi-house-door-fill"></i> <span>Beranda</span>
-        </button>
-        <button class="nav-item-btn" id="nav-riwayat" onclick="switchScreen('riwayat')">
-            <i class="bi bi-clock-history"></i> <span>Riwayat</span>
-        </button>
-        <button class="nav-item-btn" id="nav-layanan" onclick="switchScreen('layanan')">
-            <i class="bi bi-ui-checks-grid"></i> <span>Layanan</span>
-        </button>
-        <button class="nav-item-btn" id="nav-profil" onclick="switchScreen('profil')">
-            <i class="bi bi-person-fill"></i> <span>Profil</span>
-        </button>
+        <button class="nav-item-btn active" id="nav-beranda" onclick="switchScreen('beranda')"><i class="bi bi-house-door-fill"></i> <span>Beranda</span></button>
+        <button class="nav-item-btn" id="nav-riwayat" onclick="switchScreen('riwayat')"><i class="bi bi-clock-history"></i> <span>Riwayat</span></button>
+        <button class="nav-item-btn" id="nav-layanan" onclick="switchScreen('layanan')"><i class="bi bi-ui-checks-grid"></i> <span>Layanan</span></button>
+        <button class="nav-item-btn" id="nav-profil" onclick="switchScreen('profil')"><i class="bi bi-person-fill"></i> <span>Profil</span></button>
     </div>
 
     <div class="main-content">
@@ -161,7 +152,6 @@ if ($is_admin) {
             </div>
 
             <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
-                
                 <div class="card mb-3 overlap-card shadow-sm" style="margin-top:-35px; z-index: 10; position:relative;">
                     <div class="card-body d-flex align-items-center gap-3 p-3">
                         <div class="avatar-initials" style="width: 55px; height: 55px; font-size: 22px;">
@@ -244,7 +234,7 @@ if ($is_admin) {
 
                         <?php if ($show_camera): ?>
                             <div class="mb-3 text-center">
-                                <div class="camera-box">
+                                <div class="camera-box bg-dark">
                                     <video id="kamera" autoplay playsinline></video>
                                     <img id="kamera-preview" style="display:none;" />
                                     <canvas id="canvas_kamera" style="display:none;"></canvas>
@@ -301,16 +291,8 @@ if ($is_admin) {
         </div>
 
         <div id="screen-riwayat" class="app-screen">
-            <div class="bg-white p-4 desktop-px d-flex justify-content-between align-items-center border-bottom sticky-top shadow-sm" style="z-index: 10;">
-                <h4 class="mb-0 text-dark fw-bold"><i class="bi bi-clock-history text-pink me-2"></i>Riwayat Kehadiran</h4>
-                <div>
-                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold me-2 shadow-sm" onclick="new bootstrap.Modal(document.getElementById('modalCetakPribadi')).show()">
-                        <i class="bi bi-printer-fill me-1"></i> Cetak
-                    </button>
-                    <button class="btn btn-light border btn-sm rounded-pill px-3 fw-bold shadow-sm text-dark">
-                        <i class="bi bi-funnel-fill me-1"></i> Filter
-                    </button>
-                </div>
+            <div class="bg-pink-wave p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+                <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Riwayat Kehadiran</h4>
             </div>
             
             <div class="p-3 desktop-px mx-auto mt-3" style="max-width: 1200px;">
@@ -468,9 +450,14 @@ if ($is_admin) {
                     <h4 class="mb-0 text-white fw-bold mt-2 pb-2" id="detail-nama-karyawan">Log Kehadiran</h4>
                 </div>
                 <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
+                    
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <h6 class="small fw-bold text-muted mb-0"><i class="bi bi-funnel-fill me-1 text-pink"></i> Filter & Aksi</h6>
+                        <button class="btn btn-outline-danger btn-sm rounded-pill fw-bold shadow-sm" onclick="bukaModalCetakKaryawan()"><i class="bi bi-printer-fill me-1"></i> Cetak Laporan Karyawan</button>
+                    </div>
+
                     <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
                         <div class="card-body p-3 p-md-4">
-                            <h6 class="small fw-bold text-muted mb-2"><i class="bi bi-funnel-fill me-1 text-pink"></i> Filter Pencarian</h6>
                             <div class="d-flex flex-wrap gap-2 gap-md-4">
                                 <div class="flex-fill">
                                     <small class="text-muted fw-bold" style="font-size:11px;">Dari Tanggal</small>
@@ -729,14 +716,16 @@ if ($is_admin) {
     </div>
 </div>
 
-<div class="modal fade" id="modalCetakPribadi" tabindex="-1">
+<div class="modal fade" id="modalCetakLogKaryawan" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content rounded-4 border-0 shadow-lg">
             <div class="modal-body p-4 text-center">
                 <i class="bi bi-file-earmark-pdf-fill text-danger" style="font-size: 3rem;"></i>
-                <h5 class="fw-bold mt-3 mb-1 text-dark">Cetak Data Pribadi</h5>
-                <p class="text-muted small mb-4">Download laporan kehadiran Anda</p>
+                <h5 class="fw-bold mt-3 mb-1 text-dark">Cetak Laporan Karyawan</h5>
+                <p class="text-muted small mb-4">Siklus: Tgl 26 s/d Tgl 25</p>
                 <form action="/cetak_pribadi" method="GET" target="_blank">
+                    <input type="hidden" name="nik" id="cetak_nik_karyawan">
+                    
                     <select name="bulan" class="form-select form-select-lg bg-light mb-3 fs-6">
                         <?php for($i=1; $i<=12; $i++): ?>
                             <option value="<?= str_pad($i, 2, '0', STR_PAD_LEFT) ?>" <?= date('m') == $i ? 'selected' : '' ?>><?= date('F', mktime(0,0,0,$i,1)) ?></option>
@@ -775,9 +764,7 @@ if ($is_admin) {
         adminHistData: <?= json_encode($admin_hist_arr) ?>
     };
 </script>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/style/script.js"></script>
-
 </body>
 </html>

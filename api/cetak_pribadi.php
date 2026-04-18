@@ -3,21 +3,47 @@
 include __DIR__ . '/koneksi.php';
 date_default_timezone_set('Asia/Jakarta');
 
-// Autentikasi Karyawan
-$karyawan = auth_required($conn);
-$nik = $karyawan['nik'];
+// Autentikasi HR/Admin
+$karyawan_login = auth_required($conn);
+$posisi   = strtoupper($karyawan_login['posisi']);
+$level    = strtoupper($karyawan_login['level_jabatan']);
+$is_admin = in_array($posisi, ['HCG','HRD','HR']) || in_array($level, ['OWNER','DIREKTUR']);
+
+if (!$is_admin) {
+    die("❌ Akses Ditolak! Khusus HR & Manajemen.");
+}
+
+// Dapatkan NIK karyawan yang ingin dicetak dari URL (?nik=...)
+$nik_target = $_GET['nik'] ?? '';
+if (empty($nik_target)) { die("❌ NIK Karyawan tidak ditemukan."); }
+
+// Ambil Data Karyawan Target
+$q_target = $conn->query("SELECT * FROM karyawan WHERE nik='$nik_target'");
+$data_karyawan = $q_target->fetch_assoc();
+if (!$data_karyawan) { die("❌ Data karyawan tidak ditemukan di sistem."); }
 
 $bulan = $_GET['bulan'] ?? date('m');
 $tahun = $_GET['tahun'] ?? date('Y');
 $nama_bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
-// Ambil riwayat absen 1 bulan ini
+// LOGIKA SIKLUS CUT-OFF (TGL 26 Bulan Lalu - TGL 25 Bulan Ini)
+$end_date_str = "$tahun-$bulan-25";
+$end_date = new DateTime($end_date_str);
+
+$start_date = clone $end_date;
+$start_date->modify('-1 month')->modify('+1 day'); // Mundur 1 bulan, maju 1 hari (jadi tgl 26)
+
+$start_str = $start_date->format('Y-m-d');
+$end_str = $end_date->format('Y-m-d');
+$hari_ini_str = date('Y-m-d');
+
+// Ambil riwayat absen di periode Cut-Off
 $sql = "SELECT DATE(waktu) as tgl, 
         MAX(CASE WHEN jenis='Check In' THEN waktu END) as in_time,
         MAX(CASE WHEN jenis='Check Out' THEN waktu END) as out_time,
         MAX(CASE WHEN jenis='Check In' THEN status END) as status_in
         FROM absensi 
-        WHERE nik='$nik' AND MONTH(waktu)='$bulan' AND YEAR(waktu)='$tahun'
+        WHERE nik='$nik_target' AND DATE(waktu) BETWEEN '$start_str' AND '$end_str'
         GROUP BY DATE(waktu)";
 $res_absen = $conn->query($sql);
 
@@ -26,9 +52,6 @@ while ($row = $res_absen->fetch_assoc()) {
     $absen_data[$row['tgl']] = $row;
 }
 
-// Menghitung Hari dalam sebulan
-$jumlah_hari = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
-
 // Variabel Rekap
 $tot_tepat = 0; $tot_telat = 0; $tot_invalid = 0; $tot_revisi = 0;
 $tot_absen = 0; $tot_libur = 0; $tot_sakit = 0;
@@ -36,43 +59,56 @@ $total_menit_kerja = 0;
 
 $tabel_harian = "";
 
-for ($i = 1; $i <= $jumlah_hari; $i++) {
-    $tgl_str = $tahun . '-' . str_pad($bulan, 2, '0', STR_PAD_LEFT) . '-' . str_pad($i, 2, '0', STR_PAD_LEFT);
-    $hari_ini = date('D', strtotime($tgl_str));
+// LOOP DARI TANGGAL 26 S/D 25
+$period = new DatePeriod($start_date, new DateInterval('P1D'), $end_date->modify('+1 day'));
+
+foreach ($period as $dt) {
+    $tgl_str = $dt->format('Y-m-d');
+    $hari_ini = $dt->format('D');
     $is_weekend = ($hari_ini == 'Sat' || $hari_ini == 'Sun');
     
-    $status = $is_weekend ? 'Libur' : 'Tidak Hadir';
-    $jam_masuk = '-'; $jam_keluar = '-'; $jam_lembur = '-';
-    $total_jam = '-';
+    // Default Styling
+    $row_bg = '';
+    $status_bg = '';
+    $status = '-';
+    $jam_masuk = '-'; $jam_keluar = '-'; $jam_lembur = '-'; $total_jam = '-';
     
-    $row_bg = $is_weekend ? 'style="background-color: #f8f9fa;"' : '';
-    $status_bg = $is_weekend ? 'style="background-color: #cfe2ff;"' : 'style="background-color: #f5c2c7;"';
+    // Cek apakah tanggal tersebut di masa depan (belum dilewati)
+    if ($tgl_str > $hari_ini_str) {
+        $status = '-';
+        $row_bg = 'style="background-color: #fcfcfc;"';
+    } 
+    else {
+        // Logika Normal jika tanggal sudah dilewati / adalah hari ini
+        $status = $is_weekend ? 'Libur' : 'Tidak Hadir';
+        $row_bg = $is_weekend ? 'style="background-color: #f8f9fa;"' : '';
+        $status_bg = $is_weekend ? 'style="background-color: #cfe2ff;"' : 'style="background-color: #f5c2c7;"';
 
-    if (isset($absen_data[$tgl_str])) {
-        $d = $absen_data[$tgl_str];
-        $status_asli = $d['status_in'] ?: 'Hadir';
-        
-        $jam_masuk = $d['in_time'] ? date('H:i', strtotime($d['in_time'])) : '-';
-        $jam_keluar = $d['out_time'] ? date('H:i', strtotime($d['out_time'])) : '-';
-        
-        if ($status_asli == 'Hadir') {
-            $tot_tepat++; $status = 'Hadir'; $status_bg = 'style="background-color: #d1e7dd;"';
-        } elseif ($status_asli == 'Telat') {
-            $tot_telat++; $status = 'Terlambat'; $status_bg = 'style="background-color: #ffe69c;"';
+        if (isset($absen_data[$tgl_str])) {
+            $d = $absen_data[$tgl_str];
+            $status_asli = $d['status_in'] ?: 'Hadir';
+            
+            $jam_masuk = $d['in_time'] ? date('H:i', strtotime($d['in_time'])) : '-';
+            $jam_keluar = $d['out_time'] ? date('H:i', strtotime($d['out_time'])) : '-';
+            
+            if ($status_asli == 'Hadir') {
+                $tot_tepat++; $status = 'Hadir'; $status_bg = 'style="background-color: #d1e7dd;"';
+            } elseif ($status_asli == 'Telat' || $status_asli == 'Terlambat') {
+                $tot_telat++; $status = 'Terlambat'; $status_bg = 'style="background-color: #ffe69c;"';
+            }
+            
+            if ($d['in_time'] && $d['out_time']) {
+                $diff = strtotime($d['out_time']) - strtotime($d['in_time']);
+                $total_menit_kerja += floor($diff / 60);
+                $total_jam = floor($diff / 3600) . ' jam ' . floor(($diff % 3600) / 60) . ' menit';
+            }
+            $row_bg = ''; 
+        } else {
+            if ($is_weekend) { $tot_libur++; } else { $tot_absen++; }
         }
-        
-        // Hitung Jam Kerja
-        if ($d['in_time'] && $d['out_time']) {
-            $diff = strtotime($d['out_time']) - strtotime($d['in_time']);
-            $total_menit_kerja += floor($diff / 60);
-            $total_jam = floor($diff / 3600) . ' jam ' . floor(($diff % 3600) / 60) . ' menit';
-        }
-        $row_bg = ''; // Hilangkan bg abu jika ada absen
-    } else {
-        if ($is_weekend) { $tot_libur++; } else { $tot_absen++; }
     }
 
-    $tgl_indo = str_pad($i, 2, '0', STR_PAD_LEFT) . '-' . str_pad($bulan, 2, '0', STR_PAD_LEFT) . '-' . $tahun;
+    $tgl_indo = $dt->format('d-m-Y');
     
     $tabel_harian .= "<tr $row_bg>
         <td class='text-center'>$tgl_indo</td>
@@ -92,46 +128,38 @@ $total_jam_all = floor($total_menit_kerja / 60) . ' jam ' . ($total_menit_kerja 
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Kehadiran - <?= $karyawan['nama'] ?></title>
+    <title>Laporan Kehadiran - <?= $data_karyawan['nama'] ?></title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Arial:wght@400;700&display=swap');
         body { font-family: Arial, sans-serif; font-size: 11px; color: #000; line-height: 1.4; }
         .page-container { width: 100%; max-width: 800px; margin: 0 auto; padding: 20px; background: white; }
         
-        /* HEADER */
         .header-table { width: 100%; margin-bottom: 20px; }
         .comp-name { font-size: 14px; font-weight: bold; margin-bottom: 2px; }
         .comp-addr { font-size: 10px; color: #333; }
         
-        /* TITLE */
         .title-box { text-align: center; margin: 30px 0; }
         .title-box h2 { margin: 0; font-size: 18px; font-weight: bold; }
         .title-box p { margin: 5px 0 0 0; font-size: 12px; font-weight: bold; }
         
-        /* INFO KARYAWAN */
         .info-table { width: 60%; margin-bottom: 20px; }
         .info-table td { padding: 3px 0; }
         .info-table td:first-child { width: 130px; font-weight: bold; }
         
-        /* REKAP TABLE */
         table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
         th, td { border: 1px solid #000; padding: 6px; }
         .text-center { text-align: center; }
         .fw-bold { font-weight: bold; }
         
-        /* WARNA REKAP */
         .bg-green-soft { background-color: #d1e7dd; }
         .bg-red-soft { background-color: #f8d7da; }
         .bg-blue-soft { background-color: #cfe2ff; }
         .bg-orange-soft { background-color: #ffe69c; }
         .bg-yellow-soft { background-color: #fff3cd; }
         
-        /* TABEL HARIAN */
         .tabel-harian th { background-color: #C94F78; color: white; border-color: #C94F78; }
         
-        /* FOOTER SIGNATURE */
         .footer-notes { font-size: 10px; margin-top: 20px; }
-        .signature-box { margin-top: 30px; display: flex; justify-content: space-between; }
         .auto-approve { border: 1px solid #0d6efd; padding: 10px; text-align: center; color: #0d6efd; width: 300px; }
         .auto-approve p { margin: 2px; font-size: 10px; }
         .print-btn { display: block; width: 100%; padding: 15px; background: #C94F78; color: white; text-align: center; text-decoration: none; font-weight: bold; font-size: 16px; margin-bottom: 20px; border: none; cursor: pointer;}
@@ -149,9 +177,7 @@ $total_jam_all = floor($total_menit_kerja / 60) . ' jam ' . ($total_menit_kerja 
     <div class="page-container">
         <table class="header-table">
             <tr>
-                <td style="width: 150px;">
-                    <img src="/logo/lbqueen_logo.PNG" style="max-height: 60px;">
-                </td>
+                <td style="width: 150px;"><img src="/logo/lbqueen_logo.PNG" style="max-height: 60px;"></td>
                 <td style="text-align: right;">
                     <div class="comp-name">LBQueen Care Beauty</div>
                     <div class="comp-addr">Jalan Alam Kurnia, Kalibalau Kencana, Bandar Lampung, Lampung 35133<br>
@@ -162,14 +188,14 @@ $total_jam_all = floor($total_menit_kerja / 60) . ' jam ' . ($total_menit_kerja 
 
         <div class="title-box">
             <h2>Laporan Kehadiran</h2>
-            <p>Periode <?= $nama_bulan[$bulan-1] ?> <?= $tahun ?></p>
+            <p>Siklus: 26 <?= $nama_bulan[($bulan == 1 ? 12 : $bulan-1)-1] ?> <?= $bulan == 1 ? $tahun-1 : $tahun ?> s/d 25 <?= $nama_bulan[$bulan-1] ?> <?= $tahun ?></p>
         </div>
 
         <table class="info-table" style="border:none;">
-            <tr><td style="border:none;">Nama</td><td style="border:none;">: <?= $karyawan['nama'] ?></td></tr>
-            <tr><td style="border:none;">Nomor Karyawan / NIK</td><td style="border:none;">: <?= $karyawan['nik'] ?></td></tr>
-            <tr><td style="border:none;">Penempatan</td><td style="border:none;">: <?= $karyawan['penempatan'] ?></td></tr>
-            <tr><td style="border:none;">Jabatan</td><td style="border:none;">: <?= $karyawan['posisi'] ?></td></tr>
+            <tr><td style="border:none;">Nama</td><td style="border:none;">: <?= $data_karyawan['nama'] ?></td></tr>
+            <tr><td style="border:none;">Nomor Karyawan</td><td style="border:none;">: <?= $data_karyawan['nik'] ?></td></tr>
+            <tr><td style="border:none;">Penempatan</td><td style="border:none;">: <?= $data_karyawan['penempatan'] ?></td></tr>
+            <tr><td style="border:none;">Jabatan</td><td style="border:none;">: <?= $data_karyawan['posisi'] ?></td></tr>
         </table>
 
         <table>
@@ -228,8 +254,8 @@ $total_jam_all = floor($total_menit_kerja / 60) . ' jam ' . ($total_menit_kerja 
             <div style="float: left;">
                 <b>Diperiksa oleh:</b><br>
                 <b>Dept. Human Capital & General Affairs</b><br><br><br><br><br>
-                ( M. Fadli Kurniawan )<br>
-                <b>HR Administrator</b>
+                ( <?= $karyawan_login['nama'] ?> )<br>
+                <b><?= $karyawan_login['posisi'] ?></b>
             </div>
             <div style="float: right;">
                 <div class="auto-approve">
@@ -240,15 +266,7 @@ $total_jam_all = floor($total_menit_kerja / 60) . ' jam ' . ($total_menit_kerja 
             </div>
             <div style="clear: both;"></div>
         </div>
-
-        <div style="margin-top: 50px; font-size: 9px; display: flex; justify-content: space-between; color: #666;">
-            <span>Dokumen ini di-generate otomatis oleh sistem pada tanggal <?= date('d F Y H:i') ?></span>
-            <span>Valid by HRIS LBQueen</span>
-        </div>
     </div>
-    <script>
-        // Otomatis buka dialog print di desktop
-        if(window.innerWidth > 800) { window.onload = function() { window.print(); } }
-    </script>
+    <script> if(window.innerWidth > 800) { window.onload = function() { window.print(); } } </script>
 </body>
 </html>

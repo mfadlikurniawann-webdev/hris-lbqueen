@@ -338,3 +338,15 @@ function submitPengajuan(event, jenis) {
             btnSubmit.disabled = false;
         });
 }
+// =======================================================
+// CETAK PRIBADI DARI SISI ADMIN (HR)
+// =======================================================
+function bukaModalCetakKaryawan() {
+    if (!selectedNikAdmin) {
+        showModernAlert('Peringatan', 'Silakan pilih karyawan terlebih dahulu.', 'bi bi-exclamation-circle-fill', '#dc3545');
+        return;
+    }
+    // Setel nilai NIK karyawan yang sedang diklik ke dalam input hidden
+    document.getElementById('cetak_nik_karyawan').value = selectedNikAdmin;
+    new bootstrap.Modal(document.getElementById('modalCetakLogKaryawan')).show();
+}
