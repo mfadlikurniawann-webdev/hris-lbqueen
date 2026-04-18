@@ -124,7 +124,8 @@ if ($is_admin) {
     <link rel="stylesheet" href="/style/style.css">
 </head>
 <body>
-    <div id="splash-screen" class="splash-screen">
+
+<div id="splash-screen" class="splash-screen">
     <div class="splash-content px-4">
         <div class="logo-box-splash mb-3 mx-auto shadow-lg">
             <img src="/logo/lbqueen_logo.PNG" alt="LBQueen Logo" onerror="this.style.display='none'">
@@ -137,6 +138,7 @@ if ($is_admin) {
         </div>
     </div>
 </div>
+
 <div class="app-wrapper">
 
     <div class="sidebar-nav">
@@ -203,7 +205,7 @@ if ($is_admin) {
                     </div>
                 </div>
 
-                <div class="row g-3 mb-4">
+                <div class="row g-3 mb-3">
                     <div class="col-6">
                         <div class="card h-100 shadow-sm rounded-4">
                             <div class="card-body p-3">
@@ -233,6 +235,10 @@ if ($is_admin) {
                         </div>
                     </div>
                 </div>
+
+                <button class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm mb-4" onclick="new bootstrap.Modal(document.getElementById('modalLembur')).show()">
+                    <i class="bi bi-clock-fill me-2"></i> Pengajuan Lembur
+                </button>
 
                 <div class="card mb-4 shadow-sm rounded-4 border-0" style="background: linear-gradient(to bottom, #ffffff, #fafafa);">
                     <div class="card-body p-4">
@@ -292,7 +298,7 @@ if ($is_admin) {
         </div>
 
         <div id="screen-riwayat" class="app-screen">
-            <div class="bg-pink-wave header-top p-4 desktop-px shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+            <div class="bg-pink-wave header-top p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
                 <h4 class="mb-0 text-white fw-bold mt-2 pb-2"><i class="bi bi-clock-history me-2"></i>Riwayat Kehadiran</h4>
             </div>
             
@@ -385,6 +391,13 @@ if ($is_admin) {
                             <i class="bi bi-chevron-right text-muted fs-5"></i>
                         </div>
                     </div>
+                    <div class="col-md-6 col-lg-4" onclick="new bootstrap.Modal(document.getElementById('modalPayroll')).show()">
+                        <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid #198754;">
+                            <div class="action-icon bg-success bg-opacity-10 text-success fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-cash-coin"></i></div>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Sistem Payroll</h6><small class="text-muted">Cetak Slip Gaji Karyawan</small></div>
+                            <i class="bi bi-chevron-right text-muted fs-5"></i>
+                        </div>
+                    </div>
                 </div>
                 <?php endif; ?>
                 
@@ -428,7 +441,7 @@ if ($is_admin) {
                 <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <p class="text-muted small mb-0 fw-bold">Pilih Karyawan</p>
-                        <button class="btn btn-outline-danger btn-sm rounded-pill fw-bold shadow-sm" onclick="new bootstrap.Modal(document.getElementById('modalCetakLaporan')).show()"><i class="bi bi-printer-fill me-1"></i> Cetak Semua Bulanan</button>
+                        <button class="btn btn-outline-danger btn-sm rounded-pill fw-bold shadow-sm" onclick="new bootstrap.Modal(document.getElementById('modalCetakLaporan')).show()"><i class="bi bi-printer-fill me-1"></i> Cetak Rekap Bulanan</button>
                     </div>
                     
                     <div class="row g-3">
@@ -630,6 +643,41 @@ if ($is_admin) {
     </div>
 </div>
 
+<div class="modal fade" id="modalLembur" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header border-bottom-0 pb-0 p-4">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-clock-fill text-primary me-2"></i>Form Pengajuan Lembur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 pt-2">
+                <p class="text-muted small mb-4">Ajukan rencana lembur Anda di sini. Lembur yang disetujui akan masuk ke riwayat PDF otomatis.</p>
+                <form id="formLembur" onsubmit="submitPengajuan(event, 'lembur')">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Tanggal Lembur</label>
+                        <input type="date" class="form-control form-control-lg bg-light fs-6" name="tanggal" required>
+                    </div>
+                    <div class="row mb-3 g-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-dark">Jam Mulai</label>
+                            <input type="time" class="form-control form-control-lg bg-light fs-6" name="jam_mulai" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-dark">Jam Selesai</label>
+                            <input type="time" class="form-control form-control-lg bg-light fs-6" name="jam_selesai" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-dark">Keterangan / Tugas Lembur</label>
+                        <textarea class="form-control form-control-lg bg-light fs-6" name="keterangan" rows="2" placeholder="Selesaikan tugas..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill shadow-sm">Kirim Rencana Lembur</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="modalDinas" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -703,6 +751,66 @@ if ($is_admin) {
         </div>
     </div>
 </div>
+
+<?php if ($is_admin): ?>
+<div class="modal fade" id="modalPayroll" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header border-bottom-0 pb-0 p-4">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-cash-coin text-success me-2"></i>Generate Slip Gaji</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 pt-2">
+                <form action="/cetak_slip" method="GET" target="_blank">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Pilih Karyawan</label>
+                        <select name="nik" class="form-select form-select-lg bg-light fs-6" required>
+                            <?php foreach ($semua_karyawan as $kar): ?>
+                                <option value="<?= $kar['nik'] ?>"><?= $kar['nama'] ?> (<?= $kar['posisi'] ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="row mb-3 g-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-dark">Bulan</label>
+                            <select name="bulan" class="form-select form-select-lg bg-light fs-6">
+                                <?php for($i=1; $i<=12; $i++): ?>
+                                    <option value="<?= str_pad($i, 2, '0', STR_PAD_LEFT) ?>" <?= date('m') == $i ? 'selected' : '' ?>><?= date('F', mktime(0,0,0,$i,1)) ?></option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-dark">Tahun</label>
+                            <input type="number" class="form-control form-control-lg bg-light fs-6" name="tahun" value="<?= date('Y') ?>" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3 g-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-dark">Total Hari Kerja</label>
+                            <input type="number" class="form-control form-control-lg bg-light fs-6" name="hari_kerja" value="26" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-dark">Uang Makan (Total)</label>
+                            <input type="number" class="form-control form-control-lg bg-light fs-6" name="uang_makan" value="200000" required>
+                        </div>
+                    </div>
+                    <div class="mb-4 bg-light p-3 rounded-3 border">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="capai_target" value="1" id="c_target">
+                            <label class="form-check-label small fw-bold text-dark" for="c_target">Capai Target Omset (Bonus 600rb)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="alpa_banyak" value="1" id="c_alpa">
+                            <label class="form-check-label small fw-bold text-danger" for="c_alpa">Alpa >= 2x (Kerajinan Hangus)</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 py-3 fw-bold rounded-pill shadow-sm">Cetak Slip Gaji PDF</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <div class="modal fade" id="modalCetakLaporan" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">

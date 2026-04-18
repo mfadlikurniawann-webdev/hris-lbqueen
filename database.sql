@@ -104,3 +104,16 @@ CREATE TABLE `reimburse` (
   PRIMARY KEY (`id`),
   FOREIGN KEY (`nik`) REFERENCES `karyawan` (`nik`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `lembur` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nik` varchar(20) NOT NULL,
+  `tanggal` date NOT NULL,
+  `jam_mulai` time NOT NULL,
+  `jam_selesai` time NOT NULL,
+  `keterangan` text NOT NULL,
+  `status` enum('Pending','Disetujui','Ditolak') DEFAULT 'Disetujui',
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`nik`) REFERENCES `karyawan` (`nik`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -26,12 +26,12 @@ $q_target = $conn->query("SELECT * FROM karyawan WHERE nik='$nik_target'");
 $data_karyawan = $q_target->fetch_assoc();
 if (!$data_karyawan) { die("❌ Data karyawan tidak ditemukan di sistem."); }
 
-$bulan = $_GET['bulan'] ?? date('m');
-$tahun = $_GET['tahun'] ?? date('Y');
-$nama_bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+$bulan = (int)($_GET['bulan'] ?? date('m'));
+$tahun = (int)($_GET['tahun'] ?? date('Y'));
+$nama_bulan_arr = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
 // LOGIKA SIKLUS CUT-OFF (TGL 26 Bulan Lalu - TGL 25 Bulan Ini)
-$end_date_str = "$tahun-$bulan-25";
+$end_date_str = "$tahun-" . str_pad($bulan, 2, '0', STR_PAD_LEFT) . "-25";
 $end_date = new DateTime($end_date_str);
 
 $start_date = clone $end_date;
@@ -41,25 +41,42 @@ $start_str = $start_date->format('Y-m-d');
 $end_str = $end_date->format('Y-m-d');
 $hari_ini_str = date('Y-m-d');
 
-// Ambil riwayat absen di periode Cut-Off
-$sql = "SELECT DATE(waktu) as tgl, 
+// Penamaan Periode Siklus Teks
+$bulan_lalu = ($bulan == 1) ? 12 : $bulan - 1;
+$tahun_lalu = ($bulan == 1) ? $tahun - 1 : $tahun;
+$teks_siklus = "26 " . $nama_bulan_arr[$bulan_lalu - 1] . " $tahun_lalu s/d 25 " . $nama_bulan_arr[$bulan - 1] . " $tahun";
+
+// 1. Ambil riwayat absen di periode Cut-Off
+$sql_absen = "SELECT DATE(waktu) as tgl, 
         MAX(CASE WHEN jenis='Check In' THEN waktu END) as in_time,
         MAX(CASE WHEN jenis='Check Out' THEN waktu END) as out_time,
         MAX(CASE WHEN jenis='Check In' THEN status END) as status_in
         FROM absensi 
         WHERE nik='$nik_target' AND DATE(waktu) BETWEEN '$start_str' AND '$end_str'
         GROUP BY DATE(waktu)";
-$res_absen = $conn->query($sql);
+$res_absen = $conn->query($sql_absen);
 
 $absen_data = [];
 while ($row = $res_absen->fetch_assoc()) {
     $absen_data[$row['tgl']] = $row;
 }
 
+// 2. Ambil riwayat Lembur di periode Cut-Off
+$sql_lembur = "SELECT tanggal, jam_mulai, jam_selesai 
+               FROM lembur 
+               WHERE nik='$nik_target' AND tanggal BETWEEN '$start_str' AND '$end_str' AND status='Disetujui'";
+$res_lembur = $conn->query($sql_lembur);
+
+$lembur_data = [];
+while ($row = $res_lembur->fetch_assoc()) {
+    $lembur_data[$row['tanggal']] = $row;
+}
+
 // Variabel Rekap
 $tot_tepat = 0; $tot_telat = 0; $tot_invalid = 0; $tot_revisi = 0;
 $tot_absen = 0; $tot_libur = 0; $tot_sakit = 0;
 $total_menit_kerja = 0;
+$total_menit_lembur = 0;
 
 $tabel_harian = "";
 
@@ -88,6 +105,7 @@ foreach ($period as $dt) {
         $row_bg = $is_weekend ? 'style="background-color: #f8f9fa;"' : '';
         $status_bg = $is_weekend ? 'style="background-color: #cfe2ff;"' : 'style="background-color: #f5c2c7;"';
 
+        // Pengecekan Absensi
         if (isset($absen_data[$tgl_str])) {
             $d = $absen_data[$tgl_str];
             $status_asli = $d['status_in'] ?: 'Hadir';
@@ -101,14 +119,31 @@ foreach ($period as $dt) {
                 $tot_telat++; $status = 'Terlambat'; $status_bg = 'style="background-color: #ffe69c;"';
             }
             
+            // Hitung durasi jam kerja harian
             if ($d['in_time'] && $d['out_time']) {
                 $diff = strtotime($d['out_time']) - strtotime($d['in_time']);
-                $total_menit_kerja += floor($diff / 60);
-                $total_jam = floor($diff / 3600) . ' jam ' . floor(($diff % 3600) / 60) . ' menit';
+                if ($diff > 0) {
+                    $total_menit_kerja += floor($diff / 60);
+                    $total_jam = floor($diff / 3600) . ' jam ' . floor(($diff % 3600) / 60) . ' menit';
+                }
             }
             $row_bg = ''; 
         } else {
             if ($is_weekend) { $tot_libur++; } else { $tot_absen++; }
+        }
+
+        // Pengecekan Lembur
+        if (isset($lembur_data[$tgl_str])) {
+            $jm = strtotime($lembur_data[$tgl_str]['jam_mulai']);
+            $js = strtotime($lembur_data[$tgl_str]['jam_selesai']);
+            
+            if ($js < $jm) { $js += 86400; } // Jika lembur lewat tengah malam (beda hari)
+            
+            $diff_lembur = $js - $jm;
+            if ($diff_lembur > 0) {
+                $total_menit_lembur += floor($diff_lembur / 60);
+                $jam_lembur = floor($diff_lembur / 3600) . ' jam ' . floor(($diff_lembur % 3600) / 60) . ' mnt';
+            }
         }
     }
 
@@ -126,7 +161,12 @@ foreach ($period as $dt) {
 
 $tot_hadir = $tot_tepat + $tot_telat;
 $tot_cuti_all = $tot_libur + $tot_sakit;
-$total_jam_all = floor($total_menit_kerja / 60) . ' jam ' . ($total_menit_kerja % 60) . ' menit';
+$total_jam_kerja_all = floor($total_menit_kerja / 60) . ' jam ' . ($total_menit_kerja % 60) . ' menit';
+
+$total_jam_lembur_all = '-';
+if ($total_menit_lembur > 0) {
+    $total_jam_lembur_all = floor($total_menit_lembur / 60) . ' jam ' . ($total_menit_lembur % 60) . ' menit';
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -192,14 +232,14 @@ $total_jam_all = floor($total_menit_kerja / 60) . ' jam ' . ($total_menit_kerja 
 
         <div class="title-box">
             <h2>Laporan Kehadiran</h2>
-            <p>Siklus: 26 <?= $nama_bulan[($bulan == 1 ? 12 : $bulan-1)-1] ?> <?= $bulan == 1 ? $tahun-1 : $tahun ?> s/d 25 <?= $nama_bulan[$bulan-1] ?> <?= $tahun ?></p>
+            <p>Siklus: <?= $teks_siklus ?></p>
         </div>
 
         <table class="info-table" style="border:none;">
             <tr><td style="border:none;">Nama</td><td style="border:none;">: <?= htmlspecialchars($data_karyawan['nama']) ?></td></tr>
-            <tr><td style="border:none;">Nomor Karyawan</td><td style="border:none;">: <?= $data_karyawan['nik'] ?></td></tr>
-            <tr><td style="border:none;">Penempatan</td><td style="border:none;">: <?= $data_karyawan['penempatan'] ?></td></tr>
-            <tr><td style="border:none;">Jabatan</td><td style="border:none;">: <?= $data_karyawan['posisi'] ?></td></tr>
+            <tr><td style="border:none;">Nomor Karyawan</td><td style="border:none;">: <?= htmlspecialchars($data_karyawan['nik']) ?></td></tr>
+            <tr><td style="border:none;">Penempatan</td><td style="border:none;">: <?= htmlspecialchars($data_karyawan['penempatan']) ?></td></tr>
+            <tr><td style="border:none;">Jabatan</td><td style="border:none;">: <?= htmlspecialchars($data_karyawan['posisi']) ?></td></tr>
         </table>
 
         <table>
@@ -232,8 +272,8 @@ $total_jam_all = floor($total_menit_kerja / 60) . ' jam ' . ($total_menit_kerja 
         </table>
 
         <table class="info-table" style="border:none; width:100%; margin-bottom:15px;">
-            <tr><td style="border:none; width: 130px; font-weight:bold;">Total Jam Kerja</td><td style="border:none;">: <?= $total_jam_all ?></td></tr>
-            <tr><td style="border:none; font-weight:bold;">Total Jam Lembur</td><td style="border:none;">: -</td></tr>
+            <tr><td style="border:none; width: 130px; font-weight:bold;">Total Jam Kerja</td><td style="border:none;">: <?= $total_jam_kerja_all ?></td></tr>
+            <tr><td style="border:none; font-weight:bold;">Total Jam Lembur</td><td style="border:none;">: <?= $total_jam_lembur_all ?></td></tr>
         </table>
 
         <table class="tabel-harian">
@@ -259,7 +299,7 @@ $total_jam_all = floor($total_menit_kerja / 60) . ' jam ' . ($total_menit_kerja 
                 <b>Diperiksa oleh:</b><br>
                 <b>Dept. Human Capital & General Affairs</b><br><br><br><br><br>
                 ( <?= htmlspecialchars($karyawan_login['nama']) ?> )<br>
-                <b><?= $karyawan_login['posisi'] ?></b>
+                <b><?= htmlspecialchars($karyawan_login['posisi']) ?></b>
             </div>
             <div style="float: right;">
                 <div class="auto-approve">
