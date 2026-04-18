@@ -112,8 +112,8 @@ window.bukaDetailDariAdmin = function (idx) {
 
     let durasi_teks = '-';
     if (data.in_time && data.out_time) {
-        const inDate = new Date(`1970-01-01T${data.in_time}Z`);
-        const outDate = new Date(`1970-01-01T${data.out_time}Z`);
+        const inDate = new Date(`1970-01-01T${data.in_time.substring(11, 16)}:00Z`);
+        const outDate = new Date(`1970-01-01T${data.out_time.substring(11, 16)}:00Z`);
         const diffMs = outDate - inDate;
         if (diffMs > 0) {
             const diffHrs = Math.floor(diffMs / 3600000);
@@ -140,7 +140,7 @@ window.bukaDetailDariAdmin = function (idx) {
         in_lokasi: data.lok_in || karyawanPenempatan,
         out_lokasi: data.lok_out || karyawanPenempatan,
         in_foto: data.foto_in || '',
-        out_foto: data.out_foto || '',
+        out_foto: data.foto_out || '', // ✅ FIX BUG 1: was data.out_foto (undefined), sekarang data.foto_out
         penempatan: karyawanPenempatan
     };
     bukaDetail(modalData);
@@ -196,18 +196,26 @@ function batalFoto() {
     document.getElementById('btn-confirm-group').style.setProperty('display', 'none', 'important');
 }
 
+// ✅ FIX BUG 2: Kirim foto sebagai JSON bukan FormData
+// FormData sering memotong base64 panjang di beberapa server/PHP config.
+// JSON tidak punya batasan tersebut dan lebih aman untuk data besar.
 function submitAbsen() {
     const responseDiv = document.getElementById('absen-response');
     responseDiv.innerHTML = '<span class="text-warning"><i class="spinner-border spinner-border-sm"></i> Mengirim data absensi...</span>';
 
     document.getElementById('btn-confirm-group').style.setProperty('display', 'none', 'important');
 
-    const formData = new FormData();
-    formData.append('jenis_absen', absenJenisType);
-    formData.append('nik', userNIK);
-    formData.append('foto', fotoDataURL);
+    const payload = {
+        jenis_absen: absenJenisType,
+        nik: userNIK,
+        foto: fotoDataURL
+    };
 
-    fetch('/proses_absen', { method: 'POST', body: formData })
+    fetch('/proses_absen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
         .then(res => res.text())
         .then(data => { responseDiv.innerHTML = data; setTimeout(() => location.reload(), 1500); })
         .catch(() => { responseDiv.innerText = "Terjadi kesalahan server saat mengirim absen."; batalFoto(); });

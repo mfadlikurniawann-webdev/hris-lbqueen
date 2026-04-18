@@ -2,6 +2,17 @@
 // api/proses_absen.php
 include __DIR__ . '/koneksi.php';
 
+// =====================================================
+// FIX: Terima input JSON (dari script.js baru) ATAU FormData (fallback)
+// =====================================================
+$contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+if (str_contains($contentType, 'application/json')) {
+    $jsonData        = json_decode(file_get_contents('php://input'), true);
+    $_POST['nik']        = $jsonData['nik']        ?? '';
+    $_POST['jenis_absen'] = $jsonData['jenis_absen'] ?? '';
+    $_POST['foto']       = $jsonData['foto']       ?? '';
+}
+
 // Verifikasi JWT
 $token   = get_token_from_cookie();
 $payload = jwt_verify($token);
@@ -41,7 +52,7 @@ if ($cek->num_rows > 0) {
     exit();
 }
 
-// Logika status Check In (Batas jam 11:00)
+// Logika status Check In
 $status = '-';
 if ($jenis == 'Check In') {
     if ($jam_menit > '13:00') {
@@ -64,18 +75,23 @@ if (empty($foto_raw)) {
     exit();
 }
 
-// Bersihkan data foto agar aman masuk ke query SQL
-$foto_final = $conn->real_escape_string($foto_raw);
+// Gunakan prepared statement agar base64 panjang tidak terpotong
+// dan aman dari SQL injection
+$stmt = $conn->prepare("INSERT INTO absensi (nik, waktu, jenis, lokasi, status, foto) VALUES (?, ?, ?, ?, ?, ?)");
+if (!$stmt) {
+    echo "❌ Gagal menyiapkan query: " . $conn->error;
+    exit();
+}
 
-// Simpan ke database MySQL
-$sql = "INSERT INTO absensi (nik, waktu, jenis, lokasi, status, foto) 
-        VALUES ('$nik', '$waktu_lengkap', '$jenis', '$lokasi', '$status', '$foto_final')";
+$stmt->bind_param("ssssss", $nik, $waktu_lengkap, $jenis, $lokasi, $status, $foto_raw);
 
-if ($conn->query($sql) === TRUE) {
+if ($stmt->execute()) {
     $msg = "✅ Berhasil $jenis!";
     if ($status != '-') $msg .= " Status: $status.";
     echo $msg;
 } else {
-    echo "❌ Gagal menyimpan ke database: " . $conn->error;
+    echo "❌ Gagal menyimpan ke database: " . $stmt->error;
 }
+
+$stmt->close();
 ?>
