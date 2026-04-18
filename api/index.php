@@ -3,11 +3,18 @@
 include __DIR__ . '/koneksi.php';
 date_default_timezone_set('Asia/Jakarta');
 
-// Route halaman ganti password
-$router->get('/ganti_password',       'api/ganti_password.php');
+// PERBAIKAN: Mengganti $router yang tidak terdefinisi dengan native PHP routing
+$request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// Route proses ganti password (AJAX POST)
-$router->post('/proses_ganti_password', 'api/proses_ganti_password.php');
+if ($request_uri === '/ganti_password') {
+    include __DIR__ . '/ganti_password.php';
+    exit;
+}
+
+if ($request_uri === '/proses_ganti_password' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    include __DIR__ . '/proses_ganti_password.php';
+    exit;
+}
 
 // PROTEKSI HALAMAN - Pakai JWT
 $karyawan = auth_required($conn);
