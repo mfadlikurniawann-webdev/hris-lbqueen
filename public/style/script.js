@@ -33,7 +33,7 @@ function aksesGajiDitolak() {
 }
 
 // =======================================================
-// LOGIKA ADMIN FILTER 
+// LOGIKA ADMIN FILTER & CETAK
 // =======================================================
 let selectedNikAdmin = null;
 let selectedNamaAdmin = null;
@@ -90,14 +90,11 @@ function renderAdminTable() {
         const ddmmyyyy = `${tglParts[2]}/${tglParts[1]}/${tglParts[0]}`;
 
         htmlRows += `
-            <tr>
+            <tr style="cursor:pointer;" onclick="bukaDetailDariAdmin(${index})">
                 <td class="px-4 py-3 fw-bold text-dark">${ddmmyyyy}</td>
-                <td><i class="bi bi-clock text-success me-1"></i> ${inTimeView} <span class="text-muted mx-1">&mdash;</span> ${outTimeView}</td>
-                <td>-</td>
-                <td>-</td>
-                <td><span class="badge-status ${badgeBg}">${statusIn}</span></td>
+                <td><i class="bi bi-clock-fill text-success me-1 opacity-75"></i> ${inTimeView} <span class="text-muted mx-1">&mdash;</span> ${outTimeView}</td>
                 <td class="text-end px-4">
-                    <button class="btn btn-sm btn-light border rounded-circle shadow-sm" onclick="bukaDetailDariAdmin(${index})">
+                    <button class="btn btn-sm btn-light border rounded-circle shadow-sm">
                         <i class="bi bi-three-dots-vertical text-dark"></i>
                     </button>
                 </td>
@@ -140,14 +137,23 @@ window.bukaDetailDariAdmin = function (idx) {
         in_lokasi: data.lok_in || karyawanPenempatan,
         out_lokasi: data.lok_out || karyawanPenempatan,
         in_foto: data.foto_in || '',
-        out_foto: data.foto_out || '', // ✅ FIX BUG 1: was data.out_foto (undefined), sekarang data.foto_out
+        out_foto: data.foto_out || '',
         penempatan: karyawanPenempatan
     };
     bukaDetail(modalData);
 };
 
+function bukaModalCetakKaryawan() {
+    if (!selectedNikAdmin) {
+        showModernAlert('Peringatan', 'Silakan pilih karyawan terlebih dahulu.', 'bi bi-exclamation-circle-fill', '#dc3545');
+        return;
+    }
+    document.getElementById('cetak_nik_karyawan').value = selectedNikAdmin;
+    new bootstrap.Modal(document.getElementById('modalCetakLogKaryawan')).show();
+}
+
 // =======================================================
-// LOGIKA KAMERA: AMBIL, PREVIEW & BATAL 
+// LOGIKA KAMERA, GPS (REALTIME KORDINAT) & IP
 // =======================================================
 const video = document.getElementById('kamera');
 const preview = document.getElementById('kamera-preview');
@@ -156,6 +162,16 @@ let kameraAktif = false;
 let fotoDataURL = '';
 let absenJenisType = '';
 
+let userLat = '';
+let userLng = '';
+let userIP = 'Mendeteksi...';
+
+// Ambil IP
+fetch('https://api.ipify.org?format=json')
+    .then(response => response.json())
+    .then(data => { userIP = data.ip; })
+    .catch(error => { userIP = 'Gagal mendeteksi IP'; });
+
 if (video) {
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
         .then(stream => { video.srcObject = stream; kameraAktif = true; })
@@ -163,6 +179,17 @@ if (video) {
             const w = document.querySelector('.camera-box');
             if (w) w.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 bg-dark w-100"><small class="text-danger fw-bold text-center px-2">Kamera Ditolak / Tidak Ditemukan.</small></div>';
         });
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                userLat = position.coords.latitude;
+                userLng = position.coords.longitude;
+            },
+            error => { console.log("GPS Error: ", error); },
+            { enableHighAccuracy: true }
+        );
+    }
 }
 
 function ambilFoto(jenis) {
@@ -174,7 +201,7 @@ function ambilFoto(jenis) {
     canvas.height = video.videoHeight || 426;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    fotoDataURL = canvas.toDataURL('image/jpeg', 0.3);
+    fotoDataURL = canvas.toDataURL('image/jpeg', 0.8); // Kualitas gambar dinaikkan ke standar
 
     video.style.display = 'none';
     preview.src = fotoDataURL;
@@ -196,25 +223,23 @@ function batalFoto() {
     document.getElementById('btn-confirm-group').style.setProperty('display', 'none', 'important');
 }
 
-// ✅ FIX BUG 2: Kirim foto sebagai JSON bukan FormData
-// FormData sering memotong base64 panjang di beberapa server/PHP config.
-// JSON tidak punya batasan tersebut dan lebih aman untuk data besar.
 function submitAbsen() {
     const responseDiv = document.getElementById('absen-response');
     responseDiv.innerHTML = '<span class="text-warning"><i class="spinner-border spinner-border-sm"></i> Mengirim data absensi...</span>';
 
     document.getElementById('btn-confirm-group').style.setProperty('display', 'none', 'important');
 
-    const payload = {
-        jenis_absen: absenJenisType,
-        nik: userNIK,
-        foto: fotoDataURL
-    };
+    const koordinatRealtime = (userLat && userLng) ? `${userLat}, ${userLng}` : 'Lokasi tidak diizinkan';
+
+    const formData = new FormData();
+    formData.append('jenis_absen', absenJenisType);
+    formData.append('nik', userNIK);
+    formData.append('foto', fotoDataURL);
+    formData.append('lokasi', koordinatRealtime);
 
     fetch('/proses_absen', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: formData
     })
         .then(res => res.text())
         .then(data => { responseDiv.innerHTML = data; setTimeout(() => location.reload(), 1500); })
@@ -231,7 +256,7 @@ function bukaDetail(data) {
     const iconStatus = document.getElementById('mdl-status-icon');
     const textStatus = document.getElementById('mdl-status-text');
 
-    let badgeWFO = `<span class="badge bg-success fw-normal ms-2" style="font-size:10px;">${data.penempatan || karyawanPenempatan}</span>`;
+    let badgeWFO = `<span class="badge bg-success fw-normal ms-2 shadow-sm" style="font-size:10px;">${data.penempatan || karyawanPenempatan}</span>`;
 
     if (data.status === 'Terlambat' || data.status === 'Telat') {
         boxStatus.style.backgroundColor = '#fff4e5';
@@ -258,8 +283,14 @@ function bukaDetail(data) {
     document.getElementById('mdl-in-time').innerText = data.in_time;
     document.getElementById('mdl-out-time').innerText = data.out_time;
 
-    document.getElementById('mdl-in-lokasi').innerText = `Jalan Alam Kurnia, ${data.in_lokasi}`;
-    document.getElementById('mdl-out-lokasi').innerText = `Jalan Alam Kurnia, ${data.out_lokasi}`;
+    document.getElementById('mdl-in-lokasi').innerText = `Titik Area: ${data.penempatan}`;
+    document.getElementById('mdl-out-lokasi').innerText = `Titik Area: ${data.penempatan}`;
+
+    document.getElementById('mdl-in-ip').innerText = 'Terekam Sistem';
+    document.getElementById('mdl-in-coord').innerText = data.in_lokasi;
+
+    document.getElementById('mdl-out-ip').innerText = 'Terekam Sistem';
+    document.getElementById('mdl-out-coord').innerText = data.out_lokasi;
 
     const inFotoEl = document.getElementById('mdl-in-foto');
     if (data.in_foto && data.in_foto !== '' && data.in_foto !== 'NULL') { inFotoEl.src = data.in_foto; }
@@ -275,21 +306,9 @@ function bukaDetail(data) {
     new bootstrap.Modal(document.getElementById('modalDetailAbsen')).show();
 }
 
-// JAM DIGITAL RESPONSIVE KE BANNER
-setInterval(() => {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
-    if (document.getElementById('clock-display'))
-        document.getElementById('clock-display').innerHTML = timeString + ' <span class="fs-4">WIB</span>';
-    if (document.getElementById('date-display'))
-        document.getElementById('date-display').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-}, 1000);
-
 // =======================================================
 // LOGIKA PENGAJUAN DINAS & REIMBURSE
 // =======================================================
-
-// Converter Foto Nota ke Base64 (Untuk Reimburse)
 const inputFotoReimburse = document.getElementById('inputFotoReimburse');
 if (inputFotoReimburse) {
     inputFotoReimburse.addEventListener('change', function () {
@@ -305,13 +324,11 @@ if (inputFotoReimburse) {
 }
 
 function submitPengajuan(event, jenis) {
-    event.preventDefault(); // Cegah reload web
-
+    event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
     formData.append('jenis', jenis);
 
-    // Tampilkan Loading
     const btnSubmit = form.querySelector('button[type="submit"]');
     const originalText = btnSubmit.innerHTML;
     btnSubmit.innerHTML = '<i class="spinner-border spinner-border-sm"></i> Mengirim...';
@@ -323,36 +340,63 @@ function submitPengajuan(event, jenis) {
     })
         .then(res => res.text())
         .then(data => {
-            // Tutup modal form
             bootstrap.Modal.getInstance(form.closest('.modal')).hide();
-            // Tampilkan pesan sukses di Alert Global
             showModernAlert('Berhasil', data, 'bi bi-check-circle-fill', '#198754');
-            form.reset(); // Kosongkan form
+            form.reset();
         })
         .catch(err => {
             showModernAlert('Gagal', 'Terjadi kesalahan jaringan.', 'bi bi-x-circle-fill', '#dc3545');
         })
         .finally(() => {
-            // Kembalikan tombol ke semula
             btnSubmit.innerHTML = originalText;
             btnSubmit.disabled = false;
         });
 }
+
 // =======================================================
-// CETAK PRIBADI DARI SISI ADMIN (HR)
+// LOGIKA UBAH KATA SANDI (DENGAN ANIMASI)
 // =======================================================
-function bukaModalCetakKaryawan() {
-    if (!selectedNikAdmin) {
-        showModernAlert('Peringatan', 'Silakan pilih karyawan terlebih dahulu.', 'bi bi-exclamation-circle-fill', '#dc3545');
-        return;
+function checkStrength(val) {
+    const bars = [document.getElementById('bar1'), document.getElementById('bar2'), document.getElementById('bar3'), document.getElementById('bar4')];
+    const label = document.getElementById('strength-label');
+
+    bars.forEach(b => { b.style.background = '#eee'; });
+    label.textContent = '';
+    label.style.color = '#333';
+
+    if (!val) return;
+
+    let score = 0;
+    if (val.length >= 6) score++;
+    if (val.length >= 10) score++;
+    if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score++;
+    if (/[0-9]/.test(val) && /[^A-Za-z0-9]/.test(val)) score++;
+
+    const colors = ['#e53935', '#fb8c00', '#fdd835', '#43a047'];
+    const labels = ['Sangat Lemah', 'Lemah', 'Cukup Kuat', 'Kuat'];
+
+    for (let i = 0; i < score; i++) {
+        bars[i].style.background = colors[Math.min(score - 1, 3)];
     }
-    // Setel nilai NIK karyawan yang sedang diklik ke dalam input hidden
-    document.getElementById('cetak_nik_karyawan').value = selectedNikAdmin;
-    new bootstrap.Modal(document.getElementById('modalCetakLogKaryawan')).show();
+    label.textContent = labels[Math.min(score - 1, 3)];
+    label.style.color = colors[Math.min(score - 1, 3)];
 }
-// =======================================================
-// LOGIKA UBAH KATA SANDI
-// =======================================================
+
+function checkMatch() {
+    const pw1 = document.getElementById('password_baru').value;
+    const pw2 = document.getElementById('password_konfirmasi').value;
+    const msg = document.getElementById('match-msg');
+
+    if (!pw2) { msg.textContent = ''; return; }
+    if (pw1 === pw2) {
+        msg.textContent = '✓ Kata sandi cocok';
+        msg.style.color = '#43a047';
+    } else {
+        msg.textContent = '✗ Kata sandi tidak cocok';
+        msg.style.color = '#e53935';
+    }
+}
+
 function submitUbahPassword(event) {
     event.preventDefault();
     const form = event.target;
@@ -368,7 +412,7 @@ function submitUbahPassword(event) {
     btnSubmit.innerHTML = '<i class="spinner-border spinner-border-sm"></i> Menyimpan...';
     btnSubmit.disabled = true;
 
-    fetch('/ubah_password', { // <- pastikan url sesuai dengan route
+    fetch('/ubah_password', {
         method: 'POST',
         body: formData
     })
@@ -378,6 +422,9 @@ function submitUbahPassword(event) {
             if (data.includes('Berhasil') || data.includes('berhasil') || data.includes('✅')) {
                 showModernAlert('Berhasil', data, 'bi bi-check-circle-fill', '#198754');
                 form.reset();
+                document.getElementById('strength-label').textContent = '';
+                document.getElementById('match-msg').textContent = '';
+                ['bar1', 'bar2', 'bar3', 'bar4'].forEach(id => document.getElementById(id).style.background = '#eee');
             } else {
                 showModernAlert('Gagal', data, 'bi bi-x-circle-fill', '#dc3545');
             }
@@ -390,3 +437,13 @@ function submitUbahPassword(event) {
             btnSubmit.disabled = false;
         });
 }
+
+// JAM DIGITAL RESPONSIVE KE BANNER
+setInterval(() => {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
+    if (document.getElementById('clock-display'))
+        document.getElementById('clock-display').innerHTML = timeString + ' <span class="fs-4">WIB</span>';
+    if (document.getElementById('date-display'))
+        document.getElementById('date-display').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}, 1000);

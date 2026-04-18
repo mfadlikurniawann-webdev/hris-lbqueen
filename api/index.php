@@ -110,6 +110,7 @@ if ($is_admin) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HRIS - <?= htmlspecialchars($karyawan['nama']) ?></title>
+    
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#C94F78">
     <link rel="icon" type="image/png" href="/logo/lbqueen_logo.PNG">
@@ -117,8 +118,9 @@ if ($is_admin) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="HRIS LBQueen">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="/style/style.css">
 </head>
 <body>
@@ -277,11 +279,17 @@ if ($is_admin) {
         </div>
 
         <div id="screen-riwayat" class="app-screen">
-            <div class="bg-pink-wave p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
-                <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Riwayat Kehadiran</h4>
+            <div class="bg-pink-wave header-top p-4 desktop-px shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+                <h4 class="mb-0 text-white fw-bold mt-2 pb-2"><i class="bi bi-clock-history me-2"></i>Riwayat Kehadiran</h4>
             </div>
             
-            <div class="p-3 desktop-px mx-auto mt-3" style="max-width: 1200px;">
+            <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-light border btn-sm rounded-pill px-4 fw-bold shadow-sm text-dark">
+                        <i class="bi bi-funnel-fill me-1"></i> Filter Pencarian
+                    </button>
+                </div>
+                
                 <div class="table-responsive bg-white rounded-4 shadow-sm border p-0">
                     <table class="table table-hover table-riwayat align-middle mb-0">
                         <thead class="table-light">
@@ -349,7 +357,7 @@ if ($is_admin) {
         </div>
 
         <div id="screen-layanan" class="app-screen">
-            <div class="bg-pink-wave p-4 desktop-px shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+            <div class="bg-pink-wave header-top p-4 desktop-px shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
                 <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Pusat Layanan HRIS</h4>
             </div>
             <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
@@ -360,7 +368,7 @@ if ($is_admin) {
                     <div class="col-md-6 col-lg-4" onclick="switchScreen('admin-absen')">
                         <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid var(--lb-pink);">
                             <div class="action-icon bg-pink-light text-pink fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-people-fill"></i></div>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Kehadiran Tim</h6><small class="text-muted">Pantau & Cetak Absensi</small></div>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Kehadiran Tim</h6><small class="text-muted">Pantau & Cetak Laporan</small></div>
                             <i class="bi bi-chevron-right text-muted fs-5"></i>
                         </div>
                     </div>
@@ -387,6 +395,12 @@ if ($is_admin) {
                             <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Pengajuan Cuti</h6><small class="text-muted">Cek kuota dan libur</small></div>
                         </div>
                     </div>
+                    <div class="col-md-6 col-lg-4" onclick="aksesGajiDitolak()">
+                        <div class="action-card shadow-sm p-4 bg-light rounded-4 d-flex align-items-center employee-card border border-light">
+                            <div class="action-icon bg-secondary bg-opacity-10 text-secondary fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-lock-fill"></i></div>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 text-secondary fs-6">Slip Gaji <span class="badge bg-secondary ms-1 shadow-sm" style="font-size:9px;">Terkunci</span></h6><small class="text-muted">Akses via portal Finance</small></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -394,14 +408,14 @@ if ($is_admin) {
         <?php if ($is_admin): ?>
         <div id="screen-admin-absen" class="app-screen">
             <div id="admin-view-list">
-                <div class="bg-pink-wave p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+                <div class="bg-pink-wave header-top p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
                     <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-md-4 ms-2" onclick="switchScreen('layanan')"><i class="bi bi-arrow-left fs-3"></i></button>
                     <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Log Kehadiran Tim</h4>
                 </div>
                 <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <p class="text-muted small mb-0 fw-bold">Pilih Karyawan</p>
-                        <button class="btn btn-outline-danger btn-sm rounded-pill fw-bold shadow-sm" onclick="new bootstrap.Modal(document.getElementById('modalCetakLaporan')).show()"><i class="bi bi-printer-fill me-1"></i> Cetak Rekap Bulanan</button>
+                        <button class="btn btn-outline-danger btn-sm rounded-pill fw-bold shadow-sm" onclick="new bootstrap.Modal(document.getElementById('modalCetakLaporan')).show()"><i class="bi bi-printer-fill me-1"></i> Cetak Semua Bulanan</button>
                     </div>
                     
                     <div class="row g-3">
@@ -425,7 +439,7 @@ if ($is_admin) {
             </div>
 
             <div id="admin-view-detail" style="display:none;">
-                <div class="bg-pink-wave p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+                <div class="bg-pink-wave header-top p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
                     <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-md-4 ms-2" onclick="backToAdminList()"><i class="bi bi-arrow-left fs-3"></i></button>
                     <h4 class="mb-0 text-white fw-bold mt-2 pb-2" id="detail-nama-karyawan">Log Kehadiran</h4>
                 </div>
@@ -433,7 +447,7 @@ if ($is_admin) {
                     
                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                         <h6 class="small fw-bold text-muted mb-0"><i class="bi bi-funnel-fill me-1 text-pink"></i> Filter Pencarian</h6>
-                        <button class="btn btn-outline-danger btn-sm rounded-pill fw-bold shadow-sm" onclick="bukaModalCetakKaryawan()"><i class="bi bi-printer-fill me-1"></i> Cetak Laporan Karyawan</button>
+                        <button class="btn btn-outline-danger btn-sm rounded-pill fw-bold shadow-sm" onclick="bukaModalCetakKaryawan()"><i class="bi bi-file-earmark-pdf-fill me-1"></i> Cetak Laporan Pribadi</button>
                     </div>
 
                     <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
@@ -473,7 +487,7 @@ if ($is_admin) {
         <?php endif; ?>
 
         <div id="screen-profil" class="app-screen">
-            <div class="bg-pink-wave p-5 desktop-px text-center shadow-sm" style="border-radius: 0 0 25px 25px;">
+            <div class="bg-pink-wave header-top p-5 desktop-px text-center shadow-sm" style="border-radius: 0 0 25px 25px;">
                 <div class="avatar-initials mx-auto mt-2 mb-3 bg-white text-pink shadow-lg" style="width:110px; height:110px; font-size:42px; border:4px solid white;"><?= $inisial ?></div>
                 <h3 class="text-white fw-bold mb-1"><?= htmlspecialchars($karyawan['nama']) ?></h3>
                 <p class="text-white-50 mb-0 fs-5"><?= $karyawan['posisi'] ?></p>
@@ -550,8 +564,8 @@ if ($is_admin) {
                             <h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-geo-alt me-2 text-dark"></i>Lokasi Absen</h6>
                             <p class="mb-3 fs-6 fw-bold text-dark" id="mdl-in-lokasi">-</p>
                             <hr class="text-muted opacity-25" style="border-style: dashed;">
-                            <div class="d-flex justify-content-between small text-success mb-2"><span>IP Address</span><span class="text-dark fw-bold">118.99.119.147</span></div>
-                            <div class="d-flex justify-content-between small text-success"><span>Koordinat</span><span class="text-dark fw-bold">-5.387, 105.280</span></div>
+                            <div class="d-flex justify-content-between small text-success mb-2"><span>IP Address</span><span class="text-dark fw-bold" id="mdl-in-ip">Memuat...</span></div>
+                            <div class="d-flex justify-content-between small text-success"><span>Koordinat</span><span class="text-dark fw-bold" id="mdl-in-coord">Memuat...</span></div>
                         </div>
                         <div class="detail-box p-4 shadow-sm border">
                             <h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-camera me-2 text-dark"></i>Foto Selfie Bukti</h6>
@@ -572,8 +586,8 @@ if ($is_admin) {
                             <h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-geo-alt me-2 text-dark"></i>Lokasi Absen</h6>
                             <p class="mb-3 fs-6 fw-bold text-dark" id="mdl-out-lokasi">-</p>
                             <hr class="text-muted opacity-25" style="border-style: dashed;">
-                            <div class="d-flex justify-content-between small text-danger mb-2"><span>IP Address</span><span class="text-dark fw-bold">118.99.119.147</span></div>
-                            <div class="d-flex justify-content-between small text-danger"><span>Koordinat</span><span class="text-dark fw-bold">-5.387, 105.280</span></div>
+                            <div class="d-flex justify-content-between small text-danger mb-2"><span>IP Address</span><span class="text-dark fw-bold" id="mdl-out-ip">Memuat...</span></div>
+                            <div class="d-flex justify-content-between small text-danger"><span>Koordinat</span><span class="text-dark fw-bold" id="mdl-out-coord">Memuat...</span></div>
                         </div>
                         <div class="detail-box p-4 shadow-sm border">
                             <h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-camera me-2 text-dark"></i>Foto Selfie Bukti</h6>
@@ -745,11 +759,21 @@ if ($is_admin) {
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-dark">Kata Sandi Baru</label>
-                        <input type="password" class="form-control form-control-lg bg-light fs-6" name="password_baru" placeholder="Minimal 6 karakter" required minlength="6">
+                        <input type="password" class="form-control form-control-lg bg-light fs-6" id="password_baru" name="password_baru" placeholder="Minimal 6 karakter" required minlength="6" oninput="checkStrength(this.value); checkMatch()">
                     </div>
+                    
+                    <div class="strength-bar-wrap d-flex gap-1 mb-2" id="strength-bars">
+                        <div class="strength-bar flex-fill rounded" id="bar1" style="height:4px; background:#eee;"></div>
+                        <div class="strength-bar flex-fill rounded" id="bar2" style="height:4px; background:#eee;"></div>
+                        <div class="strength-bar flex-fill rounded" id="bar3" style="height:4px; background:#eee;"></div>
+                        <div class="strength-bar flex-fill rounded" id="bar4" style="height:4px; background:#eee;"></div>
+                    </div>
+                    <div class="strength-label small fw-bold mb-3" id="strength-label"></div>
+
                     <div class="mb-4">
                         <label class="form-label small fw-bold text-dark">Konfirmasi Kata Sandi Baru</label>
-                        <input type="password" class="form-control form-control-lg bg-light fs-6" name="konfirmasi_password" placeholder="Tulis ulang sandi baru" required minlength="6">
+                        <input type="password" class="form-control form-control-lg bg-light fs-6" id="password_konfirmasi" name="konfirmasi_password" placeholder="Tulis ulang sandi baru" required minlength="6" oninput="checkMatch()">
+                        <div id="match-msg" style="font-size:0.78rem; margin-top:5px; font-weight:600;"></div>
                     </div>
                     <button type="submit" class="btn btn-pink w-100 py-3 fw-bold rounded-pill shadow-sm">Simpan Kata Sandi Baru</button>
                 </form>
