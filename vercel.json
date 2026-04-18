@@ -34,6 +34,10 @@
       "dest": "/api/proses_pengajuan.php"
     },
     {
+      "src": "/proses_approval",
+      "dest": "/api/proses_approval.php"
+    },
+    {
       "src": "/cetak_rekap",
       "dest": "/api/cetak_rekap.php"
     },

@@ -520,7 +520,7 @@ if ($is_admin) {
             </div>
         </div>
 
-        <div id="screen-admin-lembur" class="app-screen">
+        <div id="screen-admin-lembur" class="app-screen" style="display: none;">
             <div class="bg-pink-wave header-top p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
                 <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-md-4 ms-2" onclick="switchScreen('layanan')"><i class="bi bi-arrow-left fs-3"></i></button>
                 <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Approval Lembur</h4>
@@ -873,5 +873,33 @@ if ($is_admin) {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/style/script.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Timpa fungsi switchScreen bawaan agar lebih ketat menyembunyikan semua layar
+        if (typeof window.switchScreen === 'function') {
+            const originalSwitchScreen = window.switchScreen;
+            window.switchScreen = function(screenId) {
+                
+                // 1. Paksa sembunyikan SEMUA elemen dengan class .app-screen
+                document.querySelectorAll('.app-screen').forEach(function(screen) {
+                    screen.classList.remove('active');
+                    screen.style.display = 'none';
+                });
+
+                // 2. Jalankan fungsi bawaan dari script.js
+                try { originalSwitchScreen(screenId); } catch(e) {}
+
+                // 3. Pastikan HANYA layar yang dituju yang ditampilkan
+                const activeScreen = document.getElementById('screen-' + screenId);
+                if (activeScreen) {
+                    activeScreen.classList.add('active');
+                    activeScreen.style.display = 'block';
+                }
+            };
+        }
+    });
+</script>
+
 </body>
 </html>
