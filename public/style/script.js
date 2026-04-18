@@ -350,3 +350,43 @@ function bukaModalCetakKaryawan() {
     document.getElementById('cetak_nik_karyawan').value = selectedNikAdmin;
     new bootstrap.Modal(document.getElementById('modalCetakLogKaryawan')).show();
 }
+// =======================================================
+// LOGIKA UBAH KATA SANDI
+// =======================================================
+function submitUbahPassword(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+
+    if (formData.get('password_baru') !== formData.get('konfirmasi_password')) {
+        showModernAlert('Gagal', 'Kata sandi baru dan konfirmasi tidak cocok!', 'bi bi-x-circle-fill', '#dc3545');
+        return;
+    }
+
+    const btnSubmit = form.querySelector('button[type="submit"]');
+    const originalText = btnSubmit.innerHTML;
+    btnSubmit.innerHTML = '<i class="spinner-border spinner-border-sm"></i> Menyimpan...';
+    btnSubmit.disabled = true;
+
+    fetch('/ubah_password', { // <- pastikan url sesuai dengan route
+        method: 'POST',
+        body: formData
+    })
+        .then(res => res.text())
+        .then(data => {
+            bootstrap.Modal.getInstance(form.closest('.modal')).hide();
+            if (data.includes('Berhasil') || data.includes('berhasil') || data.includes('✅')) {
+                showModernAlert('Berhasil', data, 'bi bi-check-circle-fill', '#198754');
+                form.reset();
+            } else {
+                showModernAlert('Gagal', data, 'bi bi-x-circle-fill', '#dc3545');
+            }
+        })
+        .catch(err => {
+            showModernAlert('Gagal', 'Terjadi kesalahan jaringan.', 'bi bi-x-circle-fill', '#dc3545');
+        })
+        .finally(() => {
+            btnSubmit.innerHTML = originalText;
+            btnSubmit.disabled = false;
+        });
+}

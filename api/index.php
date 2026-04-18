@@ -9,8 +9,6 @@ $karyawan = auth_required($conn);
 // HAK AKSES ADMIN/HR (ANTI GAGAL & KEBAL SPASI)
 $posisi   = trim(strtoupper($karyawan['posisi'] ?? ''));
 $level    = trim(strtoupper($karyawan['level_jabatan'] ?? ''));
-
-// Jika posisinya mengandung kata "HC" (HCG/HCGA) atau "HR" (HRD/HR), otomatis terbuka!
 $is_admin = (strpos($posisi, 'HC') !== false || strpos($posisi, 'HR') !== false || in_array($level, ['OWNER','DIREKTUR']));
 
 // FUNGSI BANTUAN
@@ -112,7 +110,6 @@ if ($is_admin) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HRIS - <?= htmlspecialchars($karyawan['nama']) ?></title>
-    
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#C94F78">
     <link rel="icon" type="image/png" href="/logo/lbqueen_logo.PNG">
@@ -120,7 +117,6 @@ if ($is_admin) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="HRIS LBQueen">
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="/style/style.css">
@@ -156,9 +152,7 @@ if ($is_admin) {
             <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
                 <div class="card mb-3 overlap-card shadow-sm" style="margin-top:-35px; z-index: 10; position:relative;">
                     <div class="card-body d-flex align-items-center gap-3 p-3">
-                        <div class="avatar-initials" style="width: 55px; height: 55px; font-size: 22px;">
-                            <?= $inisial ?>
-                        </div>
+                        <div class="avatar-initials" style="width: 55px; height: 55px; font-size: 22px;"><?= $inisial ?></div>
                         <div>
                             <h6 class="fw-bold mb-1 text-dark section-title" style="margin-bottom:2px; font-size:16px;"><?= $karyawan['posisi'] ?></h6>
                             <span class="badge bg-warning text-dark me-1 shadow-sm"><?= $karyawan['status_pegawai'] ?></span>
@@ -184,9 +178,7 @@ if ($is_admin) {
                 <div class="card mb-3 shadow-sm rounded-4">
                     <div class="card-body p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="status-icon bg-light text-secondary shadow-sm" style="width:40px; height:40px;">
-                                <i class="bi bi-stopwatch fs-5"></i>
-                            </div>
+                            <div class="status-icon bg-light text-secondary shadow-sm" style="width:40px; height:40px;"><i class="bi bi-stopwatch fs-5"></i></div>
                             <div>
                                 <small class="text-muted fw-bold d-block text-uppercase" style="font-size:10px; letter-spacing:0.5px;">Jadwal Kerja Anda</small>
                                 <span class="fw-bold fs-6 text-dark">09:00 - 19:00 <small class="text-muted fw-normal">WIB</small></span>
@@ -248,23 +240,15 @@ if ($is_admin) {
 
                             <div id="btn-action-group" class="d-flex justify-content-center gap-3 mt-4 mx-auto" style="max-width: 400px;">
                                 <?php if ($jenis_absen_sekarang == 'Check In'): ?>
-                                    <button class="btn btn-success w-100 rounded-pill py-3 fw-bold shadow" onclick="ambilFoto('Check In')">
-                                        <i class="bi bi-camera-fill me-2 fs-5"></i> Ambil Foto Check In
-                                    </button>
+                                    <button class="btn btn-success w-100 rounded-pill py-3 fw-bold shadow" onclick="ambilFoto('Check In')"><i class="bi bi-camera-fill me-2 fs-5"></i> Ambil Foto Check In</button>
                                 <?php else: ?>
-                                    <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow" onclick="ambilFoto('Check Out')">
-                                        <i class="bi bi-camera-fill me-2 fs-5"></i> Ambil Foto Check Out
-                                    </button>
+                                    <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow" onclick="ambilFoto('Check Out')"><i class="bi bi-camera-fill me-2 fs-5"></i> Ambil Foto Check Out</button>
                                 <?php endif; ?>
                             </div>
 
                             <div id="btn-confirm-group" class="d-flex justify-content-center gap-3 mt-4 mx-auto" style="max-width: 400px; display:none !important;">
-                                <button class="btn btn-outline-secondary flex-fill rounded-pill py-3 fw-bold bg-white" onclick="batalFoto()">
-                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Batal
-                                </button>
-                                <button class="btn btn-pink flex-fill rounded-pill py-3 fw-bold shadow" onclick="submitAbsen()">
-                                    <span id="confirm-text">Kirim Absen</span> <i class="bi bi-send-fill ms-2"></i>
-                                </button>
+                                <button class="btn btn-outline-secondary flex-fill rounded-pill py-3 fw-bold bg-white" onclick="batalFoto()"><i class="bi bi-arrow-counterclockwise me-1"></i> Batal</button>
+                                <button class="btn btn-pink flex-fill rounded-pill py-3 fw-bold shadow" onclick="submitAbsen()"><span id="confirm-text">Kirim Absen</span> <i class="bi bi-send-fill ms-2"></i></button>
                             </div>
                         <?php else: ?>
                             <div class="text-center p-4 rounded-4 mx-auto border" style="max-width: 350px; background-color:#fff;">
@@ -298,7 +282,7 @@ if ($is_admin) {
             </div>
             
             <div class="p-3 desktop-px mx-auto mt-3" style="max-width: 1200px;">
-                <div class="table-responsive bg-white rounded-4 shadow-sm border">
+                <div class="table-responsive bg-white rounded-4 shadow-sm border p-0">
                     <table class="table table-hover table-riwayat align-middle mb-0">
                         <thead class="table-light">
                             <tr>
@@ -324,7 +308,7 @@ if ($is_admin) {
                                     
                                     $status_in = $data['status_in'] ?: 'Tidak Hadir';
                                     $badge_class = 'bg-hadir';
-                                    if ($status_in == 'Telat') { $status_in = 'Terlambat'; $badge_class = 'bg-terlambat'; }
+                                    if ($status_in == 'Telat' || $status_in == 'Terlambat') { $status_in = 'Terlambat'; $badge_class = 'bg-terlambat'; }
                                     elseif ($status_in == 'Tidak Hadir') { $badge_class = 'bg-absen'; }
                                     elseif ($data['in_time'] && !$data['out_time']) { $status_in = 'Check In'; $badge_class = 'bg-checkin'; }
 
@@ -403,12 +387,6 @@ if ($is_admin) {
                             <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Pengajuan Cuti</h6><small class="text-muted">Cek kuota dan libur</small></div>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-4" onclick="aksesGajiDitolak()">
-                        <div class="action-card shadow-sm p-4 bg-light rounded-4 d-flex align-items-center employee-card border border-light">
-                            <div class="action-icon bg-secondary bg-opacity-10 text-secondary fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-lock-fill"></i></div>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 text-secondary fs-6">Slip Gaji <span class="badge bg-secondary ms-1 shadow-sm" style="font-size:9px;">Terkunci</span></h6><small class="text-muted">Akses via portal Finance</small></div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -454,7 +432,7 @@ if ($is_admin) {
                 <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
                     
                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-                        <h6 class="small fw-bold text-muted mb-0"><i class="bi bi-funnel-fill me-1 text-pink"></i> Filter & Aksi</h6>
+                        <h6 class="small fw-bold text-muted mb-0"><i class="bi bi-funnel-fill me-1 text-pink"></i> Filter Pencarian</h6>
                         <button class="btn btn-outline-danger btn-sm rounded-pill fw-bold shadow-sm" onclick="bukaModalCetakKaryawan()"><i class="bi bi-printer-fill me-1"></i> Cetak Laporan Karyawan</button>
                     </div>
 
@@ -476,13 +454,14 @@ if ($is_admin) {
                         </div>
                     </div>
                     
-                    <div class="table-responsive bg-white rounded-4 shadow-sm border">
+                    <div class="table-responsive bg-white rounded-4 shadow-sm border p-0">
                         <table class="table table-hover table-admin align-middle mb-0 table-riwayat">
                             <thead class="table-light">
                                 <tr>
                                     <th class="px-4 py-3 border-0">Tanggal & Status</th>
                                     <th class="text-center py-3 border-0">Jam Masuk</th>
                                     <th class="text-center py-3 border-0">Jam Pulang</th>
+                                    <th class="text-end py-3 border-0 px-4">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-detail-tbody"></tbody>
@@ -511,6 +490,11 @@ if ($is_admin) {
                         </ul>
                     </div>
                 </div>
+                
+                <button class="btn btn-light bg-white border w-100 rounded-4 py-3 fw-bold mt-2 shadow-sm fs-5 text-dark" onclick="new bootstrap.Modal(document.getElementById('modalUbahPassword')).show()">
+                    <i class="bi bi-key-fill me-2 text-warning"></i> Ubah Kata Sandi
+                </button>
+                
                 <a href="/logout" class="btn btn-outline-danger bg-white w-100 rounded-4 py-3 fw-bold mt-3 shadow-sm fs-5">
                     <i class="bi bi-box-arrow-right me-2"></i> Keluar dari Aplikasi
                 </a>
@@ -739,6 +723,35 @@ if ($is_admin) {
                         <?php endfor; ?>
                     </select>
                     <button type="submit" class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow-sm"><i class="bi bi-printer-fill me-2"></i> Cetak Laporan PDF</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalUbahPassword" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header border-bottom-0 pb-0 p-4">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-key-fill text-warning me-2"></i>Ubah Kata Sandi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 pt-2">
+                <p class="text-muted small mb-4">Silakan masukkan kata sandi lama dan kata sandi baru Anda.</p>
+                <form id="formUbahPassword" onsubmit="submitUbahPassword(event)">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Kata Sandi Lama</label>
+                        <input type="password" class="form-control form-control-lg bg-light fs-6" name="password_lama" placeholder="Masukkan sandi saat ini" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Kata Sandi Baru</label>
+                        <input type="password" class="form-control form-control-lg bg-light fs-6" name="password_baru" placeholder="Minimal 6 karakter" required minlength="6">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-dark">Konfirmasi Kata Sandi Baru</label>
+                        <input type="password" class="form-control form-control-lg bg-light fs-6" name="konfirmasi_password" placeholder="Tulis ulang sandi baru" required minlength="6">
+                    </div>
+                    <button type="submit" class="btn btn-pink w-100 py-3 fw-bold rounded-pill shadow-sm">Simpan Kata Sandi Baru</button>
                 </form>
             </div>
         </div>

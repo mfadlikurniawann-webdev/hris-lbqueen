@@ -3,14 +3,18 @@
 include __DIR__ . '/koneksi.php';
 date_default_timezone_set('Asia/Jakarta');
 
-// Autentikasi HR/Admin
+// Autentikasi HR/Admin (Logika Kebal Spasi)
 $karyawan_login = auth_required($conn);
-$posisi   = strtoupper($karyawan_login['posisi']);
-$level    = strtoupper($karyawan_login['level_jabatan']);
-$is_admin = in_array($posisi, ['HCG','HRD','HR']) || in_array($level, ['OWNER','DIREKTUR']);
+$posisi   = trim(strtoupper($karyawan_login['posisi'] ?? ''));
+$level    = trim(strtoupper($karyawan_login['level_jabatan'] ?? ''));
+$is_admin = (strpos($posisi, 'HC') !== false || strpos($posisi, 'HR') !== false || in_array($level, ['OWNER','DIREKTUR']));
 
 if (!$is_admin) {
-    die("❌ Akses Ditolak! Khusus HR & Manajemen.");
+    die("<div style='font-family:sans-serif; padding:20px; color:red; text-align:center;'>
+        <h2>❌ Akses Ditolak!</h2>
+        <p>Halaman ini khusus untuk HR & Manajemen.</p>
+        <p>Posisi Anda saat ini terbaca sebagai: <b>" . ($posisi ?: 'Kosong') . "</b></p>
+        </div>");
 }
 
 // Dapatkan NIK karyawan yang ingin dicetak dari URL (?nik=...)
@@ -128,7 +132,7 @@ $total_jam_all = floor($total_menit_kerja / 60) . ' jam ' . ($total_menit_kerja 
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Kehadiran - <?= $data_karyawan['nama'] ?></title>
+    <title>Laporan Kehadiran - <?= htmlspecialchars($data_karyawan['nama']) ?></title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Arial:wght@400;700&display=swap');
         body { font-family: Arial, sans-serif; font-size: 11px; color: #000; line-height: 1.4; }
@@ -192,7 +196,7 @@ $total_jam_all = floor($total_menit_kerja / 60) . ' jam ' . ($total_menit_kerja 
         </div>
 
         <table class="info-table" style="border:none;">
-            <tr><td style="border:none;">Nama</td><td style="border:none;">: <?= $data_karyawan['nama'] ?></td></tr>
+            <tr><td style="border:none;">Nama</td><td style="border:none;">: <?= htmlspecialchars($data_karyawan['nama']) ?></td></tr>
             <tr><td style="border:none;">Nomor Karyawan</td><td style="border:none;">: <?= $data_karyawan['nik'] ?></td></tr>
             <tr><td style="border:none;">Penempatan</td><td style="border:none;">: <?= $data_karyawan['penempatan'] ?></td></tr>
             <tr><td style="border:none;">Jabatan</td><td style="border:none;">: <?= $data_karyawan['posisi'] ?></td></tr>
@@ -254,7 +258,7 @@ $total_jam_all = floor($total_menit_kerja / 60) . ' jam ' . ($total_menit_kerja 
             <div style="float: left;">
                 <b>Diperiksa oleh:</b><br>
                 <b>Dept. Human Capital & General Affairs</b><br><br><br><br><br>
-                ( <?= $karyawan_login['nama'] ?> )<br>
+                ( <?= htmlspecialchars($karyawan_login['nama']) ?> )<br>
                 <b><?= $karyawan_login['posisi'] ?></b>
             </div>
             <div style="float: right;">
