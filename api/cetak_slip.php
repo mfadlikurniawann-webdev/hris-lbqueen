@@ -25,7 +25,8 @@ $is_probation = (strpos($status_pegawai, 'probation') !== false);
 
 // Variabel Input HR
 $hari_kerja = (int)($_GET['hari_kerja'] ?? 26);
-$uang_makan = (int)($_GET['uang_makan'] ?? 0);
+$total_lembur = (int)($_GET['total_lembur'] ?? 0);
+$uang_lembur = $total_lembur * 10000;
 $capai_target = isset($_GET['capai_target']) && $_GET['capai_target'] == '1';
 $alpa_banyak = isset($_GET['alpa_banyak']) && $_GET['alpa_banyak'] == '1';
 
@@ -43,7 +44,7 @@ if ($capai_target) {
     $uang_bonus = 600000;
 }
 
-$total_penerima = $gaji_pokok + $uang_kerajinan + $uang_bonus + $uang_makan;
+$total_penerima = $gaji_pokok + $uang_kerajinan + $uang_bonus + $uang_lembur;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -71,14 +72,15 @@ $total_penerima = $gaji_pokok + $uang_kerajinan + $uang_bonus + $uang_makan;
         .signature-box .sign-area { height: 90px; position: relative; background: #fff; }
         .signature-box .sign-area img { height: 70px; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); opacity: 0.9; }
         .signature-box .name { border-top: 1px dashed #edf2f7; padding: 12px; font-weight: 800; color: #C94F78; background: #FDF0F5; }
-        .notes { margin-top: 180px; font-size: 13px; }
+        .notes { margin-top: 60px; font-size: 13px; }
         .notes table { border: none; box-shadow: none; border-radius: 12px; overflow: hidden; }
         .notes th { background-color: #f8fafc; color: #C94F78; border-bottom: 1px solid #edf2f7; }
         .notes td { color: #718096; border-bottom: 1px dashed #edf2f7; font-weight: 500; font-size: 12.5px; }
         .print-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #C94F78, #b03d64); color: white; text-align: center; font-weight: 800; margin-bottom: 25px; border: none; cursor: pointer; border-radius: 50px; font-size: 16px; box-shadow: 0 10px 20px rgba(201, 79, 120, 0.25); text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; }
         .print-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(201, 79, 120, 0.35); }
         @media print { 
-            body { padding: 0; margin: 0; -webkit-print-color-adjust: exact; color-adjust: exact; print-color-adjust: exact; }
+            @page { size: A4; margin: 1cm; }
+            body { padding: 0; margin: 0; -webkit-print-color-adjust: exact; color-adjust: exact; print-color-adjust: exact; zoom: 1; }
             .print-btn { display: none; } 
             .container { border: none; padding: 0; box-shadow: none; max-width: 100%; }
         }
@@ -109,7 +111,7 @@ $total_penerima = $gaji_pokok + $uang_kerajinan + $uang_bonus + $uang_makan;
             <tr><td>Gaji Pokok</td><td class="text-right">Rp <?= number_format($gaji_pokok, 0, ',', '.') ?></td></tr>
             <tr><td>Total Hari Kerja</td><td class="text-right"><?= $hari_kerja ?></td></tr>
             <tr><td colspan="2" style="border-left:none; border-right:none;"></td></tr>
-            <tr><td>Tunjangan Uang Makan</td><td class="text-right">Rp <?= number_format($uang_makan, 0, ',', '.') ?></td></tr>
+            <tr><td>Gaji Uang Lembur (<?= $total_lembur ?> x Rp 10.000)</td><td class="text-right">Rp <?= number_format($uang_lembur, 0, ',', '.') ?></td></tr>
             <tr><td>Uang Kerajinan</td><td class="text-right">Rp <?= number_format($uang_kerajinan, 0, ',', '.') ?></td></tr>
             <tr><td>Uang Bonus Target</td><td class="text-right">Rp <?= number_format($uang_bonus, 0, ',', '.') ?></td></tr>
             <tr><th class="bg-pink">Total Penerima</th><th class="bg-pink text-right">Rp <?= number_format($total_penerima, 0, ',', '.') ?></th></tr>

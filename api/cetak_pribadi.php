@@ -194,7 +194,7 @@ if ($total_menit_lembur > 0) {
         .info-table td strong { color: #1a202c; }
         
         table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 25px; border: 1px solid #edf2f7; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-        th, td { padding: 10px 14px; border-bottom: 1px solid #edf2f7; border-right: 1px solid #edf2f7; }
+        th, td { padding: 6px 10px; border-bottom: 1px solid #edf2f7; border-right: 1px solid #edf2f7; }
         th:last-child, td:last-child { border-right: none; }
         tr:last-child td { border-bottom: none; }
         .text-center { text-align: center; }
@@ -207,18 +207,19 @@ if ($total_menit_lembur > 0) {
         .bg-yellow-soft { background-color: #fefce8; color: #854d0e; }
         
         .tabel-harian th { background-color: #C94F78; color: white; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; border-bottom: none; }
-        .tabel-harian td { font-size: 12px; font-weight: 500; color: #4a5568; }
+        .tabel-harian td { font-size: 11.5px; font-weight: 500; color: #4a5568; padding: 5px 8px; }
         
-        .footer-notes { font-size: 11px; margin-top: 30px; color: #718096; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px dashed #cbd5e1; }
+        .footer-notes { font-size: 10px; margin-top: 15px; color: #718096; background: #f8fafc; padding: 10px; border-radius: 12px; border: 1px dashed #cbd5e1; }
         .footer-notes b { color: #4a5568; }
-        .auto-approve { border: 1px dashed #93c5fd; padding: 15px; text-align: center; border-radius: 16px; width: 300px; background: #eff6ff; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.05); }
-        .auto-approve p { margin: 5px 0 0 0; font-size: 10px; color: #64748b; line-height: 1.5; }
+        .auto-approve { border: 1px dashed #93c5fd; padding: 10px; text-align: center; border-radius: 16px; width: 250px; background: #eff6ff; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.05); }
+        .auto-approve p { margin: 5px 0 0 0; font-size: 9px; color: #64748b; line-height: 1.5; }
         
         .print-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #C94F78, #b03d64); color: white; text-align: center; text-decoration: none; font-weight: 800; font-size: 16px; margin-bottom: 25px; border: none; cursor: pointer; border-radius: 50px; box-shadow: 0 10px 20px rgba(201, 79, 120, 0.25); text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; }
         .print-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(201, 79, 120, 0.35); }
         
         @media print {
-            body { padding: 0; margin: 0; -webkit-print-color-adjust: exact; color-adjust: exact; print-color-adjust: exact; }
+            @page { size: A4; margin: 0.8cm; }
+            body { padding: 0; margin: 0; -webkit-print-color-adjust: exact; color-adjust: exact; print-color-adjust: exact; zoom: 0.93; }
             .page-container { padding: 0; width: 100%; max-width: 100%; box-shadow: none; border: none; }
             .print-btn { display: none; }
         }

@@ -59,7 +59,8 @@ $result = $conn->query($sql);
         .signature-box p.sign-title { color: #1a202c; font-weight: 800; font-size: 14px; margin-top: 60px; border-top: 1px solid #cbd5e1; padding-top: 10px; }
         
         @media print { 
-            body { padding: 0; margin: 0; -webkit-print-color-adjust: exact; color-adjust: exact; print-color-adjust: exact; }
+            @page { size: A4; margin: 1cm; }
+            body { padding: 0; margin: 0; -webkit-print-color-adjust: exact; color-adjust: exact; print-color-adjust: exact; zoom: 0.95; }
             .page-container { border: none; padding: 0; box-shadow: none; border-radius: 0; max-width: 100%; }
             .no-print { display: none; } 
         }

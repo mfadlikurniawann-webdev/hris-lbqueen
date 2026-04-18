@@ -790,8 +790,8 @@ if ($is_admin) {
                             <input type="number" class="form-control form-control-lg bg-light fs-6" name="hari_kerja" value="26" required>
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-bold text-dark">Uang Makan (Total)</label>
-                            <input type="number" class="form-control form-control-lg bg-light fs-6" name="uang_makan" value="200000" required>
+                            <label class="form-label small fw-bold text-dark">Total Hari Lembur</label>
+                            <input type="number" class="form-control form-control-lg bg-light fs-6" name="total_lembur" value="0" min="0" required>
                         </div>
                     </div>
                     <div class="mb-4 bg-light p-3 rounded-3 border">
