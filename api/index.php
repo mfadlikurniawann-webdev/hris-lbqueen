@@ -393,7 +393,13 @@ if ($is_admin) {
                             <i class="bi bi-chevron-right text-muted fs-5"></i>
                         </div>
                     </div>
-
+                    <div class="col-md-6 col-lg-4" onclick="switchScreen('admin-lembur')">
+                        <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid #fd7e14;">
+                            <div class="action-icon bg-warning bg-opacity-10 text-warning fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-clock-history"></i></div>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Approval Lembur</h6><small class="text-muted">Persetujuan & Riwayat</small></div>
+                            <i class="bi bi-chevron-right text-muted fs-5"></i>
+                        </div>
+                    </div>
                     <div class="col-md-6 col-lg-4" onclick="new bootstrap.Modal(document.getElementById('modalPayroll')).show()">
                         <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid #198754;">
                             <div class="action-icon bg-success bg-opacity-10 text-success fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-cash-coin"></i></div>
@@ -431,53 +437,6 @@ if ($is_admin) {
                         </div>
                     </div>
                 </div>
-
-                <?php if ($is_admin): ?>
-                <h6 class="section-title mt-5 text-pink fw-bold"><i class="bi bi-clock-history me-2"></i>Approval Lembur Khusus HR</h6>
-                <div class="table-responsive bg-white rounded-4 shadow-sm border p-0 mb-4">
-                    <table class="table table-hover table-admin align-middle mb-0 table-riwayat">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="px-4 py-3 border-0">Tanggal & Karyawan</th>
-                                <th class="text-center py-3 border-0">Jam Lembur</th>
-                                <th class="py-3 border-0">Keterangan</th>
-                                <th class="text-center py-3 border-0">Status</th>
-                                <th class="text-center py-3 border-0 px-4">Aksi HR</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (count($data_approval_lembur) > 0): foreach ($data_approval_lembur as $lmb): ?>
-                            <tr>
-                                <td class="px-4 py-3">
-                                    <span class="fw-bold d-block text-dark"><?= formatTanggalIndo($lmb['tanggal']) ?></span>
-                                    <small class="text-muted"><?= htmlspecialchars($lmb['nama']) ?></small>
-                                </td>
-                                <td class="text-center text-primary fw-bold"><?= date('H:i', strtotime($lmb['jam_mulai'])) ?> - <?= date('H:i', strtotime($lmb['jam_selesai'])) ?></td>
-                                <td><span class="d-inline-block text-truncate" style="max-width: 150px; font-size:12px;" title="<?= htmlspecialchars($lmb['keterangan']) ?>"><?= htmlspecialchars($lmb['keterangan']) ?></span></td>
-                                <td class="text-center">
-                                    <?php 
-                                        $st = $lmb['status'] ?: 'Pending';
-                                        if(in_array($st, ['Pending','Menunggu'])) echo '<span class="badge bg-warning text-dark">Pending</span>'; 
-                                        elseif($st == 'Disetujui') echo '<span class="badge bg-success">Disetujui</span>'; 
-                                        else echo '<span class="badge bg-danger">Ditolak</span>'; 
-                                    ?>
-                                </td>
-                                <td class="text-center px-4">
-                                    <?php $st = $lmb['status'] ?: 'Pending'; if(in_array($st, ['Pending','Menunggu'])): ?>
-                                        <button class="btn btn-sm btn-success rounded-circle shadow-sm me-1" onclick="prosesApprovalLembur(<?= $lmb['id'] ?>, 'Disetujui')" title="Setujui"><i class="bi bi-check-lg"></i></button>
-                                        <button class="btn btn-sm btn-danger rounded-circle shadow-sm" onclick="prosesApprovalLembur(<?= $lmb['id'] ?>, 'Ditolak')" title="Tolak"><i class="bi bi-x-lg"></i></button>
-                                    <?php else: ?>
-                                        <span class="text-muted small"><i class="bi bi-check2-all"></i> Selesai</span>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                            <?php endforeach; else: ?>
-                            <tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-folder2-open fs-1 d-block mb-2 text-black-50"></i> Belum ada pengajuan lembur.</td></tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <?php endif; ?>
             </div>
         </div>
 
@@ -561,7 +520,54 @@ if ($is_admin) {
             </div>
         </div>
 
-
+        <div id="screen-admin-lembur" class="app-screen">
+            <div class="bg-pink-wave header-top p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+                <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-md-4 ms-2" onclick="switchScreen('layanan')"><i class="bi bi-arrow-left fs-3"></i></button>
+                <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Approval Lembur</h4>
+            </div>
+            <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
+                <div class="table-responsive bg-white rounded-4 shadow-sm border p-0">
+                    <table class="table table-hover table-admin align-middle mb-0 table-riwayat">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="px-4 py-3 border-0">Tanggal & Karyawan</th>
+                                <th class="text-center py-3 border-0">Jam Lembur</th>
+                                <th class="py-3 border-0">Keterangan</th>
+                                <th class="text-center py-3 border-0">Status</th>
+                                <th class="text-center py-3 border-0 px-4">Aksi HR</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (count($data_approval_lembur) > 0): foreach ($data_approval_lembur as $lmb): ?>
+                            <tr>
+                                <td class="px-4 py-3">
+                                    <span class="fw-bold d-block text-dark"><?= formatTanggalIndo($lmb['tanggal']) ?></span>
+                                    <small class="text-muted"><?= htmlspecialchars($lmb['nama']) ?></small>
+                                </td>
+                                <td class="text-center text-primary fw-bold"><?= date('H:i', strtotime($lmb['jam_mulai'])) ?> - <?= date('H:i', strtotime($lmb['jam_selesai'])) ?></td>
+                                <td><span class="d-inline-block text-truncate" style="max-width: 150px; font-size:12px;" title="<?= htmlspecialchars($lmb['keterangan']) ?>"><?= htmlspecialchars($lmb['keterangan']) ?></span></td>
+                                <td class="text-center">
+                                    <?php if($lmb['status']=='Pending') echo '<span class="badge bg-warning text-dark">Pending</span>'; 
+                                          elseif($lmb['status']=='Disetujui') echo '<span class="badge bg-success">Disetujui</span>'; 
+                                          else echo '<span class="badge bg-danger">Ditolak</span>'; ?>
+                                </td>
+                                <td class="text-center px-4">
+                                    <?php if($lmb['status']=='Pending'): ?>
+                                        <button class="btn btn-sm btn-success rounded-circle shadow-sm me-1" onclick="prosesApprovalLembur(<?= $lmb['id'] ?>, 'Disetujui')" title="Setujui"><i class="bi bi-check-lg"></i></button>
+                                        <button class="btn btn-sm btn-danger rounded-circle shadow-sm" onclick="prosesApprovalLembur(<?= $lmb['id'] ?>, 'Ditolak')" title="Tolak"><i class="bi bi-x-lg"></i></button>
+                                    <?php else: ?>
+                                        <span class="text-muted small"><i class="bi bi-check2-all"></i> Selesai</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; else: ?>
+                            <tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-folder2-open fs-1 d-block mb-2 text-black-50"></i> Belum ada pengajuan lembur.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
         <?php endif; ?>
 
         <div id="screen-profil" class="app-screen">
