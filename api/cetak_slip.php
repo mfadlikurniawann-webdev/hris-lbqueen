@@ -31,12 +31,14 @@ $alpa_banyak = isset($_GET['alpa_banyak']) && $_GET['alpa_banyak'] == '1';
 
 // Logika Gaji Sesuai Kontrak
 $gaji_pokok = 1000000;
-$uang_kerajinan = 0;
+$uang_kerajinan = 200000; // Default Uang Kerajinan 200k
 $uang_bonus = 0;
 
-if (!$is_probation && !$alpa_banyak) {
-    $uang_kerajinan = 200000;
+// Jika checkbox Alpa >= 2x dicentang, maka uang kerajinan hangus (0)
+if ($alpa_banyak) {
+    $uang_kerajinan = 0;
 }
+
 if ($capai_target) {
     $uang_bonus = 600000;
 }
