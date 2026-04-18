@@ -170,11 +170,11 @@ function ambilFoto(jenis) {
 
     absenJenisType = jenis;
 
-    canvas.width = video.videoWidth || 480;
-    canvas.height = video.videoHeight || 640;
+    canvas.width = video.videoWidth || 320;
+    canvas.height = video.videoHeight || 426;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    fotoDataURL = canvas.toDataURL('image/jpeg', 0.8);
+    fotoDataURL = canvas.toDataURL('image/jpeg', 0.3);
 
     video.style.display = 'none';
     preview.src = fotoDataURL;
