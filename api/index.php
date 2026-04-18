@@ -312,10 +312,17 @@ if ($is_admin) {
         </div>
 
         <div id="screen-riwayat" class="app-screen">
-            <div class="bg-white p-4 desktop-px d-flex justify-content-between align-items-center border-bottom sticky-top" style="z-index: 10;">
-                <h4 class="mb-0 text-dark fw-bold">Riwayat Kehadiran</h4>
-                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold"><i class="bi bi-funnel"></i> Filter</button>
-            </div>
+    <div class="bg-white p-4 desktop-px d-flex justify-content-between align-items-center border-bottom sticky-top" style="z-index: 10;">
+        <h4 class="mb-0 text-dark fw-bold">Riwayat Kehadiran</h4>
+        <div>
+            <button class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold me-2" onclick="new bootstrap.Modal(document.getElementById('modalCetakPribadi')).show()">
+                <i class="bi bi-printer"></i> Cetak
+            </button>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold">
+                <i class="bi bi-funnel"></i> Filter
+            </button>
+        </div>
+    </div>
             
             <div class="p-3 desktop-px mx-auto mt-2" style="max-width: 1200px;">
                 <div class="table-responsive bg-white rounded-4 shadow-sm border">
@@ -711,13 +718,13 @@ if ($is_admin) {
     </div>
 </div>
 
-<div class="modal fade" id="modalCetakLaporan" tabindex="-1">
+<div class="modal fade" id="modalCetakPribadi" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content rounded-4 border-0 shadow-lg">
             <div class="modal-body p-4 text-center">
-                <i class="bi bi-printer text-pink" style="font-size: 3rem;"></i>
-                <h5 class="fw-bold mt-3 mb-4">Cetak Rekap Bulanan</h5>
-                <form action="/cetak_rekap" method="GET" target="_blank">
+                <i class="bi bi-file-earmark-pdf text-pink" style="font-size: 3rem;"></i>
+                <h5 class="fw-bold mt-3 mb-4">Cetak Laporan Kehadiran</h5>
+                <form action="/cetak_pribadi" method="GET" target="_blank">
                     <select name="bulan" class="form-select bg-light mb-2">
                         <?php for($i=1; $i<=12; $i++): ?>
                             <option value="<?= str_pad($i, 2, '0', STR_PAD_LEFT) ?>" <?= date('m') == $i ? 'selected' : '' ?>><?= date('F', mktime(0,0,0,$i,1)) ?></option>
@@ -728,13 +735,12 @@ if ($is_admin) {
                             <option value="<?= $i ?>" <?= date('Y') == $i ? 'selected' : '' ?>><?= $i ?></option>
                         <?php endfor; ?>
                     </select>
-                    <button type="submit" class="btn btn-pink w-100 rounded-pill py-2 fw-bold">Buka PDF</button>
+                    <button type="submit" class="btn btn-pink w-100 rounded-pill py-2 fw-bold"><i class="bi bi-printer me-2"></i> Cetak PDF</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
 <script>
     window.HRIS_CONFIG = {
         userNIK: '<?= $karyawan['nik'] ?>',

@@ -78,3 +78,29 @@ INSERT INTO `absensi` (`nik`, `waktu`, `jenis`, `lokasi`, `status`, `foto`) VALU
 ('HR001', '2026-04-14 17:05:00', 'Check Out', 'HO', '-', NULL),
 ('BT001', '2026-04-14 09:20:00', 'Check In', 'HO', 'Telat', NULL),
 ('BT001', '2026-04-14 17:10:00', 'Check Out', 'HO', '-', NULL);
+
+CREATE TABLE `perjalanan_dinas` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nik` varchar(20) NOT NULL,
+  `tujuan` varchar(150) NOT NULL,
+  `tgl_berangkat` date NOT NULL,
+  `tgl_kembali` date NOT NULL,
+  `keterangan` text NOT NULL,
+  `status` enum('Pending','Disetujui','Ditolak') DEFAULT 'Pending',
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`nik`) REFERENCES `karyawan` (`nik`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `reimburse` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nik` varchar(20) NOT NULL,
+  `kategori` varchar(100) NOT NULL,
+  `nominal` int(11) NOT NULL,
+  `keterangan` text NOT NULL,
+  `foto_nota` longtext NOT NULL,
+  `status` enum('Pending','Disetujui','Ditolak') DEFAULT 'Pending',
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`nik`) REFERENCES `karyawan` (`nik`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

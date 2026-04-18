@@ -38,6 +38,10 @@
       "dest": "/api/cetak_rekap.php"
     },
     {
+      "src": "/cetak_pribadi",
+      "dest": "/api/cetak_pribadi.php"
+    },
+    {
       "src": "/(.*)\\.php",
       "dest": "/api/$1.php"
     },
