@@ -5,7 +5,7 @@ const userNIK = window.HRIS_CONFIG.userNIK;
 const adminHistData = window.HRIS_CONFIG.adminHistData || [];
 const karyawanPenempatan = window.HRIS_CONFIG.karyawanPenempatan || 'WFO';
 
-const screens = ['beranda', 'riwayat', 'layanan', 'profil', 'admin-absen'];
+const screens = ['beranda', 'riwayat', 'layanan', 'profil', 'admin-absen', 'admin-lembur'];
 
 function switchScreen(target) {
     screens.forEach(s => {
