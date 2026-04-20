@@ -16,24 +16,64 @@ $nama_bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus
 $periode = $nama_bulan[(int)$bulan-1] . " " . $tahun;
 
 // Ambil Data Karyawan
-$q_kar = $conn->query("SELECT nama, posisi, status_pegawai FROM karyawan WHERE nik='$nik_target'");
+$q_kar = $conn->query("SELECT nama, posisi, status_pegawai, tgl_bergabung FROM karyawan WHERE nik='$nik_target'");
 $data_kar = $q_kar->fetch_assoc();
 if(!$data_kar) die("Data Karyawan tidak ditemukan.");
 
 $status_pegawai = strtolower($data_kar['status_pegawai']);
 $is_probation = (strpos($status_pegawai, 'probation') !== false);
+$tgl_bergabung = $data_kar['tgl_bergabung'] ?? '0000-00-00';
+
+// Hitung Kehadiran Berdasarkan Cutoff 26 - 25
+$bulan_p = (int)$bulan;
+$tahun_p = (int)$tahun;
+$bulan_s = $bulan_p - 1;
+$tahun_s = $tahun_p;
+if ($bulan_s == 0) {
+    $bulan_s = 12;
+    $tahun_s--;
+}
+$start_date = "$tahun_s-" . str_pad($bulan_s, 2, "0", STR_PAD_LEFT) . "-26";
+$end_date   = "$tahun_p-" . str_pad($bulan_p, 2, "0", STR_PAD_LEFT) . "-25";
+
+$q_abs = $conn->query("SELECT COUNT(DISTINCT DATE(waktu)) as total_hadir FROM absensi WHERE nik='$nik_target' AND jenis='Check In' AND DATE(waktu) BETWEEN '$start_date' AND '$end_date'");
+$d_abs = $q_abs->fetch_assoc();
+$kehadiran_aktual = (int)$d_abs['total_hadir'];
 
 // Variabel Input HR
 $hari_kerja = (int)($_GET['hari_kerja'] ?? 26);
+if ($kehadiran_aktual > 0) {
+    $hari_kerja = $kehadiran_aktual; // Reset kehadiran menjadi kehadiran aktual cutoff 25
+}
+
 $total_lembur = (int)($_GET['total_lembur'] ?? 0);
 $uang_lembur = $total_lembur * 10000;
 $capai_target = isset($_GET['capai_target']) && $_GET['capai_target'] == '1';
 $alpa_banyak = isset($_GET['alpa_banyak']) && $_GET['alpa_banyak'] == '1';
+$tidak_hitung_gaji = isset($_GET['tidak_hitung_gaji']) && $_GET['tidak_hitung_gaji'] == '1';
+
+// Cek apakah belum genap 1 bulan
+$belum_genap_1_bulan = false;
+if ($tgl_bergabung != '0000-00-00') {
+    $date_bergabung = new DateTime($tgl_bergabung);
+    $date_cutoff = new DateTime($end_date);
+    $diff = $date_bergabung->diff($date_cutoff);
+    if ($diff->y == 0 && $diff->m == 0) {
+        $belum_genap_1_bulan = true;
+    }
+}
 
 // Logika Gaji Sesuai Kontrak
 $gaji_pokok = 1000000;
 $uang_kerajinan = 200000; // Default Uang Kerajinan 200k
 $uang_bonus = 0;
+
+if ($tidak_hitung_gaji) {
+    $gaji_pokok = 0;
+} else if ($is_probation && $belum_genap_1_bulan) {
+    // Gaji pokok harian 25000 untuk probation < 1 bulan
+    $gaji_pokok = $hari_kerja * 25000;
+}
 
 // Jika checkbox Alpa >= 2x dicentang, maka uang kerajinan hangus (0)
 if ($alpa_banyak) {

@@ -783,6 +783,7 @@ if ($is_admin) {
                         <div class="col-6"><label class="form-label small fw-bold text-dark">Uang Makan</label><input type="number" class="form-control form-control-lg bg-light fs-6" name="uang_makan" value="200000" required></div>
                     </div>
                     <div class="mb-4 bg-light p-3 rounded-3 border">
+                        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="tidak_hitung_gaji" value="1" id="c_tidak_gaji"><label class="form-check-label small fw-bold text-dark" for="c_tidak_gaji">Tidak Dihitung Gaji Pokok (Rp 0)</label></div>
                         <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="capai_target" value="1" id="c_target"><label class="form-check-label small fw-bold text-dark" for="c_target">Capai Target Omset (Bonus 600rb)</label></div>
                         <div class="form-check"><input class="form-check-input" type="checkbox" name="alpa_banyak" value="1" id="c_alpa"><label class="form-check-label small fw-bold text-danger" for="c_alpa">Alpa >= 2x (Kerajinan Hangus)</label></div>
                     </div>
