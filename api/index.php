@@ -12,6 +12,14 @@ $conn->query("CREATE TABLE IF NOT EXISTS `pengajuan_cuti` (
   `id` int(11) NOT NULL AUTO_INCREMENT, `nik` varchar(20) NOT NULL, `jenis` varchar(50) NOT NULL, `tanggal_mulai` date NOT NULL, `tanggal_selesai` date NOT NULL, `keterangan` text NOT NULL, `status` varchar(20) DEFAULT 'Pending', `created_at` timestamp DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`), FOREIGN KEY (`nik`) REFERENCES `karyawan` (`nik`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
+$conn->query("CREATE TABLE IF NOT EXISTS `perjalanan_dinas` (
+  `id` int(11) NOT NULL AUTO_INCREMENT, `nik` varchar(20) NOT NULL, `tujuan` varchar(255) NOT NULL, `tgl_berangkat` date NOT NULL, `tgl_kembali` date NOT NULL, `keterangan` text NOT NULL, `status` varchar(20) DEFAULT 'Pending', `created_at` timestamp DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`), FOREIGN KEY (`nik`) REFERENCES `karyawan` (`nik`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+$conn->query("CREATE TABLE IF NOT EXISTS `reimburse` (
+  `id` int(11) NOT NULL AUTO_INCREMENT, `nik` varchar(20) NOT NULL, `kategori` varchar(50) NOT NULL, `nominal` int(11) NOT NULL, `foto_nota` longtext NOT NULL, `keterangan` text NOT NULL, `status` varchar(20) DEFAULT 'Pending', `created_at` timestamp DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`), FOREIGN KEY (`nik`) REFERENCES `karyawan` (`nik`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
 // PROTEKSI HALAMAN - Pakai JWT
 $karyawan = auth_required($conn);
 
@@ -107,6 +115,21 @@ if ($q_cuti_pribadi) {
         }
     }
 }
+
+// 4. Ambil Dinas
+$q_dinas_pribadi = $conn->query("SELECT * FROM perjalanan_dinas WHERE nik='" . $karyawan['nik'] . "'");
+if ($q_dinas_pribadi) {
+    while ($row = $q_dinas_pribadi->fetch_assoc()) {
+        $start = new DateTime($row['tgl_berangkat']);
+        $end = new DateTime($row['tgl_kembali']);
+        $end->modify('+1 day');
+        $period = new DatePeriod($start, new DateInterval('P1D'), $end);
+        foreach ($period as $dt) {
+            $riwayat_pribadi[$dt->format('Y-m-d')]['dinas'] = $row;
+        }
+    }
+}
+
 krsort($riwayat_pribadi);
 
 // DATA ADMIN
@@ -114,6 +137,8 @@ $semua_karyawan = [];
 $admin_hist_arr = [];
 $data_approval_lembur = [];
 $data_approval_cuti = [];
+$data_approval_dinas = [];
+$data_approval_reimburse = [];
 
 if ($is_admin) {
     $q_kar = $conn->query("SELECT nik, nama, posisi, status_pegawai FROM karyawan ORDER BY nama ASC");
@@ -141,6 +166,20 @@ if ($is_admin) {
         if ($q_cuti) {
             while ($r = $q_cuti->fetch_assoc()) {
                 $data_approval_cuti[] = $r;
+            }
+        }
+
+        $q_dinas = $conn->query("SELECT d.*, k.nama, k.posisi FROM perjalanan_dinas d JOIN karyawan k ON d.nik=k.nik ORDER BY d.id DESC");
+        if ($q_dinas) {
+            while ($r = $q_dinas->fetch_assoc()) {
+                $data_approval_dinas[] = $r;
+            }
+        }
+
+        $q_reimburse = $conn->query("SELECT r.*, k.nama, k.posisi FROM reimburse r JOIN karyawan k ON r.nik=k.nik ORDER BY r.id DESC");
+        if ($q_reimburse) {
+            while ($r = $q_reimburse->fetch_assoc()) {
+                $data_approval_reimburse[] = $r;
             }
         }
     } catch (Exception $e) {
@@ -395,6 +434,20 @@ if ($is_admin) {
                                             }
                                         }
 
+                                        // Set Dinas (Jika ada)
+                                        if (isset($data['dinas'])) {
+                                            $status_absen = 'Dinas Luar Kota';
+                                            if ($data['dinas']['status'] == 'Pending') {
+                                                $badge_class = 'bg-warning text-dark';
+                                                $status_absen .= ' (Pending)';
+                                            } elseif ($data['dinas']['status'] == 'Ditolak') {
+                                                $badge_class = 'bg-danger';
+                                                $status_absen .= ' (Ditolak)';
+                                            } else {
+                                                $badge_class = 'bg-primary';
+                                            }
+                                        }
+
                                         // Set Absensi
                                         if (isset($data['absen'])) {
                                             $abs = $data['absen'];
@@ -500,6 +553,22 @@ if ($is_admin) {
                                     <div class="action-icon bg-info bg-opacity-10 text-info fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-calendar2-check-fill"></i></div>
                                     <div class="flex-grow-1">
                                         <h6 class="fw-bold mb-0 fs-6 text-dark">Approval Libur</h6><small class="text-muted">Cuti & Libur Mingguan</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-3" onclick="switchScreen('admin-dinas')">
+                                <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid #0d6efd;">
+                                    <div class="action-icon bg-primary bg-opacity-10 text-primary fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-car-front-fill"></i></div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-bold mb-0 fs-6 text-dark">Approval Dinas</h6><small class="text-muted">Perjalanan Luar Kota</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-3" onclick="switchScreen('admin-reimburse')">
+                                <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid #198754;">
+                                    <div class="action-icon bg-success bg-opacity-10 text-success fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-receipt-cutoff"></i></div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-bold mb-0 fs-6 text-dark">Approval Reimburse</h6><small class="text-muted">Klaim Dana Operasional</small>
                                     </div>
                                 </div>
                             </div>
@@ -733,6 +802,108 @@ if ($is_admin) {
                                         <tr>
                                             <td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-folder2-open fs-1 d-block mb-2 text-black-50"></i> Belum ada pengajuan Libur/Cuti.</td>
                                         </tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="screen-admin-dinas" class="app-screen">
+                    <div class="bg-pink-wave header-top p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+                        <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-md-4 ms-2" onclick="switchScreen('layanan')"><i class="bi bi-arrow-left fs-3"></i></button>
+                        <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Approval Dinas</h4>
+                    </div>
+                    <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
+                        <div class="table-responsive bg-white rounded-4 shadow-sm border p-0">
+                            <table class="table table-hover table-admin align-middle mb-0 table-riwayat">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="px-4 py-3 border-0">Tujuan & Karyawan</th>
+                                        <th class="text-center py-3 border-0">Tanggal</th>
+                                        <th class="py-3 border-0">Keterangan</th>
+                                        <th class="text-center py-3 border-0">Status</th>
+                                        <th class="text-center py-3 border-0 px-4">Aksi HR</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (count($data_approval_dinas) > 0): foreach ($data_approval_dinas as $dns): ?>
+                                            <tr>
+                                                <td class="px-4 py-3">
+                                                    <span class="fw-bold d-block text-dark"><?= htmlspecialchars($dns['tujuan']) ?></span>
+                                                    <small class="text-muted"><?= htmlspecialchars($dns['nama']) ?></small>
+                                                </td>
+                                                <td class="text-center text-primary fw-bold">
+                                                    <?= formatTanggalIndo($dns['tgl_berangkat']) ?> s/d <?= formatTanggalIndo($dns['tgl_kembali']) ?>
+                                                </td>
+                                                <td><span class="d-inline-block text-truncate" style="max-width: 150px; font-size:12px;" title="<?= htmlspecialchars($dns['keterangan']) ?>"><?= htmlspecialchars($dns['keterangan']) ?></span></td>
+                                                <td class="text-center">
+                                                    <?php if ($dns['status'] == 'Pending') echo '<span class="badge bg-warning text-dark border border-warning">Pending</span>';
+                                                    elseif ($dns['status'] == 'Disetujui') echo '<span class="badge bg-success">Disetujui</span>';
+                                                    else echo '<span class="badge bg-danger">Ditolak</span>'; ?>
+                                                </td>
+                                                <td class="text-center px-4">
+                                                    <?php if ($dns['status'] == 'Pending'): ?>
+                                                        <button class="btn btn-sm btn-success rounded-circle shadow-sm me-1" onclick="prosesApproval('<?= $dns['id'] ?>', 'Disetujui', 'dinas')" title="Setujui"><i class="bi bi-check-lg"></i></button>
+                                                        <button class="btn btn-sm btn-danger rounded-circle shadow-sm" onclick="prosesApproval('<?= $dns['id'] ?>', 'Ditolak', 'dinas')" title="Tolak"><i class="bi bi-x-lg"></i></button>
+                                                    <?php else: ?>
+                                                        <span class="text-muted small"><i class="bi bi-check2-all"></i> Selesai</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; else: ?>
+                                        <tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-folder2-open fs-1 d-block mb-2 text-black-50"></i> Belum ada pengajuan Dinas.</td></tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="screen-admin-reimburse" class="app-screen">
+                    <div class="bg-pink-wave header-top p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+                        <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-md-4 ms-2" onclick="switchScreen('layanan')"><i class="bi bi-arrow-left fs-3"></i></button>
+                        <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Approval Reimburse</h4>
+                    </div>
+                    <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
+                        <div class="table-responsive bg-white rounded-4 shadow-sm border p-0">
+                            <table class="table table-hover table-admin align-middle mb-0 table-riwayat">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="px-4 py-3 border-0">Kategori & Karyawan</th>
+                                        <th class="text-center py-3 border-0">Nominal (Rp)</th>
+                                        <th class="py-3 border-0 text-center">Foto Nota</th>
+                                        <th class="text-center py-3 border-0">Status</th>
+                                        <th class="text-center py-3 border-0 px-4">Aksi HR</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (count($data_approval_reimburse) > 0): foreach ($data_approval_reimburse as $rmb): ?>
+                                            <tr>
+                                                <td class="px-4 py-3">
+                                                    <span class="fw-bold d-block text-dark"><?= htmlspecialchars($rmb['kategori']) ?></span>
+                                                    <small class="text-muted"><?= htmlspecialchars($rmb['nama']) ?></small>
+                                                </td>
+                                                <td class="text-center text-success fw-bold">Rp <?= number_format($rmb['nominal'], 0, ',', '.') ?></td>
+                                                <td class="text-center">
+                                                    <a href="<?= htmlspecialchars($rmb['foto_nota']) ?>" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm"><i class="bi bi-image"></i> Lihat</a>
+                                                </td>
+                                                <td class="text-center">
+                                                    <?php if ($rmb['status'] == 'Pending') echo '<span class="badge bg-warning text-dark border border-warning">Pending</span>';
+                                                    elseif ($rmb['status'] == 'Disetujui') echo '<span class="badge bg-success">Disetujui</span>';
+                                                    else echo '<span class="badge bg-danger">Ditolak</span>'; ?>
+                                                </td>
+                                                <td class="text-center px-4">
+                                                    <?php if ($rmb['status'] == 'Pending'): ?>
+                                                        <button class="btn btn-sm btn-success rounded-circle shadow-sm me-1" onclick="prosesApproval('<?= $rmb['id'] ?>', 'Disetujui', 'reimburse')" title="Setujui"><i class="bi bi-check-lg"></i></button>
+                                                        <button class="btn btn-sm btn-danger rounded-circle shadow-sm" onclick="prosesApproval('<?= $rmb['id'] ?>', 'Ditolak', 'reimburse')" title="Tolak"><i class="bi bi-x-lg"></i></button>
+                                                    <?php else: ?>
+                                                        <span class="text-muted small"><i class="bi bi-check2-all"></i> Selesai</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; else: ?>
+                                        <tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-folder2-open fs-1 d-block mb-2 text-black-50"></i> Belum ada pengajuan Reimburse.</td></tr>
                                     <?php endif; ?>
                                 </tbody>
                             </table>
