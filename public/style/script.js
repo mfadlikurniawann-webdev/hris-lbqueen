@@ -323,6 +323,8 @@ if (inputFotoReimburse) {
     });
 }
 
+// ====== GANTI FUNGSI INI DI SCRIPT.JS ======
+
 function submitPengajuan(event, jenis) {
     event.preventDefault();
     const form = event.target;
@@ -334,50 +336,87 @@ function submitPengajuan(event, jenis) {
     btnSubmit.innerHTML = '<i class="spinner-border spinner-border-sm"></i> Mengirim...';
     btnSubmit.disabled = true;
 
-    fetch('/proses_pengajuan', {
+    // Perbaikan URL: Pakai /api/ langsung
+    fetch('/api/proses_pengajuan.php', {
         method: 'POST',
         body: formData
     })
         .then(res => res.text())
         .then(data => {
             bootstrap.Modal.getInstance(form.closest('.modal')).hide();
-            showModernAlert('Berhasil', data, 'bi bi-check-circle-fill', '#198754');
-            form.reset();
+            // Validasi respon dari PHP (Hanya hijau jika ada centang)
+            if (data.includes('✅')) {
+                showModernAlert('Berhasil', data, 'bi bi-check-circle-fill', '#198754');
+                form.reset();
+                setTimeout(() => location.reload(), 1500); // Reload agar muncul di Riwayat!
+            } else {
+                showModernAlert('Gagal', data, 'bi bi-x-circle-fill', '#dc3545');
+            }
         })
-        .catch(err => {
-            showModernAlert('Gagal', 'Terjadi kesalahan jaringan.', 'bi bi-x-circle-fill', '#dc3545');
-        })
-        .finally(() => {
-            btnSubmit.innerHTML = originalText;
-            btnSubmit.disabled = false;
-        });
+        .catch(err => { showModernAlert('Gagal', 'Terjadi kesalahan jaringan.', 'bi bi-x-circle-fill', '#dc3545'); })
+        .finally(() => { btnSubmit.innerHTML = originalText; btnSubmit.disabled = false; });
 }
 
-// =======================================================
-// LOGIKA APPROVAL LEMBUR (KHUSUS HR)
-// =======================================================
-function prosesApprovalLembur(id, status) {
-    if (!confirm('Anda yakin ingin mengubah status pengajuan lembur ini menjadi ' + status + '?')) return;
+function prosesApproval(id, status, jenis) {
+    if (!confirm('Yakin ingin merubah status menjadi ' + status + '?')) return;
+    const fd = new FormData();
+    fd.append('id', id); fd.append('status', status); fd.append('jenis', jenis);
 
+    // Perbaikan URL: Pakai /api/ langsung
+    fetch('/api/proses_approval.php', { method: 'POST', body: fd })
+        .then(res => res.text())
+        .then(res => {
+            if (res.includes('✅')) {
+                showModernAlert('Berhasil', res, 'bi bi-check-circle-fill', '#198754');
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                showModernAlert('Gagal', res, 'bi bi-x-circle-fill', '#dc3545');
+            }
+        })
+        .catch(err => showModernAlert('Error', 'Gagal memproses data.', 'bi bi-x-circle-fill', '#dc3545'));
+}
+
+function submitUbahPassword(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+
+    if (formData.get('password_baru') !== formData.get('konfirmasi_password')) {
+        showModernAlert('Gagal', 'Kata sandi baru dan konfirmasi tidak cocok!', 'bi bi-x-circle-fill', '#dc3545'); return;
+    }
+
+    const btnSubmit = form.querySelector('button[type="submit"]');
+    const originalText = btnSubmit.innerHTML;
+    btnSubmit.innerHTML = '<i class="spinner-border spinner-border-sm"></i> Menyimpan...';
+    btnSubmit.disabled = true;
+
+    // Perbaikan URL: Pakai /api/ langsung
+    fetch('/api/ubah_password.php', { method: 'POST', body: formData })
+        .then(res => res.text())
+        .then(data => {
+            bootstrap.Modal.getInstance(form.closest('.modal')).hide();
+            if (data.includes('✅')) {
+                showModernAlert('Berhasil', data, 'bi bi-check-circle-fill', '#198754');
+                form.reset();
+            } else { showModernAlert('Gagal', data, 'bi bi-x-circle-fill', '#dc3545'); }
+        })
+        .catch(err => showModernAlert('Gagal', 'Terjadi kesalahan jaringan.', 'bi bi-x-circle-fill', '#dc3545'))
+        .finally(() => { btnSubmit.innerHTML = originalText; btnSubmit.disabled = false; });
+}
+
+function submitAbsen() {
+    const responseDiv = document.getElementById('absen-response');
+    responseDiv.innerHTML = '<span class="text-warning"><i class="spinner-border spinner-border-sm"></i> Mengirim data absensi...</span>';
+    document.getElementById('btn-confirm-group').style.setProperty('display', 'none', 'important');
+    const koordinatRealtime = (userLat && userLng) ? `${userLat}, ${userLng}` : 'Lokasi tidak diizinkan';
     const formData = new FormData();
-    formData.append('id', id);
-    formData.append('status', status);
-    formData.append('jenis', 'lembur');
+    formData.append('jenis_absen', absenJenisType); formData.append('nik', userNIK); formData.append('foto', fotoDataURL); formData.append('lokasi', koordinatRealtime);
 
-    fetch('/proses_approval', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.text())
-    .then(data => {
-        alert(data);
-        if (data.includes('✅') || data.toLowerCase().includes('berhasil')) {
-            location.reload();
-        }
-    })
-    .catch(err => {
-        alert('Gagal menghubungi server.');
-    });
+    // Perbaikan URL: Pakai /api/ langsung
+    fetch('/api/proses_absen.php', { method: 'POST', body: formData })
+        .then(res => res.text())
+        .then(data => { responseDiv.innerHTML = data; setTimeout(() => location.reload(), 1500); })
+        .catch(() => { responseDiv.innerText = "Terjadi kesalahan server."; batalFoto(); });
 }
 
 // =======================================================
