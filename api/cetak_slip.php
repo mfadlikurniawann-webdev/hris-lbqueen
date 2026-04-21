@@ -286,7 +286,7 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
             <div class="signature-box">
                 <div class="sig-title">Best Regards</div>
                 <div class="sig-area">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/f/f8/Fictional_signature.svg" alt="Tanda Tangan">
+                    <img src="/public/logo/ttd.png" alt="Tanda Tangan">
                 </div>
                 <div class="sig-name">HR & Digital Ops</div>
             </div>
