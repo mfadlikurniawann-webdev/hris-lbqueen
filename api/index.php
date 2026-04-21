@@ -3,6 +3,15 @@
 include __DIR__ . '/koneksi.php';
 date_default_timezone_set('Asia/Jakarta');
 
+// AUTO-CREATE TABLES (ANTI ERROR / DATABASE TIDAK SINKRON)
+$conn->query("CREATE TABLE IF NOT EXISTS `lembur` (
+  `id` int(11) NOT NULL AUTO_INCREMENT, `nik` varchar(20) NOT NULL, `tanggal` date NOT NULL, `jam_mulai` time NOT NULL, `jam_selesai` time NOT NULL, `keterangan` text NOT NULL, `status` varchar(20) DEFAULT 'Pending', `created_at` timestamp DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`), FOREIGN KEY (`nik`) REFERENCES `karyawan` (`nik`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+$conn->query("CREATE TABLE IF NOT EXISTS `pengajuan_cuti` (
+  `id` int(11) NOT NULL AUTO_INCREMENT, `nik` varchar(20) NOT NULL, `jenis` varchar(50) NOT NULL, `tanggal_mulai` date NOT NULL, `tanggal_selesai` date NOT NULL, `keterangan` text NOT NULL, `status` varchar(20) DEFAULT 'Pending', `created_at` timestamp DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`), FOREIGN KEY (`nik`) REFERENCES `karyawan` (`nik`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
 // PROTEKSI HALAMAN - Pakai JWT
 $karyawan = auth_required($conn);
 
@@ -61,17 +70,31 @@ if (!$sudah_in && !$belum_waktunya_in && !$lewat_batas_in) {
     $jenis_absen_sekarang = 'Check Out';
 }
 
-$full_history = $conn->query("SELECT 
-    DATE(waktu) as tgl,
-    MAX(CASE WHEN jenis='Check In' THEN waktu END) as in_time,
-    MAX(CASE WHEN jenis='Check Out' THEN waktu END) as out_time,
-    MAX(CASE WHEN jenis='Check In' THEN status END) as status_in,
-    MAX(CASE WHEN jenis='Check In' THEN lokasi END) as lok_in,
-    MAX(CASE WHEN jenis='Check Out' THEN lokasi END) as lok_out,
-    MAX(CASE WHEN jenis='Check In' THEN foto END) as foto_in,
-    MAX(CASE WHEN jenis='Check Out' THEN foto END) as foto_out
-FROM absensi WHERE nik='".$karyawan['nik']."'
-GROUP BY DATE(waktu) ORDER BY tgl DESC");
+// =========================================================
+// PENGGABUNGAN DATA RIWAYAT PRIBADI (ABSEN + LEMBUR + CUTI)
+// =========================================================
+$riwayat_pribadi = [];
+
+// 1. Ambil Absensi
+$q_absensi = $conn->query("SELECT DATE(waktu) as tgl, MAX(CASE WHEN jenis='Check In' THEN waktu END) as in_time, MAX(CASE WHEN jenis='Check Out' THEN waktu END) as out_time, MAX(CASE WHEN jenis='Check In' THEN status END) as status_in, MAX(CASE WHEN jenis='Check In' THEN lokasi END) as lok_in, MAX(CASE WHEN jenis='Check Out' THEN lokasi END) as lok_out, MAX(CASE WHEN jenis='Check In' THEN foto END) as foto_in, MAX(CASE WHEN jenis='Check Out' THEN foto END) as foto_out FROM absensi WHERE nik='".$karyawan['nik']."' GROUP BY DATE(waktu)");
+if($q_absensi) { while($row = $q_absensi->fetch_assoc()) { $riwayat_pribadi[$row['tgl']]['absen'] = $row; } }
+
+// 2. Ambil Lembur
+$q_lembur_pribadi = $conn->query("SELECT * FROM lembur WHERE nik='".$karyawan['nik']."'");
+if($q_lembur_pribadi) { while($row = $q_lembur_pribadi->fetch_assoc()) { $riwayat_pribadi[$row['tanggal']]['lembur'] = $row; } }
+
+// 3. Ambil Cuti/Libur
+$q_cuti_pribadi = $conn->query("SELECT * FROM pengajuan_cuti WHERE nik='".$karyawan['nik']."'");
+if($q_cuti_pribadi) {
+    while($row = $q_cuti_pribadi->fetch_assoc()) {
+        $start = new DateTime($row['tanggal_mulai']);
+        $end = new DateTime($row['tanggal_selesai']);
+        $end->modify('+1 day'); // include hari terakhir
+        $period = new DatePeriod($start, new DateInterval('P1D'), $end);
+        foreach($period as $dt) { $riwayat_pribadi[$dt->format('Y-m-d')]['cuti'] = $row; }
+    }
+}
+krsort($riwayat_pribadi);
 
 // DATA ADMIN
 $semua_karyawan = [];
@@ -87,36 +110,16 @@ if ($is_admin) {
     }
 
     $q_hist = $conn->query("SELECT 
-        DATE(a.waktu) as tgl,
-        a.nik, k.nama, k.posisi,
-        MAX(CASE WHEN a.jenis='Check In' THEN a.waktu END) as in_time,
-        MAX(CASE WHEN a.jenis='Check Out' THEN a.waktu END) as out_time,
-        MAX(CASE WHEN a.jenis='Check In' THEN a.status END) as status_in,
-        MAX(CASE WHEN a.jenis='Check In' THEN a.lokasi END) as lok_in,
-        MAX(CASE WHEN a.jenis='Check Out' THEN a.lokasi END) as lok_out,
-        MAX(CASE WHEN a.jenis='Check In' THEN a.foto END) as foto_in,
-        MAX(CASE WHEN a.jenis='Check Out' THEN a.foto END) as foto_out
-    FROM absensi a JOIN karyawan k ON a.nik=k.nik
-    GROUP BY DATE(a.waktu), a.nik ORDER BY tgl DESC");
-    
-    while($r = $q_hist->fetch_assoc()) {
-        $admin_hist_arr[] = $r;
-    }
+        DATE(a.waktu) as tgl, a.nik, k.nama, k.posisi, MAX(CASE WHEN a.jenis='Check In' THEN a.waktu END) as in_time, MAX(CASE WHEN a.jenis='Check Out' THEN a.waktu END) as out_time, MAX(CASE WHEN a.jenis='Check In' THEN a.status END) as status_in, MAX(CASE WHEN a.jenis='Check In' THEN a.lokasi END) as lok_in, MAX(CASE WHEN a.jenis='Check Out' THEN a.lokasi END) as lok_out, MAX(CASE WHEN a.jenis='Check In' THEN a.foto END) as foto_in, MAX(CASE WHEN a.jenis='Check Out' THEN a.foto END) as foto_out
+    FROM absensi a JOIN karyawan k ON a.nik=k.nik GROUP BY DATE(a.waktu), a.nik ORDER BY tgl DESC");
+    while($r = $q_hist->fetch_assoc()) { $admin_hist_arr[] = $r; }
 
-    // Ambil Data Pengajuan Lembur & Cuti Khusus HR
     try {
         $q_lembur = $conn->query("SELECT l.*, k.nama, k.posisi FROM lembur l JOIN karyawan k ON l.nik=k.nik ORDER BY l.id DESC");
-        if ($q_lembur) {
-            while($r = $q_lembur->fetch_assoc()) {
-                $data_approval_lembur[] = $r;
-            }
-        }
+        if ($q_lembur) { while($r = $q_lembur->fetch_assoc()) { $data_approval_lembur[] = $r; } }
+        
         $q_cuti = $conn->query("SELECT c.*, k.nama, k.posisi FROM pengajuan_cuti c JOIN karyawan k ON c.nik=k.nik ORDER BY c.id DESC");
-        if ($q_cuti) {
-            while($r = $q_cuti->fetch_assoc()) {
-                $data_approval_cuti[] = $r;
-            }
-        }
+        if ($q_cuti) { while($r = $q_cuti->fetch_assoc()) { $data_approval_cuti[] = $r; } }
     } catch(Exception $e) {}
 }
 ?>
@@ -126,7 +129,6 @@ if ($is_admin) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HRIS - <?= htmlspecialchars($karyawan['nama']) ?></title>
-    
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#C94F78">
     <link rel="icon" type="image/png" href="/logo/lbqueen_logo.PNG">
@@ -249,7 +251,7 @@ if ($is_admin) {
 
                 <div class="row g-3 mb-4">
                     <div class="col-6">
-                        <button class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm" onclick="new bootstrap.Modal(document.getElementById('modalLembur')).show()"><i class="bi bi-clock-fill me-2"></i> Ajukan Lembur</button>
+                        <button class="btn btn-warning text-dark w-100 rounded-pill py-3 fw-bold shadow-sm" onclick="new bootstrap.Modal(document.getElementById('modalLembur')).show()"><i class="bi bi-clock-fill me-2"></i> Ajukan Lembur</button>
                     </div>
                     <div class="col-6">
                         <button class="btn btn-info text-white w-100 rounded-pill py-3 fw-bold shadow-sm" onclick="new bootstrap.Modal(document.getElementById('modalCuti')).show()"><i class="bi bi-calendar-event-fill me-2"></i> Ajukan Libur</button>
@@ -338,50 +340,78 @@ if ($is_admin) {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if ($full_history->num_rows > 0): ?>
-                                <?php while ($data = $full_history->fetch_assoc()):
-                                    $durasi_teks = '-';
-                                    if ($data['in_time'] && $data['out_time']) {
-                                        $diff = strtotime($data['out_time']) - strtotime($data['in_time']);
-                                        $durasi_teks = floor($diff/3600).' jam '.floor(($diff%3600)/60).' mnt';
+                            <?php if (count($riwayat_pribadi) > 0): ?>
+                                <?php foreach ($riwayat_pribadi as $tgl => $data):
+                                    $w_in = '-'; $w_out = '-'; $durasi_teks = '-';
+                                    $status_absen = 'Tidak Hadir'; $badge_class = 'bg-secondary';
+                                    $lembur_teks = '-';
+                                    $modal_in_time = '-'; $modal_out_time = '-'; $modal_in_loc = '-'; $modal_out_loc = '-'; $modal_in_foto = ''; $modal_out_foto = '';
+                                    
+                                    // Set Cuti (Jika ada)
+                                    if (isset($data['cuti'])) {
+                                        $status_absen = $data['cuti']['jenis'];
+                                        if ($data['cuti']['status'] == 'Pending') { $badge_class = 'bg-warning text-dark'; $status_absen .= ' (Pending)'; } 
+                                        elseif ($data['cuti']['status'] == 'Ditolak') { $badge_class = 'bg-danger'; $status_absen .= ' (Ditolak)'; } 
+                                        else { $badge_class = 'bg-info text-dark'; }
                                     }
-                                    
-                                    $w_in  = $data['in_time']  ? date('H.i', strtotime($data['in_time']))  : '-';
-                                    $w_out = $data['out_time'] ? date('H.i', strtotime($data['out_time'])) : '-';
-                                    
-                                    $status_in = $data['status_in'] ?: 'Tidak Hadir';
-                                    $badge_class = 'bg-hadir';
-                                    if ($status_in == 'Telat' || $status_in == 'Terlambat') { $status_in = 'Terlambat'; $badge_class = 'bg-terlambat'; }
-                                    elseif ($status_in == 'Tidak Hadir') { $badge_class = 'bg-absen'; }
-                                    elseif ($data['in_time'] && !$data['out_time']) { $status_in = 'Check In'; $badge_class = 'bg-checkin'; }
+
+                                    // Set Absensi
+                                    if (isset($data['absen'])) {
+                                        $abs = $data['absen'];
+                                        if ($abs['in_time'] && $abs['out_time']) {
+                                            $diff = strtotime($abs['out_time']) - strtotime($abs['in_time']);
+                                            $durasi_teks = floor($diff/3600).' jam '.floor(($diff%3600)/60).' mnt';
+                                        }
+                                        $w_in  = $abs['in_time'] ? date('H:i', strtotime($abs['in_time'])) : '-';
+                                        $w_out = $abs['out_time'] ? date('H:i', strtotime($abs['out_time'])) : '-';
+                                        $modal_in_time = $abs['in_time'] ? date('H.i', strtotime($abs['in_time'])) : '-';
+                                        $modal_out_time = $abs['out_time'] ? date('H.i', strtotime($abs['out_time'])) : '-';
+                                        $modal_in_loc = $abs['lok_in']; $modal_out_loc = $abs['lok_out'];
+                                        $modal_in_foto = $abs['foto_in']; $modal_out_foto = $abs['foto_out'];
+
+                                        if (!isset($data['cuti'])) {
+                                            $st = $abs['status_in'];
+                                            if ($st == 'Telat' || $st == 'Terlambat') { $status_absen = 'Terlambat'; $badge_class = 'bg-warning text-dark'; }
+                                            else { $status_absen = 'Hadir'; $badge_class = 'bg-success'; }
+                                        }
+                                    }
+
+                                    // Set Lembur
+                                    if (isset($data['lembur'])) {
+                                        $lmb = $data['lembur'];
+                                        $lembur_teks = date('H:i', strtotime($lmb['jam_mulai'])) . ' - ' . date('H:i', strtotime($lmb['jam_selesai']));
+                                        if ($lmb['status'] == 'Pending') $lembur_teks .= ' <span class="badge bg-warning text-dark border border-dark" style="font-size:9px;">Pending</span>';
+                                        elseif ($lmb['status'] == 'Ditolak') $lembur_teks .= ' <span class="badge bg-danger" style="font-size:9px;">Ditolak</span>';
+                                        else $lembur_teks .= ' <span class="badge bg-success" style="font-size:9px;">Disetujui</span>';
+                                    }
 
                                     $modalData = htmlspecialchars(json_encode([
-                                        'tanggal'    => formatTanggalIndo($data['tgl']),
+                                        'tanggal'    => formatTanggalIndo($tgl),
                                         'nama'       => $karyawan['nama'],
-                                        'status'     => $status_in,
+                                        'status'     => $status_absen,
                                         'durasi'     => $durasi_teks,
-                                        'in_time'    => $data['in_time']  ? date('H.i', strtotime($data['in_time']))  : '-',
-                                        'out_time'   => $data['out_time'] ? date('H.i', strtotime($data['out_time'])) : '-',
-                                        'in_lokasi'  => $data['lok_in']  ?: $karyawan['penempatan'],
-                                        'out_lokasi' => $data['lok_out'] ?: $karyawan['penempatan'],
-                                        'in_foto'    => $data['foto_in']  ?: '',
-                                        'out_foto'   => $data['foto_out'] ?: '',
+                                        'in_time'    => $modal_in_time,
+                                        'out_time'   => $modal_out_time,
+                                        'in_lokasi'  => $modal_in_loc ?: $karyawan['penempatan'],
+                                        'out_lokasi' => $modal_out_loc ?: $karyawan['penempatan'],
+                                        'in_foto'    => $modal_in_foto ?: '',
+                                        'out_foto'   => $modal_out_foto ?: '',
                                         'penempatan' => $karyawan['penempatan']
                                     ]));
                                 ?>
                                 <tr style="cursor: pointer;" onclick="bukaDetail(<?= $modalData ?>)">
-                                    <td class="py-3 px-4 fw-bold text-dark"><?= formatTanggalIndo($data['tgl']) ?></td>
+                                    <td class="py-3 px-4 fw-bold text-dark"><?= formatTanggalIndo($tgl) ?></td>
                                     <td><i class="bi bi-clock-fill text-success me-1 opacity-75"></i> <?= $w_in ?> <span class="text-muted mx-1">&mdash;</span> <?= $w_out ?></td>
                                     <td class="text-muted fw-500"><?= $durasi_teks ?></td>
-                                    <td class="text-muted">-</td>
-                                    <td><span class="badge-status <?= $badge_class ?> shadow-sm"><?= $status_in ?></span></td>
+                                    <td class="text-muted fw-500"><?= $lembur_teks ?></td>
+                                    <td><span class="badge <?= $badge_class ?> shadow-sm border"><?= $status_absen ?></span></td>
                                     <td class="text-end px-4">
                                         <button class="btn btn-sm btn-light border rounded-circle shadow-sm" onclick="event.stopPropagation(); bukaDetail(<?= $modalData ?>)">
                                             <i class="bi bi-three-dots-vertical text-dark"></i>
                                         </button>
                                     </td>
                                 </tr>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             <?php else: ?>
                                 <tr><td colspan="6" class="text-center py-5 text-muted"><i class="bi bi-folder2-open fs-1 d-block mb-2 text-black-50"></i> Belum ada riwayat kehadiran.</td></tr>
                             <?php endif; ?>
@@ -403,7 +433,7 @@ if ($is_admin) {
                     <div class="col-md-6 col-lg-3" onclick="switchScreen('admin-absen')">
                         <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid var(--lb-pink);">
                             <div class="action-icon bg-pink-light text-pink fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-people-fill"></i></div>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Kehadiran Tim</h6><small class="text-muted">Cetak Laporan</small></div>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Kehadiran Tim</h6><small class="text-muted">Pantau & Cetak Laporan</small></div>
                         </div>
                     </div>
                     <div class="col-md-6 col-lg-3" onclick="switchScreen('admin-lembur')">
@@ -421,7 +451,7 @@ if ($is_admin) {
                     <div class="col-md-6 col-lg-3" onclick="new bootstrap.Modal(document.getElementById('modalPayroll')).show()">
                         <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid #198754;">
                             <div class="action-icon bg-success bg-opacity-10 text-success fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-cash-coin"></i></div>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Sistem Payroll</h6><small class="text-muted">Cetak Slip Gaji</small></div>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Sistem Payroll</h6><small class="text-muted">Cetak Slip Gaji Karyawan</small></div>
                         </div>
                     </div>
                 </div>
@@ -444,13 +474,13 @@ if ($is_admin) {
                     <div class="col-md-6 col-lg-3" onclick="new bootstrap.Modal(document.getElementById('modalDinas')).show()">
                         <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card border">
                             <div class="action-icon bg-primary bg-opacity-10 text-primary fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-car-front-fill"></i></div>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Perjalanan Dinas</h6><small class="text-muted">Penugasan luar kota</small></div>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Perjalanan Dinas</h6><small class="text-muted">Formulir penugasan luar kota</small></div>
                         </div>
                     </div>
                     <div class="col-md-6 col-lg-3" onclick="new bootstrap.Modal(document.getElementById('modalReimburse')).show()">
                         <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card border">
                             <div class="action-icon bg-success bg-opacity-10 text-success fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-receipt-cutoff"></i></div>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Reimbursement</h6><small class="text-muted">Klaim operasional</small></div>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Reimbursement</h6><small class="text-muted">Pengajuan dana operasional</small></div>
                         </div>
                     </div>
                 </div>
@@ -458,6 +488,7 @@ if ($is_admin) {
         </div>
 
         <?php if ($is_admin): ?>
+        
         <div id="screen-admin-absen" class="app-screen">
             <div id="admin-view-list">
                 <div class="bg-pink-wave header-top p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
@@ -564,7 +595,7 @@ if ($is_admin) {
                                 <td class="text-center text-primary fw-bold"><?= date('H:i', strtotime($lmb['jam_mulai'])) ?> - <?= date('H:i', strtotime($lmb['jam_selesai'])) ?></td>
                                 <td><span class="d-inline-block text-truncate" style="max-width: 150px; font-size:12px;" title="<?= htmlspecialchars($lmb['keterangan']) ?>"><?= htmlspecialchars($lmb['keterangan']) ?></span></td>
                                 <td class="text-center">
-                                    <?php if($lmb['status']=='Pending') echo '<span class="badge bg-warning text-dark">Pending</span>'; 
+                                    <?php if($lmb['status']=='Pending') echo '<span class="badge bg-warning text-dark border border-warning">Pending</span>'; 
                                           elseif($lmb['status']=='Disetujui') echo '<span class="badge bg-success">Disetujui</span>'; 
                                           else echo '<span class="badge bg-danger">Ditolak</span>'; ?>
                                 </td>
@@ -616,7 +647,7 @@ if ($is_admin) {
                                 </td>
                                 <td><span class="d-inline-block text-truncate" style="max-width: 150px; font-size:12px;" title="<?= htmlspecialchars($cuti['keterangan']) ?>"><?= htmlspecialchars($cuti['keterangan']) ?></span></td>
                                 <td class="text-center">
-                                    <?php if($cuti['status']=='Pending') echo '<span class="badge bg-warning text-dark">Pending</span>'; 
+                                    <?php if($cuti['status']=='Pending') echo '<span class="badge bg-warning text-dark border border-warning">Pending</span>'; 
                                           elseif($cuti['status']=='Disetujui') echo '<span class="badge bg-success">Disetujui</span>'; 
                                           else echo '<span class="badge bg-danger">Ditolak</span>'; ?>
                                 </td>
@@ -676,7 +707,7 @@ if ($is_admin) {
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content rounded-4 border-0 shadow-lg">
             <div class="modal-header border-bottom-0 pb-0 px-4 pt-4">
-                <h5 class="modal-title fw-bold text-dark fs-5">Detail Attendance</h5>
+                <h5 class="modal-title fw-bold text-dark fs-5">Detail Kehadiran</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 pt-2">
@@ -686,39 +717,33 @@ if ($is_admin) {
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-box-arrow-in-right text-success fs-4" id="mdl-status-icon"></i>
-                            <span class="fw-bold fs-5 text-dark" id="mdl-status-text">
-                                Hadir <span class="badge bg-success fw-normal ms-2 shadow-sm" style="font-size:10px;">WFO</span>
-                            </span>
+                            <span class="fw-bold fs-5 text-dark" id="mdl-status-text">Hadir</span>
                         </div>
                     </div>
                 </div>
 
                 <ul class="nav nav-pills custom-tabs mb-4 w-100 d-flex shadow-sm rounded-3 overflow-hidden" id="pills-tab" role="tablist">
-                    <li class="nav-item flex-fill text-center"><button class="nav-link active w-100" data-bs-toggle="pill" data-bs-target="#pills-in" type="button"><i class="bi bi-box-arrow-in-right me-1"></i> Check In</button></li>
-                    <li class="nav-item flex-fill text-center"><button class="nav-link w-100" data-bs-toggle="pill" data-bs-target="#pills-out" type="button"><i class="bi bi-box-arrow-right me-1"></i> Check Out</button></li>
-                    <li class="nav-item flex-fill text-center"><button class="nav-link w-100" data-bs-toggle="pill" data-bs-target="#pills-data" type="button"><i class="bi bi-person-fill me-1"></i> Data Karyawan</button></li>
+                    <li class="nav-item flex-fill text-center"><button class="nav-link active w-100" data-bs-toggle="pill" data-bs-target="#pills-in" type="button"><i class="bi bi-box-arrow-in-right me-1"></i> Masuk</button></li>
+                    <li class="nav-item flex-fill text-center"><button class="nav-link w-100" data-bs-toggle="pill" data-bs-target="#pills-out" type="button"><i class="bi bi-box-arrow-right me-1"></i> Pulang</button></li>
+                    <li class="nav-item flex-fill text-center"><button class="nav-link w-100" data-bs-toggle="pill" data-bs-target="#pills-data" type="button"><i class="bi bi-person-fill me-1"></i> Profil</button></li>
                 </ul>
 
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="pills-in">
-                        <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-clock me-2 text-dark"></i>Waktu Check In</h6><div class="d-flex justify-content-between text-success fw-bold fs-5"><span class="text-muted fs-6 fw-normal">Pukul</span><span id="mdl-in-time">00.00</span></div></div>
+                        <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-clock me-2 text-dark"></i>Waktu Masuk</h6><div class="d-flex justify-content-between text-success fw-bold fs-5"><span class="text-muted fs-6 fw-normal">Pukul</span><span id="mdl-in-time">00.00</span></div></div>
                         <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-geo-alt me-2 text-dark"></i>Lokasi Absen</h6><p class="mb-3 fs-6 fw-bold text-dark" id="mdl-in-lokasi">-</p><hr class="text-muted opacity-25" style="border-style: dashed;"><div class="d-flex justify-content-between small text-success mb-2"><span>IP Address</span><span class="text-dark fw-bold" id="mdl-in-ip">Memuat...</span></div><div class="d-flex justify-content-between small text-success"><span>Koordinat</span><span class="text-dark fw-bold" id="mdl-in-coord">Memuat...</span></div></div>
-                        <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-camera me-2 text-dark"></i>Foto Selfie Bukti</h6><div class="camera-box bg-light border" style="aspect-ratio: auto; min-height:300px;"><img id="mdl-in-foto" src="" onerror="this.src='https://placehold.co/400x500?text=Tidak+Ada+Foto'"></div></div>
+                        <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-camera me-2 text-dark"></i>Foto Bukti</h6><div class="camera-box bg-light border" style="aspect-ratio: auto; min-height:300px;"><img id="mdl-in-foto" src="" onerror="this.src='https://placehold.co/400x500?text=Tidak+Ada+Foto'"></div></div>
                     </div>
                     <div class="tab-pane fade" id="pills-out">
-                        <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-clock me-2 text-dark"></i>Waktu Check Out</h6><div class="d-flex justify-content-between text-danger fw-bold fs-5"><span class="text-muted fs-6 fw-normal">Pukul</span><span id="mdl-out-time">00.00</span></div></div>
+                        <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-clock me-2 text-dark"></i>Waktu Pulang</h6><div class="d-flex justify-content-between text-danger fw-bold fs-5"><span class="text-muted fs-6 fw-normal">Pukul</span><span id="mdl-out-time">00.00</span></div></div>
                         <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-geo-alt me-2 text-dark"></i>Lokasi Absen</h6><p class="mb-3 fs-6 fw-bold text-dark" id="mdl-out-lokasi">-</p><hr class="text-muted opacity-25" style="border-style: dashed;"><div class="d-flex justify-content-between small text-danger mb-2"><span>IP Address</span><span class="text-dark fw-bold" id="mdl-out-ip">Memuat...</span></div><div class="d-flex justify-content-between small text-danger"><span>Koordinat</span><span class="text-dark fw-bold" id="mdl-out-coord">Memuat...</span></div></div>
-                        <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-camera me-2 text-dark"></i>Foto Selfie Bukti</h6><div class="camera-box bg-light border" style="aspect-ratio: auto; min-height:300px;"><img id="mdl-out-foto" src="" onerror="this.src='https://placehold.co/400x500?text=Tidak+Ada+Foto'"></div></div>
+                        <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-camera me-2 text-dark"></i>Foto Bukti</h6><div class="camera-box bg-light border" style="aspect-ratio: auto; min-height:300px;"><img id="mdl-out-foto" src="" onerror="this.src='https://placehold.co/400x500?text=Tidak+Ada+Foto'"></div></div>
                     </div>
                     <div class="tab-pane fade" id="pills-data">
                         <div class="detail-box p-5 shadow-sm border text-center">
                             <div class="avatar-initials mx-auto mb-3 shadow-sm" style="width: 80px; height: 80px; font-size: 30px;"><?= $inisial ?></div>
                             <h5 class="fw-bold text-dark mb-1"><?= $karyawan['nama'] ?></h5><p class="text-muted mb-4"><?= $karyawan['posisi'] ?></p>
-                            <div class="text-start bg-light p-4 rounded-4 border">
-                                <p class="mb-2 fs-6"><span class="text-muted fw-bold">NIK</span> <strong class="float-end text-dark"><?= $karyawan['nik'] ?></strong></p>
-                                <p class="mb-2 fs-6"><span class="text-muted fw-bold">Status</span> <strong class="float-end text-dark"><?= $karyawan['status_pegawai'] ?></strong></p>
-                                <p class="mb-0 fs-6"><span class="text-muted fw-bold">Penempatan</span> <strong class="float-end text-dark"><?= $karyawan['penempatan'] ?></strong></p>
-                            </div>
+                            <div class="text-start bg-light p-4 rounded-4 border"><p class="mb-2 fs-6"><span class="text-muted fw-bold">NIK</span> <strong class="float-end text-dark"><?= $karyawan['nik'] ?></strong></p><p class="mb-2 fs-6"><span class="text-muted fw-bold">Status</span> <strong class="float-end text-dark"><?= $karyawan['status_pegawai'] ?></strong></p><p class="mb-0 fs-6"><span class="text-muted fw-bold">Penempatan</span> <strong class="float-end text-dark"><?= $karyawan['penempatan'] ?></strong></p></div>
                         </div>
                     </div>
                 </div>
@@ -730,9 +755,9 @@ if ($is_admin) {
 <div class="modal fade" id="modalCuti" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-header border-bottom-0 pb-0 p-4"><h5 class="modal-title fw-bold text-dark"><i class="bi bi-calendar-event-fill text-info me-2"></i>Form Pengajuan Libur/Cuti</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header border-bottom-0 pb-0 p-4"><h5 class="modal-title fw-bold text-dark"><i class="bi bi-calendar-event-fill text-info me-2"></i>Form Libur & Cuti</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body p-4 pt-2">
-                <p class="text-muted small mb-4">Ajukan jadwal libur mingguan (Selain Sabtu-Minggu) atau cuti tahunan.</p>
+                <p class="text-muted small mb-4">Ajukan jadwal libur mingguan (Selain Sabtu/Minggu) atau cuti tahunan.</p>
                 <form id="formCuti" onsubmit="submitPengajuan(event, 'cuti')">
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-dark">Jenis Pengajuan</label>
@@ -757,7 +782,7 @@ if ($is_admin) {
 <div class="modal fade" id="modalLembur" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-header border-bottom-0 pb-0 p-4"><h5 class="modal-title fw-bold text-dark"><i class="bi bi-clock-fill text-warning me-2"></i>Form Pengajuan Lembur</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header border-bottom-0 pb-0 p-4"><h5 class="modal-title fw-bold text-dark"><i class="bi bi-clock-fill text-warning me-2"></i>Form Rencana Lembur</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body p-4 pt-2">
                 <form id="formLembur" onsubmit="submitPengajuan(event, 'lembur')">
                     <div class="mb-3"><label class="form-label small fw-bold text-dark">Tanggal Lembur</label><input type="date" class="form-control form-control-lg bg-light fs-6" name="tanggal" required></div>
@@ -830,7 +855,7 @@ if ($is_admin) {
 <div class="modal fade" id="modernAlertModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content rounded-4 border-0 shadow-lg"><div class="modal-body text-center p-4 pt-5"><div id="modernAlertIcon" class="mb-3"><i class="bi bi-info-circle-fill" style="font-size:3.5rem; color:var(--lb-pink);"></i></div><h5 class="fw-bold mb-3 text-dark" id="modernAlertTitle">Pemberitahuan</h5><p class="text-muted mb-4" id="modernAlertMessage" style="font-size:14px;"></p><button type="button" class="btn btn-pink w-100 rounded-pill py-3 fw-bold shadow-sm" data-bs-dismiss="modal">Saya Mengerti</button></div></div></div></div>
 
 <script>
-    window.HRIS_CONFIG = { userNIK: '<?= $karyawan['nik'] ?>', adminHistData: <?= json_encode($admin_hist_arr) ?> };
+    window.HRIS_CONFIG = { userNIK: '<?= $karyawan['nik'] ?>', karyawanPenempatan: <?= json_encode($karyawan['penempatan']) ?>, adminHistData: <?= json_encode($admin_hist_arr) ?> };
     
     // JS Validasi Khusus Hari Libur Mingguan (Tidak Boleh Sabtu/Minggu)
     function validasiHariLibur() {
@@ -853,6 +878,16 @@ if ($is_admin) {
         } else {
             inputSelesai.readOnly = false;
         }
+    }
+    
+    function prosesApproval(id, status, jenis) {
+        if(!confirm('Yakin ingin merubah status menjadi '+status+'?')) return;
+        const fd = new FormData();
+        fd.append('id', id); fd.append('status', status); fd.append('jenis', jenis);
+        fetch('/proses_approval', { method: 'POST', body: fd })
+        .then(res=>res.text())
+        .then(res=>{ showModernAlert('Berhasil', res, 'bi bi-check-circle-fill', '#198754'); setTimeout(()=>location.reload(),1000); })
+        .catch(err=>showModernAlert('Error', 'Gagal memproses data.', 'bi bi-x-circle-fill', '#dc3545'));
     }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

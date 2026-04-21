@@ -36,30 +36,31 @@
     {
       "src": "/proses_approval",
       "dest": "/api/proses_approval.php"
-    },
-    {
-      "src": "/cetak_rekap",
-      "dest": "/api/cetak_rekap.php"
-    },
-    {
-      "src": "/cetak_pribadi",
-      "dest": "/api/cetak_pribadi.php"
-    },
-    {
-      "src": "/(.*)\\.php",
-      "dest": "/api/$1.php"
-    },
-    {
-      "src": "/",
-      "dest": "/api/index.php"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/$1.php"
-    },
-    {
-      "src": "/ganti_password",
-      "dest": "/api/ganti_password.php"
     }
-  ]
+  },
+  {
+    "src": "/cetak_rekap",
+    "dest": "/api/cetak_rekap.php"
+  },
+  {
+    "src": "/cetak_pribadi",
+    "dest": "/api/cetak_pribadi.php"
+  },
+  {
+    "src": "/(.*)\\.php",
+    "dest": "/api/$1.php"
+  },
+  {
+    "src": "/",
+    "dest": "/api/index.php"
+  },
+  {
+    "src": "/(.*)",
+    "dest": "/api/$1.php"
+  },
+  {
+    "src": "/ganti_password",
+    "dest": "/api/ganti_password.php"
+  }
+]
 }
