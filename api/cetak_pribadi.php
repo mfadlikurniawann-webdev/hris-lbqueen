@@ -37,6 +37,12 @@ $end_date = new DateTime($end_date_str);
 $start_date = clone $end_date;
 $start_date->modify('-1 month')->modify('+1 day'); // Mundur 1 bulan, maju 1 hari (jadi tgl 26)
 
+// Batas awal pembuatan aplikasi
+$batas_awal = new DateTime('2026-04-15');
+if ($start_date < $batas_awal) {
+    $start_date = clone $batas_awal;
+}
+
 $start_str = $start_date->format('Y-m-d');
 $end_str = $end_date->format('Y-m-d');
 $hari_ini_str = date('Y-m-d');
@@ -72,6 +78,22 @@ while ($row = $res_lembur->fetch_assoc()) {
     $lembur_data[$row['tanggal']] = $row;
 }
 
+// 3. Ambil riwayat Cuti/Libur yang disetujui di periode Cut-Off
+$sql_cuti = "SELECT * FROM pengajuan_cuti 
+             WHERE nik='$nik_target' AND status='Disetujui' AND tanggal_mulai <= '$end_str' AND tanggal_selesai >= '$start_str'";
+$res_cuti = $conn->query($sql_cuti);
+
+$cuti_data = [];
+while ($row = $res_cuti->fetch_assoc()) {
+    $start_ct = new DateTime($row['tanggal_mulai']);
+    $end_ct = new DateTime($row['tanggal_selesai']);
+    $end_ct->modify('+1 day');
+    $period_ct = new DatePeriod($start_ct, new DateInterval('P1D'), $end_ct);
+    foreach ($period_ct as $dt_c) {
+        $cuti_data[$dt_c->format('Y-m-d')] = $row;
+    }
+}
+
 // Variabel Rekap
 $tot_tepat = 0; $tot_telat = 0; $tot_invalid = 0; $tot_revisi = 0;
 $tot_absen = 0; $tot_libur = 0; $tot_sakit = 0;
@@ -80,13 +102,15 @@ $total_menit_lembur = 0;
 
 $tabel_harian = "";
 
-// LOOP DARI TANGGAL 26 S/D 25
+// LOOP DARI TANGGAL AWAL S/D 25
 $period = new DatePeriod($start_date, new DateInterval('P1D'), $end_date->modify('+1 day'));
 
 foreach ($period as $dt) {
     $tgl_str = $dt->format('Y-m-d');
-    $hari_ini = $dt->format('D');
-    $is_weekend = ($hari_ini == 'Sat' || $hari_ini == 'Sun');
+    
+    // Cek apakah ada cuti/libur approved
+    $is_holiday = isset($cuti_data[$tgl_str]);
+    $jenis_libur = $is_holiday ? $cuti_data[$tgl_str]['jenis'] : '';
     
     // Default Styling
     $row_bg = '';
@@ -101,9 +125,9 @@ foreach ($period as $dt) {
     } 
     else {
         // Logika Normal jika tanggal sudah dilewati / adalah hari ini
-        $status = $is_weekend ? 'Libur' : 'Tidak Hadir';
-        $row_bg = $is_weekend ? 'style="background-color: #f8f9fa;"' : '';
-        $status_bg = $is_weekend ? 'style="background-color: #cfe2ff;"' : 'style="background-color: #f5c2c7;"';
+        $status = $is_holiday ? $jenis_libur : 'Tidak Hadir';
+        $row_bg = $is_holiday ? 'style="background-color: #f8f9fa;"' : '';
+        $status_bg = $is_holiday ? 'style="background-color: #cfe2ff;"' : 'style="background-color: #f5c2c7;"';
 
         // Pengecekan Absensi
         if (isset($absen_data[$tgl_str])) {
@@ -129,7 +153,15 @@ foreach ($period as $dt) {
             }
             $row_bg = ''; 
         } else {
-            if ($is_weekend) { $tot_libur++; } else { $tot_absen++; }
+            if ($is_holiday) { 
+                if (stripos($jenis_libur, 'sakit') !== false) {
+                    $tot_sakit++;
+                } else {
+                    $tot_libur++;
+                }
+            } else { 
+                $tot_absen++; 
+            }
         }
 
         // Pengecekan Lembur
