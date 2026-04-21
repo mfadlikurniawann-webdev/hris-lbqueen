@@ -570,51 +570,51 @@ if ($is_admin) {
                     <?php if ($is_admin): ?>
                         <h6 class="section-title mt-0 text-pink fw-bold"><i class="bi bi-shield-lock-fill me-2"></i>Menu Administrator & HR</h6>
                         <div class="row g-3 mb-4">
-                            <div class="col-md-6 col-lg-3" onclick="switchScreen('admin-absen')">
+                            <div class="col-12 col-md-6 col-xl-4" onclick="switchScreen('admin-absen')">
                                 <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid var(--lb-pink);">
-                                    <div class="action-icon bg-pink-light text-pink fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-people-fill"></i></div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="fw-bold mb-0 fs-6 text-dark">Kehadiran Tim</h6><small class="text-muted">Pantau & Cetak Laporan</small>
+                                    <div class="action-icon bg-pink-light text-pink fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; flex-shrink: 0;"><i class="bi bi-people-fill"></i></div>
+                                    <div class="flex-grow-1" style="min-width: 0;">
+                                        <h6 class="fw-bold mb-0 fs-6 text-dark text-truncate">Kehadiran Tim</h6><small class="text-muted d-block text-truncate">Pantau & Cetak Laporan</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 col-lg-3" onclick="switchScreen('admin-lembur')">
+                            <div class="col-12 col-md-6 col-xl-4" onclick="switchScreen('admin-lembur')">
                                 <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid #fd7e14;">
-                                    <div class="action-icon bg-warning bg-opacity-10 text-warning fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-clock-history"></i></div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="fw-bold mb-0 fs-6 text-dark">Approval Lembur</h6><small class="text-muted">Persetujuan & Riwayat</small>
+                                    <div class="action-icon bg-warning bg-opacity-10 text-warning fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; flex-shrink: 0;"><i class="bi bi-clock-history"></i></div>
+                                    <div class="flex-grow-1" style="min-width: 0;">
+                                        <h6 class="fw-bold mb-0 fs-6 text-dark text-truncate">Approval Lembur</h6><small class="text-muted d-block text-truncate">Persetujuan & Riwayat</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 col-lg-3" onclick="switchScreen('admin-cuti')">
+                            <div class="col-12 col-md-6 col-xl-4" onclick="switchScreen('admin-cuti')">
                                 <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid #0dcaf0;">
-                                    <div class="action-icon bg-info bg-opacity-10 text-info fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-calendar2-check-fill"></i></div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="fw-bold mb-0 fs-6 text-dark">Approval Libur</h6><small class="text-muted">Cuti & Libur Mingguan</small>
+                                    <div class="action-icon bg-info bg-opacity-10 text-info fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; flex-shrink: 0;"><i class="bi bi-calendar2-check-fill"></i></div>
+                                    <div class="flex-grow-1" style="min-width: 0;">
+                                        <h6 class="fw-bold mb-0 fs-6 text-dark text-truncate">Approval Libur</h6><small class="text-muted d-block text-truncate">Cuti & Libur Mingguan</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 col-lg-3" onclick="switchScreen('admin-dinas')">
+                            <div class="col-12 col-md-6 col-xl-4" onclick="switchScreen('admin-dinas')">
                                 <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid #0d6efd;">
-                                    <div class="action-icon bg-primary bg-opacity-10 text-primary fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-car-front-fill"></i></div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="fw-bold mb-0 fs-6 text-dark">Approval Dinas</h6><small class="text-muted">Perjalanan Luar Kota</small>
+                                    <div class="action-icon bg-primary bg-opacity-10 text-primary fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; flex-shrink: 0;"><i class="bi bi-car-front-fill"></i></div>
+                                    <div class="flex-grow-1" style="min-width: 0;">
+                                        <h6 class="fw-bold mb-0 fs-6 text-dark text-truncate">Approval Dinas</h6><small class="text-muted d-block text-truncate">Perjalanan Luar Kota</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 col-lg-3" onclick="switchScreen('admin-reimburse')">
+                            <div class="col-12 col-md-6 col-xl-4" onclick="switchScreen('admin-reimburse')">
                                 <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid #198754;">
-                                    <div class="action-icon bg-success bg-opacity-10 text-success fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-receipt-cutoff"></i></div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="fw-bold mb-0 fs-6 text-dark">Approval Reimburse</h6><small class="text-muted">Klaim Dana Operasional</small>
+                                    <div class="action-icon bg-success bg-opacity-10 text-success fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; flex-shrink: 0;"><i class="bi bi-receipt-cutoff"></i></div>
+                                    <div class="flex-grow-1" style="min-width: 0;">
+                                        <h6 class="fw-bold mb-0 fs-6 text-dark text-truncate">Approval Reimburse</h6><small class="text-muted d-block text-truncate">Klaim Dana Operasional</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 col-lg-3" onclick="new bootstrap.Modal(document.getElementById('modalPayroll')).show()">
+                            <div class="col-12 col-md-6 col-xl-4" onclick="new bootstrap.Modal(document.getElementById('modalPayroll')).show()">
                                 <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid #198754;">
-                                    <div class="action-icon bg-success bg-opacity-10 text-success fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-cash-coin"></i></div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="fw-bold mb-0 fs-6 text-dark">Sistem Payroll</h6><small class="text-muted">Cetak Slip Gaji Karyawan</small>
+                                    <div class="action-icon bg-success bg-opacity-10 text-success fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; flex-shrink: 0;"><i class="bi bi-cash-coin"></i></div>
+                                    <div class="flex-grow-1" style="min-width: 0;">
+                                        <h6 class="fw-bold mb-0 fs-6 text-dark text-truncate">Sistem Payroll</h6><small class="text-muted d-block text-truncate">Cetak Slip Gaji Karyawan</small>
                                     </div>
                                 </div>
                             </div>
@@ -623,35 +623,35 @@ if ($is_admin) {
 
                     <h6 class="section-title mt-0 fw-bold text-dark"><i class="bi bi-folder-fill text-muted me-2"></i>Pengajuan & Dokumen</h6>
                     <div class="row g-3">
-                        <div class="col-md-6 col-lg-3" onclick="new bootstrap.Modal(document.getElementById('modalCuti')).show()">
+                        <div class="col-12 col-md-6 col-xl-6" onclick="new bootstrap.Modal(document.getElementById('modalCuti')).show()">
                             <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card border">
-                                <div class="action-icon bg-info bg-opacity-10 text-info fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-calendar-event-fill"></i></div>
-                                <div class="flex-grow-1">
-                                    <h6 class="fw-bold mb-0 fs-6 text-dark">Libur & Cuti</h6><small class="text-muted">Pilih hari libur mingguan</small>
+                                <div class="action-icon bg-info bg-opacity-10 text-info fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; flex-shrink: 0;"><i class="bi bi-calendar-event-fill"></i></div>
+                                <div class="flex-grow-1" style="min-width: 0;">
+                                    <h6 class="fw-bold mb-0 fs-6 text-dark text-truncate">Libur & Cuti</h6><small class="text-muted d-block text-truncate">Pilih hari libur mingguan</small>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 col-lg-3" onclick="new bootstrap.Modal(document.getElementById('modalLembur')).show()">
+                        <div class="col-12 col-md-6 col-xl-6" onclick="new bootstrap.Modal(document.getElementById('modalLembur')).show()">
                             <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card border">
-                                <div class="action-icon bg-warning bg-opacity-10 text-warning fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-stopwatch-fill"></i></div>
-                                <div class="flex-grow-1">
-                                    <h6 class="fw-bold mb-0 fs-6 text-dark">Pengajuan Lembur</h6><small class="text-muted">Rencana kerja tambahan</small>
+                                <div class="action-icon bg-warning bg-opacity-10 text-warning fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; flex-shrink: 0;"><i class="bi bi-stopwatch-fill"></i></div>
+                                <div class="flex-grow-1" style="min-width: 0;">
+                                    <h6 class="fw-bold mb-0 fs-6 text-dark text-truncate">Pengajuan Lembur</h6><small class="text-muted d-block text-truncate">Rencana kerja tambahan</small>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 col-lg-3" onclick="new bootstrap.Modal(document.getElementById('modalDinas')).show()">
+                        <div class="col-12 col-md-6 col-xl-6" onclick="new bootstrap.Modal(document.getElementById('modalDinas')).show()">
                             <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card border">
-                                <div class="action-icon bg-primary bg-opacity-10 text-primary fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-car-front-fill"></i></div>
-                                <div class="flex-grow-1">
-                                    <h6 class="fw-bold mb-0 fs-6 text-dark">Perjalanan Dinas</h6><small class="text-muted">Formulir penugasan luar kota</small>
+                                <div class="action-icon bg-primary bg-opacity-10 text-primary fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; flex-shrink: 0;"><i class="bi bi-car-front-fill"></i></div>
+                                <div class="flex-grow-1" style="min-width: 0;">
+                                    <h6 class="fw-bold mb-0 fs-6 text-dark text-truncate">Perjalanan Dinas</h6><small class="text-muted d-block text-truncate">Formulir penugasan luar kota</small>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 col-lg-3" onclick="new bootstrap.Modal(document.getElementById('modalReimburse')).show()">
+                        <div class="col-12 col-md-6 col-xl-6" onclick="new bootstrap.Modal(document.getElementById('modalReimburse')).show()">
                             <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card border">
-                                <div class="action-icon bg-success bg-opacity-10 text-success fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-receipt-cutoff"></i></div>
-                                <div class="flex-grow-1">
-                                    <h6 class="fw-bold mb-0 fs-6 text-dark">Reimbursement</h6><small class="text-muted">Pengajuan dana operasional</small>
+                                <div class="action-icon bg-success bg-opacity-10 text-success fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; flex-shrink: 0;"><i class="bi bi-receipt-cutoff"></i></div>
+                                <div class="flex-grow-1" style="min-width: 0;">
+                                    <h6 class="fw-bold mb-0 fs-6 text-dark text-truncate">Reimbursement</h6><small class="text-muted d-block text-truncate">Pengajuan dana operasional</small>
                                 </div>
                             </div>
                         </div>
