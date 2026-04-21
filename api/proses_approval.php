@@ -7,19 +7,23 @@ $posisi   = trim(strtoupper($karyawan['posisi'] ?? ''));
 $level    = trim(strtoupper($karyawan['level_jabatan'] ?? ''));
 $is_admin = (strpos($posisi, 'HC') !== false || strpos($posisi, 'HR') !== false || in_array($level, ['OWNER','DIREKTUR']));
 
-if (!$is_admin) { die("Akses Ditolak!"); }
+if (!$is_admin) { die("❌ Akses Ditolak!"); }
 
-$id = $conn->real_escape_string($_POST['id'] ?? '');
+$id = (int) ($_POST['id'] ?? 0);
 $status = $conn->real_escape_string($_POST['status'] ?? '');
 $jenis = $_POST['jenis'] ?? '';
 
-if ($jenis == 'lembur') {
-    $sql = "UPDATE lembur SET status = '$status' WHERE id = '$id'";
-    if ($conn->query($sql)) echo "✅ Lembur berhasil $status!";
+$tabel = '';
+if ($jenis === 'lembur') $tabel = 'lembur';
+elseif ($jenis === 'cuti') $tabel = 'pengajuan_cuti';
+elseif ($jenis === 'dinas') $tabel = 'perjalanan_dinas';
+elseif ($jenis === 'reimburse') $tabel = 'reimburse';
+
+if ($tabel && $id > 0) {
+    $sql = "UPDATE $tabel SET status = '$status' WHERE id = $id";
+    if ($conn->query($sql)) echo "✅ Status berhasil diubah menjadi $status!";
     else echo "❌ Gagal: " . $conn->error;
-} elseif ($jenis == 'cuti') {
-    $sql = "UPDATE pengajuan_cuti SET status = '$status' WHERE id = '$id'";
-    if ($conn->query($sql)) echo "✅ Pengajuan berhasil $status!";
-    else echo "❌ Gagal: " . $conn->error;
+} else {
+    echo "❌ Data tidak valid.";
 }
 ?>
