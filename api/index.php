@@ -1240,23 +1240,6 @@ if ($is_admin) {
             }
         }
 
-        function prosesApproval(id, status, jenis) {
-            if (!confirm('Yakin ingin merubah status menjadi ' + status + '?')) return;
-            const fd = new FormData();
-            fd.append('id', id);
-            fd.append('status', status);
-            fd.append('jenis', jenis);
-            fetch('/proses_approval', {
-                    method: 'POST',
-                    body: fd
-                })
-                .then(res => res.text())
-                .then(res => {
-                    showModernAlert('Berhasil', res, 'bi bi-check-circle-fill', '#198754');
-                    setTimeout(() => location.reload(), 1000);
-                })
-                .catch(err => showModernAlert('Error', 'Gagal memproses data.', 'bi bi-x-circle-fill', '#dc3545'));
-        }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/style/script.js"></script>

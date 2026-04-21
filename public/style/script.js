@@ -336,19 +336,17 @@ function submitPengajuan(event, jenis) {
     btnSubmit.innerHTML = '<i class="spinner-border spinner-border-sm"></i> Mengirim...';
     btnSubmit.disabled = true;
 
-    // Perbaikan URL: Pakai /api/ langsung
-    fetch('/api/proses_pengajuan.php', {
+    fetch('/proses_pengajuan', {
         method: 'POST',
         body: formData
     })
         .then(res => res.text())
         .then(data => {
             bootstrap.Modal.getInstance(form.closest('.modal')).hide();
-            // Validasi respon dari PHP (Hanya hijau jika ada centang)
             if (data.includes('✅')) {
                 showModernAlert('Berhasil', data, 'bi bi-check-circle-fill', '#198754');
                 form.reset();
-                setTimeout(() => location.reload(), 1500); // Reload agar muncul di Riwayat!
+                setTimeout(() => location.reload(), 1500);
             } else {
                 showModernAlert('Gagal', data, 'bi bi-x-circle-fill', '#dc3545');
             }
@@ -362,8 +360,7 @@ function prosesApproval(id, status, jenis) {
     const fd = new FormData();
     fd.append('id', id); fd.append('status', status); fd.append('jenis', jenis);
 
-    // Perbaikan URL: Pakai /api/ langsung
-    fetch('/api/proses_approval.php', { method: 'POST', body: fd })
+    fetch('/proses_approval', { method: 'POST', body: fd })
         .then(res => res.text())
         .then(res => {
             if (res.includes('✅')) {
@@ -376,48 +373,6 @@ function prosesApproval(id, status, jenis) {
         .catch(err => showModernAlert('Error', 'Gagal memproses data.', 'bi bi-x-circle-fill', '#dc3545'));
 }
 
-function submitUbahPassword(event) {
-    event.preventDefault();
-    const form = event.target;
-    const formData = new FormData(form);
-
-    if (formData.get('password_baru') !== formData.get('konfirmasi_password')) {
-        showModernAlert('Gagal', 'Kata sandi baru dan konfirmasi tidak cocok!', 'bi bi-x-circle-fill', '#dc3545'); return;
-    }
-
-    const btnSubmit = form.querySelector('button[type="submit"]');
-    const originalText = btnSubmit.innerHTML;
-    btnSubmit.innerHTML = '<i class="spinner-border spinner-border-sm"></i> Menyimpan...';
-    btnSubmit.disabled = true;
-
-    // Perbaikan URL: Pakai /api/ langsung
-    fetch('/api/ubah_password.php', { method: 'POST', body: formData })
-        .then(res => res.text())
-        .then(data => {
-            bootstrap.Modal.getInstance(form.closest('.modal')).hide();
-            if (data.includes('✅')) {
-                showModernAlert('Berhasil', data, 'bi bi-check-circle-fill', '#198754');
-                form.reset();
-            } else { showModernAlert('Gagal', data, 'bi bi-x-circle-fill', '#dc3545'); }
-        })
-        .catch(err => showModernAlert('Gagal', 'Terjadi kesalahan jaringan.', 'bi bi-x-circle-fill', '#dc3545'))
-        .finally(() => { btnSubmit.innerHTML = originalText; btnSubmit.disabled = false; });
-}
-
-function submitAbsen() {
-    const responseDiv = document.getElementById('absen-response');
-    responseDiv.innerHTML = '<span class="text-warning"><i class="spinner-border spinner-border-sm"></i> Mengirim data absensi...</span>';
-    document.getElementById('btn-confirm-group').style.setProperty('display', 'none', 'important');
-    const koordinatRealtime = (userLat && userLng) ? `${userLat}, ${userLng}` : 'Lokasi tidak diizinkan';
-    const formData = new FormData();
-    formData.append('jenis_absen', absenJenisType); formData.append('nik', userNIK); formData.append('foto', fotoDataURL); formData.append('lokasi', koordinatRealtime);
-
-    // Perbaikan URL: Pakai /api/ langsung
-    fetch('/api/proses_absen.php', { method: 'POST', body: formData })
-        .then(res => res.text())
-        .then(data => { responseDiv.innerHTML = data; setTimeout(() => location.reload(), 1500); })
-        .catch(() => { responseDiv.innerText = "Terjadi kesalahan server."; batalFoto(); });
-}
 
 // =======================================================
 // LOGIKA UBAH KATA SANDI (DENGAN ANIMASI)
@@ -478,7 +433,7 @@ function submitUbahPassword(event) {
     btnSubmit.innerHTML = '<i class="spinner-border spinner-border-sm"></i> Menyimpan...';
     btnSubmit.disabled = true;
 
-    fetch('/ubah_password', {
+    fetch('/proses_ganti_password', {
         method: 'POST',
         body: formData
     })
