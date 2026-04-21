@@ -77,6 +77,7 @@ GROUP BY DATE(waktu) ORDER BY tgl DESC");
 $semua_karyawan = [];
 $admin_hist_arr = [];
 $data_approval_lembur = [];
+$data_approval_cuti = [];
 
 if ($is_admin) {
     $q_kar = $conn->query("SELECT nik, nama, posisi, status_pegawai FROM karyawan ORDER BY nama ASC");
@@ -102,14 +103,18 @@ if ($is_admin) {
         $admin_hist_arr[] = $r;
     }
 
-    // Ambil Data Pengajuan Lembur Khusus HR
-    // Kita asumsikan ada tabel 'lembur' dengan kolom (id, nik, tanggal, jam_mulai, jam_selesai, keterangan, status)
-    // Gunakan IF EXISTS / Try-Catch agar tidak error jika tabel belum ada
+    // Ambil Data Pengajuan Lembur & Cuti Khusus HR
     try {
         $q_lembur = $conn->query("SELECT l.*, k.nama, k.posisi FROM lembur l JOIN karyawan k ON l.nik=k.nik ORDER BY l.id DESC");
         if ($q_lembur) {
             while($r = $q_lembur->fetch_assoc()) {
                 $data_approval_lembur[] = $r;
+            }
+        }
+        $q_cuti = $conn->query("SELECT c.*, k.nama, k.posisi FROM pengajuan_cuti c JOIN karyawan k ON c.nik=k.nik ORDER BY c.id DESC");
+        if ($q_cuti) {
+            while($r = $q_cuti->fetch_assoc()) {
+                $data_approval_cuti[] = $r;
             }
         }
     } catch(Exception $e) {}
@@ -211,7 +216,7 @@ if ($is_admin) {
                     </div>
                 </div>
 
-                <div class="row g-3 mb-4">
+                <div class="row g-3 mb-3">
                     <div class="col-6">
                         <div class="card h-100 shadow-sm rounded-4">
                             <div class="card-body p-3">
@@ -239,6 +244,15 @@ if ($is_admin) {
                                 <h4 class="fw-bold mb-1 <?= $sudah_out ? 'text-dark' : 'text-muted' ?>"><?= $waktu_out ?> <small class="fs-6 text-muted fw-normal">WIB</small></h4>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <button class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm" onclick="new bootstrap.Modal(document.getElementById('modalLembur')).show()"><i class="bi bi-clock-fill me-2"></i> Ajukan Lembur</button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-info text-white w-100 rounded-pill py-3 fw-bold shadow-sm" onclick="new bootstrap.Modal(document.getElementById('modalCuti')).show()"><i class="bi bi-calendar-event-fill me-2"></i> Ajukan Libur</button>
                     </div>
                 </div>
 
@@ -386,25 +400,28 @@ if ($is_admin) {
                 <?php if ($is_admin): ?>
                 <h6 class="section-title mt-0 text-pink fw-bold"><i class="bi bi-shield-lock-fill me-2"></i>Menu Administrator & HR</h6>
                 <div class="row g-3 mb-4">
-                    <div class="col-md-6 col-lg-4" onclick="switchScreen('admin-absen')">
+                    <div class="col-md-6 col-lg-3" onclick="switchScreen('admin-absen')">
                         <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid var(--lb-pink);">
                             <div class="action-icon bg-pink-light text-pink fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-people-fill"></i></div>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Kehadiran Tim</h6><small class="text-muted">Pantau & Cetak Laporan</small></div>
-                            <i class="bi bi-chevron-right text-muted fs-5"></i>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Kehadiran Tim</h6><small class="text-muted">Cetak Laporan</small></div>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-4" onclick="switchScreen('admin-lembur')">
+                    <div class="col-md-6 col-lg-3" onclick="switchScreen('admin-lembur')">
                         <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid #fd7e14;">
                             <div class="action-icon bg-warning bg-opacity-10 text-warning fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-clock-history"></i></div>
                             <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Approval Lembur</h6><small class="text-muted">Persetujuan & Riwayat</small></div>
-                            <i class="bi bi-chevron-right text-muted fs-5"></i>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-4" onclick="new bootstrap.Modal(document.getElementById('modalPayroll')).show()">
+                    <div class="col-md-6 col-lg-3" onclick="switchScreen('admin-cuti')">
+                        <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid #0dcaf0;">
+                            <div class="action-icon bg-info bg-opacity-10 text-info fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-calendar2-check-fill"></i></div>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Approval Libur</h6><small class="text-muted">Cuti & Libur Mingguan</small></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3" onclick="new bootstrap.Modal(document.getElementById('modalPayroll')).show()">
                         <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card" style="border-left:6px solid #198754;">
                             <div class="action-icon bg-success bg-opacity-10 text-success fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-cash-coin"></i></div>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Sistem Payroll</h6><small class="text-muted">Cetak Slip Gaji Karyawan</small></div>
-                            <i class="bi bi-chevron-right text-muted fs-5"></i>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Sistem Payroll</h6><small class="text-muted">Cetak Slip Gaji</small></div>
                         </div>
                     </div>
                 </div>
@@ -412,28 +429,28 @@ if ($is_admin) {
                 
                 <h6 class="section-title mt-0 fw-bold text-dark"><i class="bi bi-folder-fill text-muted me-2"></i>Pengajuan & Dokumen</h6>
                 <div class="row g-3">
-                    <div class="col-md-6 col-lg-4" onclick="new bootstrap.Modal(document.getElementById('modalLembur')).show()">
+                    <div class="col-md-6 col-lg-3" onclick="new bootstrap.Modal(document.getElementById('modalCuti')).show()">
+                        <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card border">
+                            <div class="action-icon bg-info bg-opacity-10 text-info fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-calendar-event-fill"></i></div>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Libur & Cuti</h6><small class="text-muted">Pilih hari libur mingguan</small></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3" onclick="new bootstrap.Modal(document.getElementById('modalLembur')).show()">
                         <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card border">
                             <div class="action-icon bg-warning bg-opacity-10 text-warning fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-stopwatch-fill"></i></div>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Pengajuan Lembur</h6><small class="text-muted">Rencana kerja lembur</small></div>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Pengajuan Lembur</h6><small class="text-muted">Rencana kerja tambahan</small></div>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-4" onclick="new bootstrap.Modal(document.getElementById('modalDinas')).show()">
+                    <div class="col-md-6 col-lg-3" onclick="new bootstrap.Modal(document.getElementById('modalDinas')).show()">
                         <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card border">
                             <div class="action-icon bg-primary bg-opacity-10 text-primary fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-car-front-fill"></i></div>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Perjalanan Dinas</h6><small class="text-muted">Formulir penugasan luar kota</small></div>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Perjalanan Dinas</h6><small class="text-muted">Penugasan luar kota</small></div>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-4" onclick="new bootstrap.Modal(document.getElementById('modalReimburse')).show()">
+                    <div class="col-md-6 col-lg-3" onclick="new bootstrap.Modal(document.getElementById('modalReimburse')).show()">
                         <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card border">
                             <div class="action-icon bg-success bg-opacity-10 text-success fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-receipt-cutoff"></i></div>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Reimbursement</h6><small class="text-muted">Pengajuan dana operasional</small></div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-4" onclick="showModernAlert('Informasi Cuti','Status Anda <b><?= $karyawan['status_pegawai'] ?></b>.<br>Cuti tahunan dapat digunakan setelah masa probation.','bi bi-calendar-x-fill','var(--lb-pink)')">
-                        <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card border">
-                            <div class="action-icon bg-dark bg-opacity-10 text-dark fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-calendar-event-fill"></i></div>
-                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Pengajuan Cuti</h6><small class="text-muted">Cek kuota dan libur</small></div>
+                            <div class="flex-grow-1"><h6 class="fw-bold mb-0 fs-6 text-dark">Reimbursement</h6><small class="text-muted">Klaim operasional</small></div>
                         </div>
                     </div>
                 </div>
@@ -520,7 +537,7 @@ if ($is_admin) {
             </div>
         </div>
 
-        <div id="screen-admin-lembur" class="app-screen" style="display: none;">
+        <div id="screen-admin-lembur" class="app-screen">
             <div class="bg-pink-wave header-top p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
                 <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-md-4 ms-2" onclick="switchScreen('layanan')"><i class="bi bi-arrow-left fs-3"></i></button>
                 <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Approval Lembur</h4>
@@ -553,8 +570,8 @@ if ($is_admin) {
                                 </td>
                                 <td class="text-center px-4">
                                     <?php if($lmb['status']=='Pending'): ?>
-                                        <button class="btn btn-sm btn-success rounded-circle shadow-sm me-1" onclick="prosesApprovalLembur(<?= $lmb['id'] ?>, 'Disetujui')" title="Setujui"><i class="bi bi-check-lg"></i></button>
-                                        <button class="btn btn-sm btn-danger rounded-circle shadow-sm" onclick="prosesApprovalLembur(<?= $lmb['id'] ?>, 'Ditolak')" title="Tolak"><i class="bi bi-x-lg"></i></button>
+                                        <button class="btn btn-sm btn-success rounded-circle shadow-sm me-1" onclick="prosesApproval('<?= $lmb['id'] ?>', 'Disetujui', 'lembur')" title="Setujui"><i class="bi bi-check-lg"></i></button>
+                                        <button class="btn btn-sm btn-danger rounded-circle shadow-sm" onclick="prosesApproval('<?= $lmb['id'] ?>', 'Ditolak', 'lembur')" title="Tolak"><i class="bi bi-x-lg"></i></button>
                                     <?php else: ?>
                                         <span class="text-muted small"><i class="bi bi-check2-all"></i> Selesai</span>
                                     <?php endif; ?>
@@ -562,6 +579,58 @@ if ($is_admin) {
                             </tr>
                             <?php endforeach; else: ?>
                             <tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-folder2-open fs-1 d-block mb-2 text-black-50"></i> Belum ada pengajuan lembur.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-admin-cuti" class="app-screen">
+            <div class="bg-pink-wave header-top p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+                <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-md-4 ms-2" onclick="switchScreen('layanan')"><i class="bi bi-arrow-left fs-3"></i></button>
+                <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Approval Libur & Cuti</h4>
+            </div>
+            <div class="p-3 desktop-px mx-auto" style="max-width: 1200px;">
+                <div class="table-responsive bg-white rounded-4 shadow-sm border p-0">
+                    <table class="table table-hover table-admin align-middle mb-0 table-riwayat">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="px-4 py-3 border-0">Jenis & Karyawan</th>
+                                <th class="text-center py-3 border-0">Tanggal</th>
+                                <th class="py-3 border-0">Keterangan</th>
+                                <th class="text-center py-3 border-0">Status</th>
+                                <th class="text-center py-3 border-0 px-4">Aksi HR</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (count($data_approval_cuti) > 0): foreach ($data_approval_cuti as $cuti): ?>
+                            <tr>
+                                <td class="px-4 py-3">
+                                    <span class="fw-bold d-block text-dark"><?= htmlspecialchars($cuti['jenis']) ?></span>
+                                    <small class="text-muted"><?= htmlspecialchars($cuti['nama']) ?></small>
+                                </td>
+                                <td class="text-center text-info fw-bold">
+                                    <?= formatTanggalIndo($cuti['tanggal_mulai']) ?> 
+                                    <?= $cuti['tanggal_mulai']!=$cuti['tanggal_selesai'] ? 's/d '.formatTanggalIndo($cuti['tanggal_selesai']) : '' ?>
+                                </td>
+                                <td><span class="d-inline-block text-truncate" style="max-width: 150px; font-size:12px;" title="<?= htmlspecialchars($cuti['keterangan']) ?>"><?= htmlspecialchars($cuti['keterangan']) ?></span></td>
+                                <td class="text-center">
+                                    <?php if($cuti['status']=='Pending') echo '<span class="badge bg-warning text-dark">Pending</span>'; 
+                                          elseif($cuti['status']=='Disetujui') echo '<span class="badge bg-success">Disetujui</span>'; 
+                                          else echo '<span class="badge bg-danger">Ditolak</span>'; ?>
+                                </td>
+                                <td class="text-center px-4">
+                                    <?php if($cuti['status']=='Pending'): ?>
+                                        <button class="btn btn-sm btn-success rounded-circle shadow-sm me-1" onclick="prosesApproval('<?= $cuti['id'] ?>', 'Disetujui', 'cuti')" title="Setujui"><i class="bi bi-check-lg"></i></button>
+                                        <button class="btn btn-sm btn-danger rounded-circle shadow-sm" onclick="prosesApproval('<?= $cuti['id'] ?>', 'Ditolak', 'cuti')" title="Tolak"><i class="bi bi-x-lg"></i></button>
+                                    <?php else: ?>
+                                        <span class="text-muted small"><i class="bi bi-check2-all"></i> Selesai</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; else: ?>
+                            <tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-folder2-open fs-1 d-block mb-2 text-black-50"></i> Belum ada pengajuan Libur/Cuti.</td></tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -632,39 +701,15 @@ if ($is_admin) {
 
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="pills-in">
-                        <div class="detail-box p-4 shadow-sm border">
-                            <h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-clock me-2 text-dark"></i>Waktu Check In</h6>
-                            <div class="d-flex justify-content-between text-success fw-bold fs-5"><span class="text-muted fs-6 fw-normal">Pukul</span><span id="mdl-in-time">00.00</span></div>
-                        </div>
-                        <div class="detail-box p-4 shadow-sm border">
-                            <h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-geo-alt me-2 text-dark"></i>Lokasi Absen</h6>
-                            <p class="mb-3 fs-6 fw-bold text-dark" id="mdl-in-lokasi">-</p><hr class="text-muted opacity-25" style="border-style: dashed;">
-                            <div class="d-flex justify-content-between small text-success mb-2"><span>IP Address</span><span class="text-dark fw-bold" id="mdl-in-ip">Memuat...</span></div>
-                            <div class="d-flex justify-content-between small text-success"><span>Koordinat</span><span class="text-dark fw-bold" id="mdl-in-coord">Memuat...</span></div>
-                        </div>
-                        <div class="detail-box p-4 shadow-sm border">
-                            <h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-camera me-2 text-dark"></i>Foto Selfie Bukti</h6>
-                            <div class="camera-box bg-light border" style="aspect-ratio: auto; min-height:300px;"><img id="mdl-in-foto" src="" onerror="this.src='https://placehold.co/400x500?text=Tidak+Ada+Foto'"></div>
-                        </div>
+                        <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-clock me-2 text-dark"></i>Waktu Check In</h6><div class="d-flex justify-content-between text-success fw-bold fs-5"><span class="text-muted fs-6 fw-normal">Pukul</span><span id="mdl-in-time">00.00</span></div></div>
+                        <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-geo-alt me-2 text-dark"></i>Lokasi Absen</h6><p class="mb-3 fs-6 fw-bold text-dark" id="mdl-in-lokasi">-</p><hr class="text-muted opacity-25" style="border-style: dashed;"><div class="d-flex justify-content-between small text-success mb-2"><span>IP Address</span><span class="text-dark fw-bold" id="mdl-in-ip">Memuat...</span></div><div class="d-flex justify-content-between small text-success"><span>Koordinat</span><span class="text-dark fw-bold" id="mdl-in-coord">Memuat...</span></div></div>
+                        <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-camera me-2 text-dark"></i>Foto Selfie Bukti</h6><div class="camera-box bg-light border" style="aspect-ratio: auto; min-height:300px;"><img id="mdl-in-foto" src="" onerror="this.src='https://placehold.co/400x500?text=Tidak+Ada+Foto'"></div></div>
                     </div>
-
                     <div class="tab-pane fade" id="pills-out">
-                        <div class="detail-box p-4 shadow-sm border">
-                            <h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-clock me-2 text-dark"></i>Waktu Check Out</h6>
-                            <div class="d-flex justify-content-between text-danger fw-bold fs-5"><span class="text-muted fs-6 fw-normal">Pukul</span><span id="mdl-out-time">00.00</span></div>
-                        </div>
-                        <div class="detail-box p-4 shadow-sm border">
-                            <h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-geo-alt me-2 text-dark"></i>Lokasi Absen</h6>
-                            <p class="mb-3 fs-6 fw-bold text-dark" id="mdl-out-lokasi">-</p><hr class="text-muted opacity-25" style="border-style: dashed;">
-                            <div class="d-flex justify-content-between small text-danger mb-2"><span>IP Address</span><span class="text-dark fw-bold" id="mdl-out-ip">Memuat...</span></div>
-                            <div class="d-flex justify-content-between small text-danger"><span>Koordinat</span><span class="text-dark fw-bold" id="mdl-out-coord">Memuat...</span></div>
-                        </div>
-                        <div class="detail-box p-4 shadow-sm border">
-                            <h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-camera me-2 text-dark"></i>Foto Selfie Bukti</h6>
-                            <div class="camera-box bg-light border" style="aspect-ratio: auto; min-height:300px;"><img id="mdl-out-foto" src="" onerror="this.src='https://placehold.co/400x500?text=Tidak+Ada+Foto'"></div>
-                        </div>
+                        <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-clock me-2 text-dark"></i>Waktu Check Out</h6><div class="d-flex justify-content-between text-danger fw-bold fs-5"><span class="text-muted fs-6 fw-normal">Pukul</span><span id="mdl-out-time">00.00</span></div></div>
+                        <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-geo-alt me-2 text-dark"></i>Lokasi Absen</h6><p class="mb-3 fs-6 fw-bold text-dark" id="mdl-out-lokasi">-</p><hr class="text-muted opacity-25" style="border-style: dashed;"><div class="d-flex justify-content-between small text-danger mb-2"><span>IP Address</span><span class="text-dark fw-bold" id="mdl-out-ip">Memuat...</span></div><div class="d-flex justify-content-between small text-danger"><span>Koordinat</span><span class="text-dark fw-bold" id="mdl-out-coord">Memuat...</span></div></div>
+                        <div class="detail-box p-4 shadow-sm border"><h6 class="fw-bold small text-muted mb-3 text-uppercase tracking-wider"><i class="bi bi-camera me-2 text-dark"></i>Foto Selfie Bukti</h6><div class="camera-box bg-light border" style="aspect-ratio: auto; min-height:300px;"><img id="mdl-out-foto" src="" onerror="this.src='https://placehold.co/400x500?text=Tidak+Ada+Foto'"></div></div>
                     </div>
-
                     <div class="tab-pane fade" id="pills-data">
                         <div class="detail-box p-5 shadow-sm border text-center">
                             <div class="avatar-initials mx-auto mb-3 shadow-sm" style="width: 80px; height: 80px; font-size: 30px;"><?= $inisial ?></div>
@@ -682,29 +727,43 @@ if ($is_admin) {
     </div>
 </div>
 
+<div class="modal fade" id="modalCuti" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header border-bottom-0 pb-0 p-4"><h5 class="modal-title fw-bold text-dark"><i class="bi bi-calendar-event-fill text-info me-2"></i>Form Pengajuan Libur/Cuti</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body p-4 pt-2">
+                <p class="text-muted small mb-4">Ajukan jadwal libur mingguan (Selain Sabtu-Minggu) atau cuti tahunan.</p>
+                <form id="formCuti" onsubmit="submitPengajuan(event, 'cuti')">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Jenis Pengajuan</label>
+                        <select class="form-select form-select-lg bg-light fs-6" name="kategori_cuti" id="kategori_cuti" required onchange="validasiHariLibur()">
+                            <option value="Libur Mingguan">Libur Mingguan (1 Hari)</option>
+                            <option value="Cuti Tahunan">Cuti Tahunan</option>
+                            <option value="Sakit">Izin Sakit</option>
+                        </select>
+                    </div>
+                    <div class="row mb-3 g-3">
+                        <div class="col-6"><label class="form-label small fw-bold text-dark">Tgl Mulai</label><input type="date" class="form-control form-control-lg bg-light fs-6" name="tgl_mulai" id="tgl_mulai_cuti" required onchange="validasiHariLibur()"></div>
+                        <div class="col-6"><label class="form-label small fw-bold text-dark">Tgl Selesai</label><input type="date" class="form-control form-control-lg bg-light fs-6" name="tgl_selesai" id="tgl_selesai_cuti" required></div>
+                    </div>
+                    <div class="mb-4"><label class="form-label small fw-bold text-dark">Alasan / Keterangan</label><textarea class="form-control form-control-lg bg-light fs-6" name="keterangan" rows="2" placeholder="Tuliskan keterangan..." required></textarea></div>
+                    <button type="submit" class="btn btn-info w-100 py-3 fw-bold rounded-pill shadow-sm text-white">Kirim Pengajuan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="modalLembur" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-header border-bottom-0 pb-0 p-4">
-                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-stopwatch-fill text-warning me-2"></i>Form Pengajuan Lembur</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+            <div class="modal-header border-bottom-0 pb-0 p-4"><h5 class="modal-title fw-bold text-dark"><i class="bi bi-clock-fill text-warning me-2"></i>Form Pengajuan Lembur</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body p-4 pt-2">
-                <p class="text-muted small mb-4">Ajukan rencana lembur Anda di sini. Lembur yang disetujui akan otomatis masuk ke riwayat absensi.</p>
                 <form id="formLembur" onsubmit="submitPengajuan(event, 'lembur')">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-dark">Tanggal Lembur</label>
-                        <input type="date" class="form-control form-control-lg bg-light fs-6" name="tanggal" required>
-                    </div>
-                    <div class="row mb-3 g-3">
-                        <div class="col-6"><label class="form-label small fw-bold text-dark">Jam Mulai</label><input type="time" class="form-control form-control-lg bg-light fs-6" name="jam_mulai" required></div>
-                        <div class="col-6"><label class="form-label small fw-bold text-dark">Jam Selesai</label><input type="time" class="form-control form-control-lg bg-light fs-6" name="jam_selesai" required></div>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label small fw-bold text-dark">Keterangan / Tugas Lembur</label>
-                        <textarea class="form-control form-control-lg bg-light fs-6" name="keterangan" rows="2" placeholder="Menyelesaikan tugas..." required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-warning w-100 py-3 fw-bold rounded-pill shadow-sm text-dark">Kirim Pengajuan Lembur</button>
+                    <div class="mb-3"><label class="form-label small fw-bold text-dark">Tanggal Lembur</label><input type="date" class="form-control form-control-lg bg-light fs-6" name="tanggal" required></div>
+                    <div class="row mb-3 g-3"><div class="col-6"><label class="form-label small fw-bold text-dark">Jam Mulai</label><input type="time" class="form-control form-control-lg bg-light fs-6" name="jam_mulai" required></div><div class="col-6"><label class="form-label small fw-bold text-dark">Jam Selesai</label><input type="time" class="form-control form-control-lg bg-light fs-6" name="jam_selesai" required></div></div>
+                    <div class="mb-4"><label class="form-label small fw-bold text-dark">Keterangan / Tugas Lembur</label><textarea class="form-control form-control-lg bg-light fs-6" name="keterangan" rows="2" required></textarea></div>
+                    <button type="submit" class="btn btn-warning text-dark w-100 py-3 fw-bold rounded-pill shadow-sm">Kirim Rencana Lembur</button>
                 </form>
             </div>
         </div>
@@ -714,20 +773,13 @@ if ($is_admin) {
 <div class="modal fade" id="modalDinas" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-header border-bottom-0 pb-0 p-4">
-                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-car-front-fill text-primary me-2"></i>Form Perjalanan Dinas</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+            <div class="modal-header border-bottom-0 pb-0 p-4"><h5 class="modal-title fw-bold text-dark"><i class="bi bi-car-front-fill text-primary me-2"></i>Form Perjalanan Dinas</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body p-4 pt-2">
-                <p class="text-muted small mb-4">Lengkapi form di bawah ini untuk mengajukan penugasan dinas ke luar kota.</p>
                 <form id="formDinas" onsubmit="submitPengajuan(event, 'dinas')">
-                    <div class="mb-3"><label class="form-label small fw-bold text-dark">Tujuan / Kota Penugasan</label><input type="text" class="form-control form-control-lg bg-light fs-6" name="tujuan" placeholder="Contoh: Jakarta" required></div>
-                    <div class="row mb-3 g-3">
-                        <div class="col-6"><label class="form-label small fw-bold text-dark">Tgl Berangkat</label><input type="date" class="form-control form-control-lg bg-light fs-6" name="tgl_berangkat" required></div>
-                        <div class="col-6"><label class="form-label small fw-bold text-dark">Tgl Kembali</label><input type="date" class="form-control form-control-lg bg-light fs-6" name="tgl_kembali" required></div>
-                    </div>
-                    <div class="mb-4"><label class="form-label small fw-bold text-dark">Keterangan / Agenda Penugasan</label><textarea class="form-control form-control-lg bg-light fs-6" name="keterangan" rows="2" placeholder="Deskripsikan agenda kerja..." required></textarea></div>
-                    <button type="submit" class="btn btn-pink w-100 py-3 fw-bold rounded-pill shadow-sm">Kirim Pengajuan Dinas</button>
+                    <div class="mb-3"><label class="form-label small fw-bold text-dark">Tujuan / Kota Penugasan</label><input type="text" class="form-control form-control-lg bg-light fs-6" name="tujuan" required></div>
+                    <div class="row mb-3 g-3"><div class="col-6"><label class="form-label small fw-bold text-dark">Tgl Berangkat</label><input type="date" class="form-control form-control-lg bg-light fs-6" name="tgl_berangkat" required></div><div class="col-6"><label class="form-label small fw-bold text-dark">Tgl Kembali</label><input type="date" class="form-control form-control-lg bg-light fs-6" name="tgl_kembali" required></div></div>
+                    <div class="mb-4"><label class="form-label small fw-bold text-dark">Keterangan</label><textarea class="form-control form-control-lg bg-light fs-6" name="keterangan" rows="2" required></textarea></div>
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill shadow-sm">Kirim Pengajuan Dinas</button>
                 </form>
             </div>
         </div>
@@ -737,22 +789,14 @@ if ($is_admin) {
 <div class="modal fade" id="modalReimburse" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-header border-bottom-0 pb-0 p-4">
-                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-receipt-cutoff text-success me-2"></i>Form Reimbursement</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+            <div class="modal-header border-bottom-0 pb-0 p-4"><h5 class="modal-title fw-bold text-dark"><i class="bi bi-receipt-cutoff text-success me-2"></i>Form Reimbursement</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body p-4 pt-2">
-                <p class="text-muted small mb-4">Lengkapi form dan unggah bukti nota untuk klaim dana operasional.</p>
                 <form id="formReimburse" onsubmit="submitPengajuan(event, 'reimburse')">
-                    <div class="mb-3"><label class="form-label small fw-bold text-dark">Kategori Pengeluaran</label>
-                        <select class="form-select form-select-lg bg-light fs-6" name="kategori" required>
-                            <option value="Transportasi">Transportasi / Bensin</option><option value="Konsumsi">Konsumsi / Makan</option><option value="Akomodasi">Akomodasi / Penginapan</option><option value="Operasional Lainnya">Operasional Lainnya</option>
-                        </select>
-                    </div>
-                    <div class="mb-3"><label class="form-label small fw-bold text-dark">Nominal Klaim (Rp)</label><input type="number" class="form-control form-control-lg bg-light fs-6" name="nominal" placeholder="Contoh: 150000" required></div>
-                    <div class="mb-3"><label class="form-label small fw-bold text-dark">Foto Bukti Nota / Struk</label><input type="file" class="form-control form-control-lg bg-light fs-6" id="inputFotoReimburse" accept="image/*" required><input type="hidden" name="foto_nota" id="base64Reimburse"></div>
-                    <div class="mb-4"><label class="form-label small fw-bold text-dark">Rincian Pengeluaran</label><textarea class="form-control form-control-lg bg-light fs-6" name="keterangan" rows="2" placeholder="Jelaskan keperluan..." required></textarea></div>
-                    <button type="submit" class="btn btn-pink w-100 py-3 fw-bold rounded-pill shadow-sm">Kirim Klaim Dana</button>
+                    <div class="mb-3"><label class="form-label small fw-bold text-dark">Kategori Pengeluaran</label><select class="form-select form-select-lg bg-light fs-6" name="kategori" required><option value="Transportasi">Transportasi / Bensin</option><option value="Konsumsi">Konsumsi / Makan</option><option value="Akomodasi">Akomodasi / Penginapan</option><option value="Operasional Lainnya">Operasional Lainnya</option></select></div>
+                    <div class="mb-3"><label class="form-label small fw-bold text-dark">Nominal Klaim (Rp)</label><input type="number" class="form-control form-control-lg bg-light fs-6" name="nominal" required></div>
+                    <div class="mb-3"><label class="form-label small fw-bold text-dark">Foto Bukti Nota</label><input type="file" class="form-control form-control-lg bg-light fs-6" id="inputFotoReimburse" accept="image/*" required><input type="hidden" name="foto_nota" id="base64Reimburse"></div>
+                    <div class="mb-4"><label class="form-label small fw-bold text-dark">Keterangan</label><textarea class="form-control form-control-lg bg-light fs-6" name="keterangan" rows="2" required></textarea></div>
+                    <button type="submit" class="btn btn-success w-100 py-3 fw-bold rounded-pill shadow-sm">Kirim Klaim Dana</button>
                 </form>
             </div>
         </div>
@@ -763,135 +807,66 @@ if ($is_admin) {
 <div class="modal fade" id="modalPayroll" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-header border-bottom-0 pb-0 p-4">
-                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-cash-coin text-success me-2"></i>Generate Slip Gaji</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+            <div class="modal-header border-bottom-0 pb-0 p-4"><h5 class="modal-title fw-bold text-dark"><i class="bi bi-cash-coin text-success me-2"></i>Generate Slip Gaji</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body p-4 pt-2">
                 <form action="/cetak_slip" method="GET" target="_blank">
-                    <div class="mb-3"><label class="form-label small fw-bold text-dark">Pilih Karyawan</label>
-                        <select name="nik" class="form-select form-select-lg bg-light fs-6" required>
-                            <?php foreach ($semua_karyawan as $kar): ?><option value="<?= $kar['nik'] ?>"><?= $kar['nama'] ?> (<?= $kar['posisi'] ?>)</option><?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="row mb-3 g-3">
-                        <div class="col-6"><label class="form-label small fw-bold text-dark">Bulan</label><select name="bulan" class="form-select form-select-lg bg-light fs-6"><?php for($i=1; $i<=12; $i++): ?><option value="<?= str_pad($i, 2, '0', STR_PAD_LEFT) ?>" <?= date('m') == $i ? 'selected' : '' ?>><?= date('F', mktime(0,0,0,$i,1)) ?></option><?php endfor; ?></select></div>
-                        <div class="col-6"><label class="form-label small fw-bold text-dark">Tahun</label><input type="number" class="form-control form-control-lg bg-light fs-6" name="tahun" value="<?= date('Y') ?>" required></div>
-                    </div>
-                    <div class="row mb-3 g-3">
-                        <div class="col-6"><label class="form-label small fw-bold text-dark">Total Hari Kerja</label><input type="number" class="form-control form-control-lg bg-light fs-6" name="hari_kerja" value="26" required></div>
-                        <div class="col-6"><label class="form-label small fw-bold text-dark">Uang Makan</label><input type="number" class="form-control form-control-lg bg-light fs-6" name="uang_makan" value="200000" required></div>
-                    </div>
-                    <div class="mb-4 bg-light p-3 rounded-3 border">
-                        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="tidak_hitung_gaji" value="1" id="c_tidak_gaji"><label class="form-check-label small fw-bold text-dark" for="c_tidak_gaji">Tidak Dihitung Gaji Pokok (Rp 0)</label></div>
-                        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="capai_target" value="1" id="c_target"><label class="form-check-label small fw-bold text-dark" for="c_target">Capai Target Omset (Bonus 600rb)</label></div>
-                        <div class="form-check"><input class="form-check-input" type="checkbox" name="alpa_banyak" value="1" id="c_alpa"><label class="form-check-label small fw-bold text-danger" for="c_alpa">Alpa >= 2x (Kerajinan Hangus)</label></div>
-                    </div>
+                    <div class="mb-3"><label class="form-label small fw-bold text-dark">Pilih Karyawan</label><select name="nik" class="form-select form-select-lg bg-light fs-6" required><?php foreach ($semua_karyawan as $kar): ?><option value="<?= $kar['nik'] ?>"><?= $kar['nama'] ?> (<?= $kar['posisi'] ?>)</option><?php endforeach; ?></select></div>
+                    <div class="row mb-3 g-3"><div class="col-6"><label class="form-label small fw-bold text-dark">Bulan</label><select name="bulan" class="form-select form-select-lg bg-light fs-6"><?php for($i=1; $i<=12; $i++): ?><option value="<?= str_pad($i, 2, '0', STR_PAD_LEFT) ?>" <?= date('m') == $i ? 'selected' : '' ?>><?= date('F', mktime(0,0,0,$i,1)) ?></option><?php endfor; ?></select></div><div class="col-6"><label class="form-label small fw-bold text-dark">Tahun</label><input type="number" class="form-control form-control-lg bg-light fs-6" name="tahun" value="<?= date('Y') ?>" required></div></div>
+                    <div class="row mb-3 g-3"><div class="col-6"><label class="form-label small fw-bold text-dark">Total Hari Kerja</label><input type="number" class="form-control form-control-lg bg-light fs-6" name="hari_kerja" value="26" required></div><div class="col-6"><label class="form-label small fw-bold text-dark">Uang Makan</label><input type="number" class="form-control form-control-lg bg-light fs-6" name="uang_makan" value="200000" required></div></div>
+                    <div class="mb-4 bg-light p-3 rounded-3 border"><div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="capai_target" value="1" id="c_target"><label class="form-check-label small fw-bold text-dark" for="c_target">Capai Target Omset (Bonus 600rb)</label></div><div class="form-check"><input class="form-check-input" type="checkbox" name="alpa_banyak" value="1" id="c_alpa"><label class="form-check-label small fw-bold text-danger" for="c_alpa">Alpa >= 2x (Kerajinan Hangus)</label></div></div>
                     <button type="submit" class="btn btn-success w-100 py-3 fw-bold rounded-pill shadow-sm">Cetak Slip Gaji PDF</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="modalCetakLaporan" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content rounded-4 border-0 shadow-lg"><div class="modal-body p-4 text-center"><i class="bi bi-printer text-pink" style="font-size: 3rem;"></i><h5 class="fw-bold mt-3 mb-1 text-dark">Cetak Rekap Tim</h5><form action="/cetak_rekap" method="GET" target="_blank"><select name="bulan" class="form-select form-select-lg bg-light mb-3 fs-6 mt-3"><?php for($i=1; $i<=12; $i++): ?><option value="<?= str_pad($i, 2, '0', STR_PAD_LEFT) ?>" <?= date('m') == $i ? 'selected' : '' ?>><?= date('F', mktime(0,0,0,$i,1)) ?></option><?php endfor; ?></select><select name="tahun" class="form-select form-select-lg bg-light mb-4 fs-6"><?php for($i=date('Y')-1; $i<=date('Y')+1; $i++): ?><option value="<?= $i ?>" <?= date('Y') == $i ? 'selected' : '' ?>><?= $i ?></option><?php endfor; ?></select><button type="submit" class="btn btn-pink w-100 rounded-pill py-3 fw-bold shadow-sm">Buka Laporan PDF</button></form></div></div></div></div>
+<div class="modal fade" id="modalCetakLogKaryawan" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content rounded-4 border-0 shadow-lg"><div class="modal-body p-4 text-center"><i class="bi bi-file-earmark-pdf-fill text-danger" style="font-size: 3rem;"></i><h5 class="fw-bold mt-3 mb-1 text-dark">Cetak Laporan Pribadi</h5><p class="text-muted small mb-4">Siklus: Tgl 26 s/d Tgl 25</p><form action="/cetak_pribadi" method="GET" target="_blank"><input type="hidden" name="nik" id="cetak_nik_karyawan"><select name="bulan" class="form-select form-select-lg bg-light mb-3 fs-6"><?php for($i=1; $i<=12; $i++): ?><option value="<?= str_pad($i, 2, '0', STR_PAD_LEFT) ?>" <?= date('m') == $i ? 'selected' : '' ?>><?= date('F', mktime(0,0,0,$i,1)) ?></option><?php endfor; ?></select><select name="tahun" class="form-select form-select-lg bg-light mb-4 fs-6"><?php for($i=date('Y')-1; $i<=date('Y')+1; $i++): ?><option value="<?= $i ?>" <?= date('Y') == $i ? 'selected' : '' ?>><?= $i ?></option><?php endfor; ?></select><button type="submit" class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow-sm"><i class="bi bi-printer-fill me-2"></i> Cetak Laporan PDF</button></form></div></div></div></div>
 <?php endif; ?>
 
-<div class="modal fade" id="modalCetakLaporan" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-body p-4 text-center">
-                <i class="bi bi-printer text-pink" style="font-size: 3rem;"></i>
-                <h5 class="fw-bold mt-3 mb-1 text-dark">Cetak Rekap Tim</h5>
-                <p class="text-muted small mb-4">Export data absensi seluruh karyawan</p>
-                <form action="/cetak_rekap" method="GET" target="_blank">
-                    <select name="bulan" class="form-select form-select-lg bg-light mb-3 fs-6"><?php for($i=1; $i<=12; $i++): ?><option value="<?= str_pad($i, 2, '0', STR_PAD_LEFT) ?>" <?= date('m') == $i ? 'selected' : '' ?>><?= date('F', mktime(0,0,0,$i,1)) ?></option><?php endfor; ?></select>
-                    <select name="tahun" class="form-select form-select-lg bg-light mb-4 fs-6"><?php for($i=date('Y')-1; $i<=date('Y')+1; $i++): ?><option value="<?= $i ?>" <?= date('Y') == $i ? 'selected' : '' ?>><?= $i ?></option><?php endfor; ?></select>
-                    <button type="submit" class="btn btn-pink w-100 rounded-pill py-3 fw-bold shadow-sm">Buka Laporan PDF</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<div class="modal fade" id="modalUbahPassword" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content rounded-4 border-0 shadow-lg"><div class="modal-header border-bottom-0 pb-0 p-4"><h5 class="modal-title fw-bold text-dark"><i class="bi bi-key-fill text-warning me-2"></i>Ubah Kata Sandi</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4 pt-2"><form id="formUbahPassword" onsubmit="submitUbahPassword(event)"><div class="mb-3"><label class="form-label small fw-bold text-dark">Kata Sandi Lama</label><input type="password" class="form-control form-control-lg bg-light fs-6" name="password_lama" required></div><div class="mb-3"><label class="form-label small fw-bold text-dark">Kata Sandi Baru</label><input type="password" class="form-control form-control-lg bg-light fs-6" id="password_baru" name="password_baru" required minlength="6" oninput="checkStrength(this.value); checkMatch()"></div><div class="strength-bar-wrap d-flex gap-1 mb-2" id="strength-bars"><div class="strength-bar flex-fill rounded" id="bar1" style="height:4px; background:#eee;"></div><div class="strength-bar flex-fill rounded" id="bar2" style="height:4px; background:#eee;"></div><div class="strength-bar flex-fill rounded" id="bar3" style="height:4px; background:#eee;"></div><div class="strength-bar flex-fill rounded" id="bar4" style="height:4px; background:#eee;"></div></div><div class="strength-label small fw-bold mb-3" id="strength-label"></div><div class="mb-4"><label class="form-label small fw-bold text-dark">Konfirmasi Kata Sandi Baru</label><input type="password" class="form-control form-control-lg bg-light fs-6" id="password_konfirmasi" name="konfirmasi_password" required minlength="6" oninput="checkMatch()"><div id="match-msg" style="font-size:0.78rem; margin-top:5px; font-weight:600;"></div></div><button type="submit" class="btn btn-pink w-100 py-3 fw-bold rounded-pill shadow-sm">Simpan Kata Sandi Baru</button></form></div></div></div></div>
 
-<div class="modal fade" id="modalCetakLogKaryawan" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-body p-4 text-center">
-                <i class="bi bi-file-earmark-pdf-fill text-danger" style="font-size: 3rem;"></i>
-                <h5 class="fw-bold mt-3 mb-1 text-dark">Cetak Laporan Karyawan</h5>
-                <p class="text-muted small mb-4">Siklus: Tgl 26 s/d Tgl 25</p>
-                <form action="/cetak_pribadi" method="GET" target="_blank">
-                    <input type="hidden" name="nik" id="cetak_nik_karyawan">
-                    <select name="bulan" class="form-select form-select-lg bg-light mb-3 fs-6"><?php for($i=1; $i<=12; $i++): ?><option value="<?= str_pad($i, 2, '0', STR_PAD_LEFT) ?>" <?= date('m') == $i ? 'selected' : '' ?>><?= date('F', mktime(0,0,0,$i,1)) ?></option><?php endfor; ?></select>
-                    <select name="tahun" class="form-select form-select-lg bg-light mb-4 fs-6"><?php for($i=date('Y')-1; $i<=date('Y')+1; $i++): ?><option value="<?= $i ?>" <?= date('Y') == $i ? 'selected' : '' ?>><?= $i ?></option><?php endfor; ?></select>
-                    <button type="submit" class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow-sm"><i class="bi bi-printer-fill me-2"></i> Cetak Laporan PDF</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="modalUbahPassword" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-header border-bottom-0 pb-0 p-4">
-                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-key-fill text-warning me-2"></i>Ubah Kata Sandi</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4 pt-2">
-                <form id="formUbahPassword" onsubmit="submitUbahPassword(event)">
-                    <div class="mb-3"><label class="form-label small fw-bold text-dark">Kata Sandi Lama</label><input type="password" class="form-control form-control-lg bg-light fs-6" name="password_lama" required></div>
-                    <div class="mb-3"><label class="form-label small fw-bold text-dark">Kata Sandi Baru</label><input type="password" class="form-control form-control-lg bg-light fs-6" id="password_baru" name="password_baru" required minlength="6" oninput="checkStrength(this.value); checkMatch()"></div>
-                    <div class="strength-bar-wrap d-flex gap-1 mb-2" id="strength-bars"><div class="strength-bar flex-fill rounded" id="bar1" style="height:4px; background:#eee;"></div><div class="strength-bar flex-fill rounded" id="bar2" style="height:4px; background:#eee;"></div><div class="strength-bar flex-fill rounded" id="bar3" style="height:4px; background:#eee;"></div><div class="strength-bar flex-fill rounded" id="bar4" style="height:4px; background:#eee;"></div></div>
-                    <div class="strength-label small fw-bold mb-3" id="strength-label"></div>
-                    <div class="mb-4"><label class="form-label small fw-bold text-dark">Konfirmasi Kata Sandi Baru</label><input type="password" class="form-control form-control-lg bg-light fs-6" id="password_konfirmasi" name="konfirmasi_password" required minlength="6" oninput="checkMatch()"><div id="match-msg" style="font-size:0.78rem; margin-top:5px; font-weight:600;"></div></div>
-                    <button type="submit" class="btn btn-pink w-100 py-3 fw-bold rounded-pill shadow-sm">Simpan Kata Sandi Baru</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="modernAlertModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-body text-center p-4 pt-5">
-                <div id="modernAlertIcon" class="mb-3"><i class="bi bi-info-circle-fill" style="font-size:3.5rem; color:var(--lb-pink);"></i></div>
-                <h5 class="fw-bold mb-3 text-dark" id="modernAlertTitle">Pemberitahuan</h5>
-                <p class="text-muted mb-4" id="modernAlertMessage" style="font-size:14px;">Pesan alert di sini.</p>
-                <button type="button" class="btn btn-pink w-100 rounded-pill py-3 fw-bold shadow-sm" data-bs-dismiss="modal">Saya Mengerti</button>
-            </div>
-        </div>
-    </div>
-</div>
+<div class="modal fade" id="modernAlertModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content rounded-4 border-0 shadow-lg"><div class="modal-body text-center p-4 pt-5"><div id="modernAlertIcon" class="mb-3"><i class="bi bi-info-circle-fill" style="font-size:3.5rem; color:var(--lb-pink);"></i></div><h5 class="fw-bold mb-3 text-dark" id="modernAlertTitle">Pemberitahuan</h5><p class="text-muted mb-4" id="modernAlertMessage" style="font-size:14px;"></p><button type="button" class="btn btn-pink w-100 rounded-pill py-3 fw-bold shadow-sm" data-bs-dismiss="modal">Saya Mengerti</button></div></div></div></div>
 
 <script>
-    window.HRIS_CONFIG = {
-        userNIK: '<?= $karyawan['nik'] ?>',
-        karyawanNama: <?= json_encode($karyawan['nama']) ?>,
-        karyawanPenempatan: <?= json_encode($karyawan['penempatan']) ?>,
-        adminHistData: <?= json_encode($admin_hist_arr) ?>
-    };
+    window.HRIS_CONFIG = { userNIK: '<?= $karyawan['nik'] ?>', adminHistData: <?= json_encode($admin_hist_arr) ?> };
+    
+    // JS Validasi Khusus Hari Libur Mingguan (Tidak Boleh Sabtu/Minggu)
+    function validasiHariLibur() {
+        const jenis = document.getElementById('kategori_cuti').value;
+        const inputMulai = document.getElementById('tgl_mulai_cuti');
+        const inputSelesai = document.getElementById('tgl_selesai_cuti');
+        
+        if (jenis === 'Libur Mingguan') {
+            inputSelesai.value = inputMulai.value; 
+            inputSelesai.readOnly = true;
+            
+            if (inputMulai.value) {
+                const date = new Date(inputMulai.value);
+                if (date.getDay() === 0 || date.getDay() === 6) {
+                    showModernAlert('Gagal', 'Sesuai aturan, Libur Mingguan tidak boleh diambil pada hari Sabtu atau Minggu (Wajib Masuk).', 'bi bi-x-circle-fill', '#dc3545');
+                    inputMulai.value = '';
+                    inputSelesai.value = '';
+                }
+            }
+        } else {
+            inputSelesai.readOnly = false;
+        }
+    }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/style/script.js"></script>
-
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Timpa fungsi switchScreen bawaan agar lebih ketat menyembunyikan semua layar
         if (typeof window.switchScreen === 'function') {
             const originalSwitchScreen = window.switchScreen;
             window.switchScreen = function(screenId) {
-                
-                // 1. Paksa sembunyikan SEMUA elemen dengan class .app-screen
                 document.querySelectorAll('.app-screen').forEach(function(screen) {
                     screen.classList.remove('active');
                     screen.style.display = 'none';
                 });
-
-                // 2. Jalankan fungsi bawaan dari script.js
                 try { originalSwitchScreen(screenId); } catch(e) {}
-
-                // 3. Pastikan HANYA layar yang dituju yang ditampilkan
                 const activeScreen = document.getElementById('screen-' + screenId);
                 if (activeScreen) {
                     activeScreen.classList.add('active');
@@ -901,6 +876,5 @@ if ($is_admin) {
         }
     });
 </script>
-
 </body>
 </html>

@@ -22,5 +22,9 @@ if ($jenis == 'lembur') {
     } else {
         echo "❌ Gagal: " . $conn->error;
     }
+} elseif ($jenis == 'cuti') {
+    $sql = "UPDATE pengajuan_cuti SET status = '$status' WHERE id = '$id'";
+    if ($conn->query($sql)) echo "✅ Pengajuan berhasil " . strtolower($status) . "!";
+    else echo "❌ Gagal: " . $conn->error;
 }
 ?>

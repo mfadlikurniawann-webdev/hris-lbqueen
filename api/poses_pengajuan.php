@@ -49,6 +49,16 @@ if ($jenis === 'dinas') {
     } else {
         echo "❌ Gagal: " . $conn->error;
     }
+} elseif ($jenis === 'cuti') {
+    $kategori = $conn->real_escape_string($_POST['kategori_cuti']);
+    $tgl_mulai = $conn->real_escape_string($_POST['tgl_mulai']);
+    $tgl_selesai = $conn->real_escape_string($_POST['tgl_selesai']);
+    $keterangan = $conn->real_escape_string($_POST['keterangan']);
+
+    $sql = "INSERT INTO pengajuan_cuti (nik, jenis, tanggal_mulai, tanggal_selesai, keterangan) 
+            VALUES ('$nik', '$kategori', '$tgl_mulai', '$tgl_selesai', '$keterangan')";
+    if ($conn->query($sql)) echo "✅ Pengajuan $kategori berhasil dikirim!";
+    else echo "❌ Gagal: " . $conn->error;
 } else {
     echo "❌ Jenis pengajuan tidak dikenali sistem.";
 }
