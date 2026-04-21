@@ -417,17 +417,18 @@ body {
         aspect-ratio: 16/9;
         max-width: 600px;
     }
+}
 
-    /* =========================================
-   PERBAIKAN TABEL RESPONSIVE MOBILE
-   ========================================= */
+/* =========================================
+PERBAIKAN TABEL RESPONSIVE MOBILE
+========================================= */
 
-    /* Pastikan tabel bisa digeser (scroll) ke kanan-kiri di HP */
-    .table-responsive {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-        /* Smooth scroll untuk iOS */
-    }
+/* Pastikan tabel bisa digeser (scroll) ke kanan-kiri di HP */
+.table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scroll untuk iOS */
+}
 
     /* Mencegah teks terlipat (turun ke bawah) dan berantakan */
     .table-riwayat th,
@@ -527,9 +528,8 @@ body {
         }
     }
 
-    .splash-hidden {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-    }
+.splash-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }

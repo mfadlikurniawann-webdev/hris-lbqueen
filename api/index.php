@@ -132,6 +132,44 @@ if ($q_dinas_pribadi) {
 
 krsort($riwayat_pribadi);
 
+// 5. RIWAYAT PENGAJUAN (SEMUA TIPE) UNTUK TRACKING
+$riwayat_pengajuan = [];
+if ($q_lembur_pribadi) {
+    $q_lembur_pribadi->data_seek(0);
+    while($r = $q_lembur_pribadi->fetch_assoc()) {
+        $r['tipe_pengajuan'] = 'Lembur';
+        $r['waktu_urut'] = $r['created_at'];
+        $riwayat_pengajuan[] = $r;
+    }
+}
+if ($q_cuti_pribadi) {
+    $q_cuti_pribadi->data_seek(0);
+    while($r = $q_cuti_pribadi->fetch_assoc()) {
+        $r['tipe_pengajuan'] = 'Cuti/Libur (' . $r['jenis'] . ')';
+        $r['waktu_urut'] = $r['created_at'];
+        $riwayat_pengajuan[] = $r;
+    }
+}
+if ($q_dinas_pribadi) {
+    $q_dinas_pribadi->data_seek(0);
+    while($r = $q_dinas_pribadi->fetch_assoc()) {
+        $r['tipe_pengajuan'] = 'Perjalanan Dinas';
+        $r['waktu_urut'] = $r['created_at'];
+        $riwayat_pengajuan[] = $r;
+    }
+}
+$q_reimb_pribadi = $conn->query("SELECT * FROM reimburse WHERE nik='" . $karyawan['nik'] . "'");
+if ($q_reimb_pribadi) {
+    while($r = $q_reimb_pribadi->fetch_assoc()) {
+        $r['tipe_pengajuan'] = 'Reimburse (' . $r['kategori'] . ')';
+        $r['waktu_urut'] = $r['created_at'];
+        $riwayat_pengajuan[] = $r;
+    }
+}
+usort($riwayat_pengajuan, function($a, $b) {
+    return strtotime($b['waktu_urut']) - strtotime($a['waktu_urut']);
+});
+
 // DATA ADMIN
 $semua_karyawan = [];
 $admin_hist_arr = [];
@@ -617,6 +655,84 @@ if ($is_admin) {
                                 </div>
                             </div>
                         </div>
+                        <div class="col-12 mt-4" style="border-top: 1px dashed #ddd; padding-top:20px;">
+                            <div class="action-card shadow-sm p-4 bg-white rounded-4 d-flex align-items-center employee-card border border-secondary" onclick="switchScreen('status-pengajuan')">
+                                <div class="action-icon bg-secondary bg-opacity-10 text-secondary fs-3 shadow-sm rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;"><i class="bi bi-clock-history"></i></div>
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-bold mb-0 fs-6 text-dark">Status Pengajuan Anda</h6><small class="text-muted">Pantau status pengajuan Anda (Disetujui/Pending/Ditolak)</small>
+                                </div>
+                                <i class="bi bi-chevron-right text-muted fs-5"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SCREEN STATUS PENGAJUAN (KARYAWAN) -->
+            <div id="screen-status-pengajuan" class="app-screen">
+                <div class="bg-pink-wave header-top p-4 desktop-px position-relative shadow-sm text-center mb-4" style="border-radius: 0 0 25px 25px;">
+                    <button class="btn btn-link text-white position-absolute top-50 translate-middle-y start-0 ms-md-4 ms-2" onclick="switchScreen('layanan')"><i class="bi bi-arrow-left fs-3"></i></button>
+                    <h4 class="mb-0 text-white fw-bold mt-2 pb-2">Status Pengajuan</h4>
+                </div>
+                <div class="p-3 desktop-px mx-auto" style="max-width: 800px;">
+                    <!-- Filter Tabs -->
+                    <ul class="nav nav-pills custom-tabs mb-4 px-2 d-flex flex-nowrap overflow-auto" id="statusTab" role="tablist" style="border-radius: 12px; white-space: nowrap; padding: 5px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.05); background:#f8f9fa;">
+                        <li class="nav-item flex-fill text-center" role="presentation">
+                            <button class="nav-link active w-100 rounded-pill mb-0" id="pill-semua-tab" data-bs-toggle="pill" data-bs-target="#pill-semua" type="button" role="tab">Semua</button>
+                        </li>
+                        <li class="nav-item flex-fill text-center" role="presentation">
+                            <button class="nav-link w-100 rounded-pill mb-0" id="pill-pending-tab" data-bs-toggle="pill" data-bs-target="#pill-pending" type="button" role="tab">Pending</button>
+                        </li>
+                        <li class="nav-item flex-fill text-center" role="presentation">
+                            <button class="nav-link w-100 rounded-pill mb-0" id="pill-disetujui-tab" data-bs-toggle="pill" data-bs-target="#pill-disetujui" type="button" role="tab">Disetujui</button>
+                        </li>
+                        <li class="nav-item flex-fill text-center" role="presentation">
+                            <button class="nav-link w-100 rounded-pill mb-0" id="pill-ditolak-tab" data-bs-toggle="pill" data-bs-target="#pill-ditolak" type="button" role="tab">Ditolak</button>
+                        </li>
+                    </ul>
+
+                    <?php 
+                        $status_html = ['Semua' => '', 'Pending' => '', 'Disetujui' => '', 'Ditolak' => ''];
+                        if (empty($riwayat_pengajuan)) {
+                            $empty_msg = '<div class="text-center text-muted p-5 mt-4 bg-white rounded-4 shadow-sm border"><i class="bi bi-folder-x fs-1 mb-3 d-block opacity-50 text-secondary"></i><p class="mb-0">Belum ada riwayat pengajuan.</p></div>';
+                            foreach ($status_html as $k => $v) { $status_html[$k] = $empty_msg; }
+                        } else {
+                            foreach ($riwayat_pengajuan as $rj) {
+                                $bg_badge = 'bg-secondary';
+                                if ($rj['status'] == 'Pending') $bg_badge = 'bg-warning text-dark';
+                                elseif ($rj['status'] == 'Disetujui') $bg_badge = 'bg-success';
+                                elseif ($rj['status'] == 'Ditolak') $bg_badge = 'bg-danger';
+
+                                $card = '<div class="detail-box shadow-sm mb-3">
+                                    <div class="d-flex justify-content-between align-items-center border-bottom p-3 bg-light rounded-top-3">
+                                        <b class="text-dark" style="font-size:14px;"><i class="bi bi-file-earmark-text text-primary me-2"></i>' . htmlspecialchars($rj['tipe_pengajuan']) . '</b>
+                                        <span class="badge rounded-pill px-3 ' . $bg_badge . '">' . $rj['status'] . '</span>
+                                    </div>
+                                    <div class="p-3">
+                                        <div class="text-muted small mb-2"><i class="bi bi-clock me-1"></i> ' . date('d M Y, H:i', strtotime($rj['waktu_urut'])) . '</div>
+                                        <div class="text-dark bg-opacity-10 p-2 rounded border font-monospace" style="font-size:13px; background:#f8f9fa;">' . htmlspecialchars($rj['keterangan']) . '</div>
+                                    </div>
+                                </div>';
+                                
+                                $status_html['Semua'] .= $card;
+                                if (isset($status_html[$rj['status']])) {
+                                    $status_html[$rj['status']] .= $card;
+                                }
+                            }
+                        }
+                        
+                        foreach(['Pending', 'Disetujui', 'Ditolak'] as $s) {
+                            if (empty($status_html[$s])) {
+                                $status_html[$s] = '<div class="text-center text-muted p-5 mt-4 bg-white rounded-4 shadow-sm border"><i class="bi bi-check-circle fs-1 mb-3 d-block opacity-25"></i><p class="mb-0">Tidak ada pengajuan dalam status ' . $s . '.</p></div>';
+                            }
+                        }
+                    ?>
+
+                    <div class="tab-content pb-5 mb-5" id="statusTabContent">
+                        <div class="tab-pane fade show active" id="pill-semua" role="tabpanel"><?= $status_html['Semua'] ?></div>
+                        <div class="tab-pane fade" id="pill-pending" role="tabpanel"><?= $status_html['Pending'] ?></div>
+                        <div class="tab-pane fade" id="pill-disetujui" role="tabpanel"><?= $status_html['Disetujui'] ?></div>
+                        <div class="tab-pane fade" id="pill-ditolak" role="tabpanel"><?= $status_html['Ditolak'] ?></div>
                     </div>
                 </div>
             </div>
