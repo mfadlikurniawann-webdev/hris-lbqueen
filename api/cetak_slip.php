@@ -17,28 +17,74 @@ $tahun = $_GET['tahun'] ?? date('Y');
 $nama_bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 $periode = $nama_bulan[(int)$bulan - 1] . " " . $tahun;
 
-$q_kar = $conn->query("SELECT nama, posisi, status_pegawai FROM karyawan WHERE nik='$nik_target'");
+// Ambil Data Karyawan
+$q_kar = $conn->query("SELECT nama, posisi, status_pegawai, tgl_bergabung FROM karyawan WHERE nik='$nik_target'");
 $data_kar = $q_kar->fetch_assoc();
 if (!$data_kar) die("Data Karyawan tidak ditemukan.");
 
 $status_pegawai = strtolower($data_kar['status_pegawai']);
 $is_probation = (strpos($status_pegawai, 'probation') !== false);
+$tgl_bergabung = $data_kar['tgl_bergabung'] ?? '0000-00-00';
+
+// Hitung Kehadiran Berdasarkan Cutoff 26 - 25
+$bulan_p = (int)$bulan;
+$tahun_p = (int)$tahun;
+$bulan_s = $bulan_p - 1;
+$tahun_s = $tahun_p;
+if ($bulan_s == 0) {
+    $bulan_s = 12;
+    $tahun_s--;
+}
+$start_date = "$tahun_s-" . str_pad($bulan_s, 2, "0", STR_PAD_LEFT) . "-26";
+$end_date   = "$tahun_p-" . str_pad($bulan_p, 2, "0", STR_PAD_LEFT) . "-25";
+
+$q_abs = $conn->query("SELECT COUNT(DISTINCT DATE(waktu)) as total_hadir FROM absensi WHERE nik='$nik_target' AND jenis='Check In' AND DATE(waktu) BETWEEN '$start_date' AND '$end_date'");
+$d_abs = $q_abs->fetch_assoc();
+$kehadiran_aktual = (int)$d_abs['total_hadir'];
 
 // Input HR dari Modal Payroll
 $hari_kerja = (int)($_GET['hari_kerja'] ?? 26);
+if ($kehadiran_aktual > 0) {
+    $hari_kerja = $kehadiran_aktual;
+}
+
 $uang_makan = (int)($_GET['uang_makan'] ?? 0);
 $tidak_gaji = isset($_GET['tidak_hitung_gaji']) && $_GET['tidak_hitung_gaji'] == '1';
 $capai_target = isset($_GET['capai_target']) && $_GET['capai_target'] == '1';
 $alpa_banyak = isset($_GET['alpa_banyak']) && $_GET['alpa_banyak'] == '1';
 
+// Cek apakah belum genap 1 bulan
+$belum_genap_1_bulan = false;
+if ($tgl_bergabung != '0000-00-00') {
+    $date_bergabung = new DateTime($tgl_bergabung);
+    $date_cutoff = new DateTime($end_date);
+    $diff = $date_bergabung->diff($date_cutoff);
+    if ($diff->y == 0 && $diff->m == 0) {
+        $belum_genap_1_bulan = true;
+    }
+}
+
 // LOGIKA KOMPENSASI KONTRAK
-$gaji_pokok = $tidak_gaji ? 0 : 1000000;
-$uang_kerajinan = 0;
+$gaji_pokok = 1000000;
+$uang_kerajinan = 200000; 
 $uang_bonus = 0;
 
-if (!$is_probation && !$alpa_banyak) {
-    $uang_kerajinan = 200000;
+if ($tidak_gaji) {
+    $gaji_pokok = 0;
+} else if ($is_probation && $belum_genap_1_bulan) {
+    // Gaji pokok harian 25000 untuk probation < 1 bulan
+    $gaji_pokok = $hari_kerja * 25000;
 }
+
+if ($alpa_banyak) {
+    $uang_kerajinan = 0;
+} else if (!$is_probation) {
+    // Jika tidak alpa banyak dan bukan probation, tetap 200k (sesuai logika lama)
+    $uang_kerajinan = 200000;
+} else {
+    $uang_kerajinan = 0; // Probation biasanya tidak dapat uang kerajinan di sistem ini
+}
+
 if ($capai_target) {
     $uang_bonus = 600000;
 }
@@ -163,7 +209,7 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
         .img-cap {
             position: absolute;
             height: 95px;
-            z-index: 1;
+            z-index: 2; /* Cap di atas TTD */
             opacity: 0.85;
             transform: rotate(-5deg);
             left: 50%;
@@ -173,7 +219,7 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
         .img-ttd {
             position: absolute;
             height: 75px;
-            z-index: 2;
+            z-index: 1; /* TTD di bawah Cap */
             left: 50%;
             margin-left: -35px;
             top: 15px;
@@ -231,7 +277,7 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
 
         <table class="header-table">
             <tr>
-                <td style="width: 120px;"><img src="/logo/lbqueen_logo.PNG" class="header-logo"></td>
+                <td style="width: 120px;"><img src="../public/logo/lbqueen_logo.PNG" class="header-logo"></td>
                 <td>
                     <div class="title-main">SLIP GAJI KARYAWAN</div>
                     <div class="title-sub">PT LBQUEEN CARE BEAUTY</div>
@@ -303,8 +349,8 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
             <div class="signature-box">
                 <div class="sig-title">Best Regards</div>
                 <div class="sig-area">
-                    <img src="/logo/Cap_LBQueen.png" class="img-cap" alt="Cap">
-                    <img src="/logo/ttd.png" class="img-ttd" alt="Tanda Tangan">
+                    <img src="../public/logo/Cap_LBQueen.png" class="img-cap" alt="Cap">
+                    <img src="../public/logo/ttd.png" class="img-ttd" alt="Tanda Tangan">
                 </div>
                 <div class="sig-name">HR & Digital Ops</div>
             </div>

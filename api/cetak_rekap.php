@@ -93,13 +93,13 @@ $result = $conn->query($sql);
             height: 100px;
             opacity: 0.85;
             transform: rotate(-5deg);
-            z-index: 1;
+            z-index: 2;
         }
 
         .img-ttd {
             position: absolute;
             height: 80px;
-            z-index: 2;
+            z-index: 1;
             top: 15px;
         }
 
@@ -148,8 +148,8 @@ $result = $conn->query($sql);
     <div class="ttd-area">
         <p>Mengetahui,</p>
         <div class="box-cap-ttd">
-            <img src="/logo/Cap_LBQueen.png" class="img-cap" alt="Cap">
-            <img src="/logo/ttd.png" class="img-ttd" alt="Tanda Tangan">
+            <img src="../public/logo/Cap_LBQueen.png" class="img-cap" alt="Cap">
+            <img src="../public/logo/ttd.png" class="img-ttd" alt="Tanda Tangan">
         </div>
         <p><b>Human Capital / HRD</b></p>
     </div>

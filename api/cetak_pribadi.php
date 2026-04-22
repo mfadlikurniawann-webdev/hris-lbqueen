@@ -302,14 +302,14 @@ $total_jam_lembur_all = ($total_menit_lembur > 0) ? floor($total_menit_lembur / 
             height: 95px;
             opacity: 0.85;
             transform: rotate(-5deg);
-            z-index: 1;
+            z-index: 2;
             left: 10px;
         }
 
         .img-ttd-left {
             position: absolute;
             height: 75px;
-            z-index: 2;
+            z-index: 1;
             top: 15px;
             left: 30px;
         }
@@ -434,8 +434,8 @@ $total_jam_lembur_all = ($total_menit_lembur > 0) ? floor($total_menit_lembur / 
                 <b>Diperiksa oleh:</b><br>
                 <b>Dept. Human Capital & General Affairs</b><br>
                 <div class="box-cap-ttd-left">
-                    <img src="/logo/Cap_LBQueen.png" class="img-cap-left" alt="Cap">
-                    <img src="/logo/ttd.png" class="img-ttd-left" alt="Tanda Tangan">
+                    <img src="../public/logo/Cap_LBQueen.png" class="img-cap-left" alt="Cap">
+                    <img src="../public/logo/ttd.png" class="img-ttd-left" alt="Tanda Tangan">
                 </div>
                 ( <?= htmlspecialchars($karyawan_login['nama']) ?> )<br>
                 <b><?= htmlspecialchars($karyawan_login['posisi']) ?></b>
