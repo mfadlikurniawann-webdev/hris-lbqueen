@@ -150,15 +150,27 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
         }
 
         .signature-box .sig-area {
-            height: 90px;
+            height: 100px;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .signature-box .sig-area img {
-            height: 70px;
+        .signature-box .sig-area img.sig-ttd {
+            height: 75px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .signature-box .sig-area img.sig-cap {
+            position: absolute;
+            height: 100px;
+            width: auto;
+            left: 50%;
+            top: 50%;
+            transform: translate(-60%, -50%); /* Geser sedikit ke kiri agar natural */
+            z-index: 1;
             opacity: 0.8;
         }
 
@@ -286,7 +298,8 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
             <div class="signature-box">
                 <div class="sig-title">Best Regards</div>
                 <div class="sig-area">
-                    <img src="/public/logo/ttd.png" alt="Tanda Tangan">
+                    <img src="/public/logo/Cap_LBQueen.png" class="sig-cap" alt="Cap Perusahaan">
+                    <img src="/public/logo/ttd.png" class="sig-ttd" alt="Tanda Tangan">
                 </div>
                 <div class="sig-name">HR & Digital Ops</div>
             </div>
