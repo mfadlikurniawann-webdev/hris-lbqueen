@@ -17,317 +17,194 @@ $tahun = $_GET['tahun'] ?? date('Y');
 $nama_bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 $periode = $nama_bulan[(int)$bulan - 1] . " " . $tahun;
 
-$q_kar = $conn->query("SELECT nama, posisi, status_pegawai FROM karyawan WHERE nik='$nik_target'");
+// Ambil Data Karyawan
+$q_kar = $conn->query("SELECT nama, posisi, status_pegawai, tgl_bergabung FROM karyawan WHERE nik='$nik_target'");
 $data_kar = $q_kar->fetch_assoc();
 if (!$data_kar) die("Data Karyawan tidak ditemukan.");
 
 $status_pegawai = strtolower($data_kar['status_pegawai']);
 $is_probation = (strpos($status_pegawai, 'probation') !== false);
+$tgl_bergabung = $data_kar['tgl_bergabung'] ?? '0000-00-00';
 
-// Input HR dari Modal Payroll
+// Hitung Kehadiran Berdasarkan Cutoff 26 - 25
+$bulan_p = (int)$bulan;
+$tahun_p = (int)$tahun;
+$bulan_s = $bulan_p - 1;
+$tahun_s = $tahun_p;
+if ($bulan_s == 0) {
+    $bulan_s = 12;
+    $tahun_s--;
+}
+$start_date = "$tahun_s-" . str_pad($bulan_s, 2, "0", STR_PAD_LEFT) . "-26";
+$end_date   = "$tahun_p-" . str_pad($bulan_p, 2, "0", STR_PAD_LEFT) . "-25";
+
+$q_abs = $conn->query("SELECT COUNT(DISTINCT DATE(waktu)) as total_hadir FROM absensi WHERE nik='$nik_target' AND jenis='Check In' AND DATE(waktu) BETWEEN '$start_date' AND '$end_date'");
+$d_abs = $q_abs->fetch_assoc();
+$kehadiran_aktual = (int)$d_abs['total_hadir'];
+
+// Variabel Input HR
 $hari_kerja = (int)($_GET['hari_kerja'] ?? 26);
+if ($kehadiran_aktual > 0) {
+    $hari_kerja = $kehadiran_aktual;
+}
+
+$total_lembur = (int)($_GET['total_lembur'] ?? 0);
+$uang_lembur = $total_lembur * 10000;
 $uang_makan = (int)($_GET['uang_makan'] ?? 0);
 $tidak_gaji = isset($_GET['tidak_hitung_gaji']) && $_GET['tidak_hitung_gaji'] == '1';
 $capai_target = isset($_GET['capai_target']) && $_GET['capai_target'] == '1';
 $alpa_banyak = isset($_GET['alpa_banyak']) && $_GET['alpa_banyak'] == '1';
 
-// LOGIKA KOMPENSASI KONTRAK
-$gaji_pokok = $tidak_gaji ? 0 : 1000000;
-$uang_kerajinan = 0;
+// Cek apakah belum genap 1 bulan
+$belum_genap_1_bulan = false;
+if ($tgl_bergabung != '0000-00-00') {
+    $date_bergabung = new DateTime($tgl_bergabung);
+    $date_cutoff = new DateTime($end_date);
+    $diff = $date_bergabung->diff($date_cutoff);
+    if ($diff->y == 0 && $diff->m == 0) {
+        $belum_genap_1_bulan = true;
+    }
+}
+
+// Logika Gaji Sesuai Kontrak
+$gaji_pokok = 1000000;
+$uang_kerajinan = 200000; 
 $uang_bonus = 0;
 
-if (!$is_probation && !$alpa_banyak) {
-    $uang_kerajinan = 200000;
+if ($tidak_gaji) {
+    $gaji_pokok = 0;
+} else if ($is_probation && $belum_genap_1_bulan) {
+    $gaji_pokok = $hari_kerja * 25000;
 }
+
+if ($alpa_banyak) {
+    $uang_kerajinan = 0;
+}
+
 if ($capai_target) {
     $uang_bonus = 600000;
 }
 
-$total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
+$total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus + $uang_lembur;
 ?>
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <title>Slip Gaji - <?= htmlspecialchars($data_kar['nama']) ?></title>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            font-size: 13px;
-            color: #000;
-            padding: 20px;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #fdfdfd; padding: 20px; color: #2d3748; line-height: 1.5; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; border: 1px solid #edf2f7; border-radius: 20px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .header { display: flex; align-items: center; border-bottom: 2px dashed #edf2f7; padding-bottom: 25px; margin-bottom: 30px; }
+        .header img { width: 85px; height: 85px; object-fit: contain; border-radius: 16px; padding: 5px; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #edf2f7; }
+        .header-text { flex: 1; text-align: center; }
+        .header-text h2 { margin: 0; font-size: 14px; font-weight: 800; color: #C94F78; text-transform: uppercase; letter-spacing: 2px; }
+        .header-text h1 { margin: 8px 0; font-size: 24px; font-weight: 800; color: #1a202c; letter-spacing: -0.5px; }
+        .header-text p { margin: 0; font-size: 13px; color: #718096; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 30px; font-size: 13.5px; border: 1px solid #edf2f7; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        th, td { padding: 14px 20px; text-align: left; border-bottom: 1px solid #edf2f7; }
+        tr:last-child th, tr:last-child td { border-bottom: none; }
+        .bg-pink { background-color: #C94F78; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; font-size: 12px; font-weight: 700; border-bottom: none; }
+        td { color: #4a5568; font-weight: 600; }
+        td.text-right, th.text-right { text-align: right; }
+        
+        .signature-box { float: right; width: 260px; text-align: center; border: 1px solid #edf2f7; border-radius: 16px; margin-top: 30px; font-size: 13.5px; background: #fff; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .signature-box .title { border-bottom: 1px dashed #edf2f7; padding: 12px; font-weight: 700; color: #718096; background: #f8fafc; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .signature-box .sign-area { 
+            height: 100px; 
+            position: relative; 
+            background: #fff; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .signature-box .sign-area img.sig-ttd { 
+            height: 75px; 
+            position: relative; 
+            z-index: 1; 
+            opacity: 1; 
+        }
+        .signature-box .sign-area img.sig-cap { 
+            position: absolute; 
+            height: 100px; 
+            left: 50%; 
+            top: 50%; 
+            transform: translate(-60%, -50%); 
+            z-index: 2; 
+            opacity: 0.8; 
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        /* Tabel Header Atas */
-        .header-table {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1px solid #000;
-            margin-bottom: 20px;
-        }
-
-        .header-table td {
-            padding: 10px;
-            text-align: center;
-            border: 1px solid #000;
-        }
-
-        .header-logo {
-            width: 80px;
-            height: auto;
-        }
-
-        .title-main {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-        }
-
-        .title-sub {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .title-addr {
-            font-size: 12px;
-        }
-
-        /* Tabel Konten (Sama Persis Desain Excel) */
-        table.data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        table.data-table th,
-        table.data-table td {
-            border: 1px solid #000;
-            padding: 6px 10px;
-            text-align: left;
-        }
-
-        .bg-pink {
-            background-color: #DDA0B8 !important;
-            font-weight: bold;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-
-        .text-right {
-            text-align: right;
-        }
-
-        .col-label {
-            width: 180px;
-        }
-
-        /* Kotak TTD */
-        .signature-wrapper {
-            width: 100%;
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 30px;
-        }
-
-        .signature-box {
-            width: 250px;
-            border: 1px solid #000;
-            text-align: center;
-        }
-
-        .signature-box .sig-title {
-            border-bottom: 1px solid #000;
-            padding: 5px;
-            font-weight: bold;
-        }
-
-        .signature-box .sig-area {
-            height: 100px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .signature-box .sig-area img.sig-ttd {
-            height: 75px;
-            position: relative;
-            z-index: 2;
-        }
-
-        .signature-box .sig-area img.sig-cap {
-            position: absolute;
-            height: 100px;
-            width: auto;
-            left: 50%;
-            top: 50%;
-            transform: translate(-60%, -50%);
-            /* Geser sedikit ke kiri agar natural */
-            z-index: 1;
-            opacity: 0.8;
-        }
-
-        .signature-box .sig-name {
-            border-top: 1px solid #000;
-            padding: 5px;
-            font-weight: bold;
-        }
-
-        /* Catatan Bawah */
-        .notes-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 12px;
-        }
-
-        .notes-table th,
-        .notes-table td {
-            border: 1px solid #000;
-            padding: 5px 10px;
-            text-align: left;
-        }
-
-        .print-btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            background: #C94F78;
-            color: white;
-            text-align: center;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
-
-        @media print {
-            .print-btn {
-                display: none;
-            }
-
-            body {
-                padding: 0;
-            }
+        .signature-box .name { border-top: 1px dashed #edf2f7; padding: 12px; font-weight: 800; color: #C94F78; background: #FDF0F5; }
+        .notes { margin-top: 180px; font-size: 13px; }
+        .notes table { border: none; box-shadow: none; border-radius: 12px; overflow: hidden; }
+        .notes th { background-color: #f8fafc; color: #C94F78; border-bottom: 1px solid #edf2f7; }
+        .notes td { color: #718096; border-bottom: 1px dashed #edf2f7; font-weight: 500; font-size: 12.5px; }
+        .print-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #C94F78, #b03d64); color: white; text-align: center; font-weight: 800; margin-bottom: 25px; border: none; cursor: pointer; border-radius: 50px; font-size: 16px; box-shadow: 0 10px 20px rgba(201, 79, 120, 0.25); text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; }
+        .print-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(201, 79, 120, 0.35); }
+        @media print { 
+            @page { size: A4; margin: 1cm; }
+            body { padding: 0; margin: 0; -webkit-print-color-adjust: exact; color-adjust: exact; print-color-adjust: exact; zoom: 1; }
+            .print-btn { display: none; } 
+            .container { border: none; padding: 0; box-shadow: none; max-width: 100%; }
         }
     </style>
 </head>
-
 <body>
-    <button class="print-btn" onclick="window.print()">🖨️ CETAK SLIP GAJI PDF</button>
+    <button class="print-btn" onclick="window.print()">🖨️ CETAK SLIP GAJI</button>
     <div class="container">
-
-        <table class="header-table">
-            <tr>
-                <td style="width: 120px;"><img src="/logo/lbqueen_logo.PNG" class="header-logo"></td>
-                <td>
-                    <div class="title-main">SLIP GAJI KARYAWAN</div>
-                    <div class="title-sub">PT LBQUEEN CARE BEAUTY</div>
-                    <div class="title-addr">Jl. Hos Cokroaminoto no.17 Kebon Jeruk Tanjung Karang Timur, Bandar Lampung</div>
-                </td>
-            </tr>
-        </table>
-
-        <table class="data-table">
-            <tr class="bg-pink">
-                <td colspan="2">IDENTITAS KARYAWAN</td>
-                <td style="border-left:none; width:40%;"></td>
-            </tr>
-            <tr>
-                <td class="col-label">Nama</td>
-                <td colspan="2">: <?= htmlspecialchars($data_kar['nama']) ?></td>
-            </tr>
-            <tr>
-                <td class="col-label">Jabatan</td>
-                <td colspan="2">: <?= htmlspecialchars($data_kar['posisi']) ?></td>
-            </tr>
-            <tr>
-                <td class="col-label">Periode</td>
-                <td colspan="2">: <?= $periode ?></td>
-            </tr>
-        </table>
-
-        <table class="data-table">
-            <tr class="bg-pink">
-                <td colspan="2">PENERIMA</td>
-                <td style="width:40%;"></td>
-            </tr>
-            <tr>
-                <td class="col-label">Gaji Pokok</td>
-                <td class="text-right" style="width:150px;">Rp<?= number_format($gaji_pokok, 0, ',', '.') ?></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="col-label">Total Hari Kerja</td>
-                <td class="text-right"><?= $hari_kerja ?></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td colspan="3" style="height: 15px; border-left: 1px solid #000; border-right: 1px solid #000; border-bottom: none; border-top: none;"></td>
-            </tr>
-            <tr>
-                <td class="col-label">Tunjangan Uang Makan</td>
-                <td class="text-right">Rp<?= number_format($uang_makan, 0, ',', '.') ?></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="col-label">Uang Kerajinan</td>
-                <td class="text-right">Rp<?= number_format($uang_kerajinan, 0, ',', '.') ?></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="col-label">Uang Bonus Target</td>
-                <td class="text-right">Rp<?= number_format($uang_bonus, 0, ',', '.') ?></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="col-label bg-pink">Total Penerima</td>
-                <td class="text-right bg-pink">Rp<?= number_format($total_penerima, 0, ',', '.') ?></td>
-                <td class="bg-pink"></td>
-            </tr>
-        </table>
-
-        <div class="signature-wrapper">
-            <div class="signature-box">
-                <div class="sig-title">Best Regards</div>
-                <div class="sig-area">
-                    <img src="../logo/Cap_LBQueen.png" class="sig-cap" alt="Cap Perusahaan">
-                    <img src="/logo/ttd.png" class="sig-ttd" alt="Tanda Tangan">
-                </div>
-                <div class="sig-name">HR & Digital Ops</div>
+        <div class="header">
+            <img src="../public/logo/lbqueen_logo.PNG" alt="Logo">
+            <div class="header-text">
+                <h2>SLIP GAJI KARYAWAN</h2>
+                <h1>PT LBQUEEN CARE BEAUTY</h1>
+                <p>Jl. Hos Cokroaminoto no.17 Kebon Jeruk Tanjung Karang Timur, Bandar Lampung.<br>
+                Telp: +62 821-7617-1448 | Email: lbqueen.id@gmail.com</p>
             </div>
         </div>
 
-        <table class="notes-table">
-            <tr>
-                <th class="bg-pink">Catatan:</th>
-            </tr>
-            <tr>
-                <td>1. Cut off dilakukan setiap tanggal 25, jika lebih dari itu maka masuk ke bulan depan</td>
-            </tr>
-            <tr>
-                <td>2. Jika ada kesalahan silahkan hubungi tim HR</td>
-            </tr>
-            <tr>
-                <td>3. Silahkan cek lampiran untuk mengetahui uang yang dibayarkan</td>
-            </tr>
+        <table>
+            <tr><th colspan="2" class="bg-pink">IDENTITAS KARYAWAN</th></tr>
+            <tr><td style="width: 30%;">Nama</td><td><?= htmlspecialchars($data_kar['nama']) ?></td></tr>
+            <tr><td>Jabatan</td><td><?= htmlspecialchars($data_kar['posisi']) ?> (<?= htmlspecialchars($data_kar['status_pegawai']) ?>)</td></tr>
+            <tr><td>Periode</td><td><?= $periode ?></td></tr>
         </table>
-    </div>
-    <script>
-        if (window.innerWidth > 800) {
-            window.onload = function() {
-                window.print();
-            }
-        }
-    </script>
-</body>
 
+        <table>
+            <tr><th colspan="2" class="bg-pink">PENERIMA</th></tr>
+            <tr><td>Gaji Pokok</td><td class="text-right">Rp <?= number_format($gaji_pokok, 0, ',', '.') ?></td></tr>
+            <tr><td>Total Hari Kerja</td><td class="text-right"><?= $hari_kerja ?></td></tr>
+            <tr><td colspan="2" style="border-left:none; border-right:none;"></td></tr>
+            <?php if ($uang_lembur > 0): ?>
+            <tr><td>Gaji Uang Lembur (<?= $total_lembur ?> x Rp 10.000)</td><td class="text-right">Rp <?= number_format($uang_lembur, 0, ',', '.') ?></td></tr>
+            <?php endif; ?>
+            <?php if ($uang_makan > 0): ?>
+            <tr><td>Tunjangan Uang Makan</td><td class="text-right">Rp <?= number_format($uang_makan, 0, ',', '.') ?></td></tr>
+            <?php endif; ?>
+            <tr><td>Uang Kerajinan</td><td class="text-right">Rp <?= number_format($uang_kerajinan, 0, ',', '.') ?></td></tr>
+            <tr><td>Uang Bonus Target</td><td class="text-right">Rp <?= number_format($uang_bonus, 0, ',', '.') ?></td></tr>
+            <tr><th class="bg-pink">Total Penerima</th><th class="bg-pink text-right">Rp <?= number_format($total_penerima, 0, ',', '.') ?></th></tr>
+        </table>
+
+        <div class="signature-box">
+            <div class="title">Best Regards</div>
+            <div class="sign-area">
+                <img src="../public/logo/Cap_LBQueen.png" class="sig-cap" alt="Cap">
+                <img src="../public/logo/ttd.png" class="sig-ttd" alt="Sign">
+            </div>
+            <div class="name">HR & Digital Ops</div>
+        </div>
+
+        <div class="notes">
+            <table style="margin-bottom: 0;">
+                <tr><th class="bg-pink">Catatan:</th></tr>
+                <tr><td>1. Cut off dilakukan setiap tanggal 25, jika lebih dari itu maka masuk ke bulan depan.</td></tr>
+                <tr><td>2. Uang Kerajinan hangus apabila Alpa 2x atau lebih (khusus karyawan Kontrak).</td></tr>
+                <tr><td>3. Jika ada kesalahan silakan hubungi tim HR.</td></tr>
+            </table>
+        </div>
+    </div>
+    <script> if(window.innerWidth > 800) { window.onload = function() { window.print(); } } </script>
+</body>
 </html>

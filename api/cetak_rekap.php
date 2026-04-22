@@ -69,7 +69,7 @@ $result = $conn->query($sql);
         .signature-box .sig-area img.sig-ttd {
             height: 75px;
             position: relative;
-            z-index: 2;
+            z-index: 1;
         }
 
         .signature-box .sig-area img.sig-cap {
@@ -79,7 +79,7 @@ $result = $conn->query($sql);
             left: 50%;
             top: 50%;
             transform: translate(-60%, -50%);
-            z-index: 1;
+            z-index: 2;
             opacity: 0.8;
         }
 
