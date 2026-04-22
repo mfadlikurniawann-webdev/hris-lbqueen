@@ -125,8 +125,10 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
         }
 
         .header .logo {
-            width: 100px;
-            margin-bottom: 15px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 90px;
         }
 
         .header h2 {
