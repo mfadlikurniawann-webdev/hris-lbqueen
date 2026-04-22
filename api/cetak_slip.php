@@ -408,7 +408,7 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
 
     <div class="page-container">
         <div class="header">
-            <img src="../public/logo/lbqueen_logo.png" class="logo" alt="LBQueen Logo">
+            <img src="/logo/lbqueen_logo.png" class="logo" alt="LBQueen Logo">
             <h2>Slip Gaji Karyawan</h2>
             <div class="company-name">PT LBQUEEN CARE BEAUTY</div>
             <div class="address">Jl. Hos Cokroaminoto no.17 Kebon Jeruk Tanjung Karang Timur, Bandar Lampung</div>
