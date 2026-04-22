@@ -129,8 +129,8 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
         .signature-box .date { font-size: 12px; color: #718096; margin-bottom: 10px; }
         .signature-box .role { font-size: 13px; color: #4a5568; margin-bottom: 15px; }
         .signature-area { height: 100px; display: flex; align-items: center; justify-content: center; position: relative; }
-        .signature-img { height: 80px; z-index: 2; position: relative; }
-        .stamp-img { position: absolute; height: 110px; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); opacity: 0.7; z-index: 1; pointer-events: none; }
+        .signature-img { height: 80px; z-index: 1; position: relative; }
+        .stamp-img { position: absolute; height: 110px; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); opacity: 0.7; z-index: 2; pointer-events: none; }
         .signature-name { margin-top: 15px; font-weight: 800; font-size: 14px; color: #1a202c; border-top: 1px solid #cbd5e1; padding-top: 10px; }
 
         .print-btn { 
@@ -159,7 +159,7 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
 
     <div class="page-container">
         <div class="header">
-            <img src="../public/logo/lbqueen_logo.png" class="logo" alt="LBQueen Logo">
+            <img src="/logo/lbqueen_logo.png" class="logo" alt="LBQueen Logo">
             <h2>Slip Gaji Karyawan</h2>
             <div class="company-name">PT LBQUEEN CARE BEAUTY</div>
             <div class="address">Jl. Hos Cokroaminoto no.17 Kebon Jeruk Tanjung Karang Timur, Bandar Lampung</div>
@@ -232,8 +232,8 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
                 <div class="date">Bandar Lampung, <?= date('d') ?> <?= $nama_bulan[(int)date('m')-1] ?> <?= date('Y') ?></div>
                 <div class="role">Mengetahui,</div>
                 <div class="signature-area">
-                    <img src="../public/logo/ttd.png" class="signature-img" alt="Tanda Tangan">
-                    <img src="../public/logo/Cap_LBQueen.png" class="stamp-img" alt="Stempel Perusahaan">
+                    <img src="/logo/ttd.png" class="signature-img" alt="Tanda Tangan">
+                    <img src="/logo/Cap_LBQueen.png" class="stamp-img" alt="Stempel Perusahaan">
                 </div>
                 <div class="signature-name">HR & Digital Ops</div>
             </div>
