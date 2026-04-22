@@ -78,11 +78,8 @@ if ($tidak_gaji) {
 
 if ($alpa_banyak) {
     $uang_kerajinan = 0;
-} else if (!$is_probation) {
-    // Jika tidak alpa banyak dan bukan probation, tetap 200k (sesuai logika lama)
-    $uang_kerajinan = 200000;
-} else {
-    $uang_kerajinan = 0; // Probation biasanya tidak dapat uang kerajinan di sistem ini
+} else if ($is_probation) {
+    $uang_kerajinan = 0; 
 }
 
 if ($capai_target) {
@@ -98,84 +95,125 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
     <meta charset="UTF-8">
     <title>Slip Gaji - <?= htmlspecialchars($data_kar['nama']) ?></title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Inter', 'Arial', sans-serif;
             font-size: 13px;
-            color: #000;
+            color: #1a202c;
+            background: #fdfdfd;
             padding: 20px;
+            line-height: 1.5;
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border: 1px solid #edf2f7;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
         }
 
-        /* Tabel Header Atas */
+        /* Tabel Header */
         .header-table {
             width: 100%;
-            border-collapse: collapse;
-            border: 1px solid #000;
-            margin-bottom: 20px;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 30px;
+            border-bottom: 2px dashed #edf2f7;
+            padding-bottom: 20px;
         }
 
         .header-table td {
-            padding: 10px;
-            text-align: center;
-            border: 1px solid #000;
+            padding: 0;
+            vertical-align: middle;
         }
 
         .header-logo {
-            width: 80px;
-            height: auto;
+            width: 85px;
+            height: 85px;
+            object-fit: contain;
+            border-radius: 16px;
+            padding: 5px;
+            background: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #edf2f7;
         }
 
-        .title-main {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 5px;
+        .header-text {
+            text-align: center;
+            padding-right: 85px; /* Offset for logo balance */
+        }
+
+        .header-text h2 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 800;
+            color: #C94F78;
             text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
-        .title-sub {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 5px;
+        .header-text h1 {
+            margin: 8px 0;
+            font-size: 24px;
+            font-weight: 800;
+            color: #1a202c;
+            letter-spacing: -0.5px;
         }
 
-        .title-addr {
+        .header-text p {
+            margin: 0;
             font-size: 12px;
+            color: #718096;
         }
 
-        /* Tabel Konten */
+        /* Data Tables */
         table.data-table {
             width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 25px;
+            border: 1px solid #edf2f7;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         }
 
         table.data-table th,
         table.data-table td {
-            border: 1px solid #000;
-            padding: 6px 10px;
+            border-bottom: 1px solid #edf2f7;
+            padding: 12px 20px;
             text-align: left;
         }
 
+        table.data-table tr:last-child td {
+            border-bottom: none;
+        }
+
         .bg-pink {
-            background-color: #DDA0B8 !important;
-            font-weight: bold;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            background-color: #C94F78 !important;
+            color: #ffffff !important;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 12px;
         }
 
         .text-right {
             text-align: right;
+            font-weight: 700;
         }
 
         .col-label {
-            width: 180px;
+            width: 200px;
+            color: #718096;
+            font-weight: 600;
         }
 
-        /* Kotak TTD & Cap (Ditumpuk) */
+        /* Signature Area */
         .signature-wrapper {
             width: 100%;
             display: flex;
@@ -184,104 +222,143 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
         }
 
         .signature-box {
-            width: 250px;
-            border: 1px solid #000;
+            width: 260px;
+            border: 1px solid #edf2f7;
+            border-radius: 16px;
             text-align: center;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
         }
 
         .signature-box .sig-title {
-            border-bottom: 1px solid #000;
-            padding: 5px;
-            font-weight: bold;
+            border-bottom: 1px dashed #edf2f7;
+            padding: 12px;
+            font-weight: 700;
+            color: #718096;
+            background: #f8fafc;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .signature-box .sig-area {
-            height: 110px;
+            height: 120px;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
-            background: white;
+            background: #fff;
         }
 
-        /* Pengaturan Cap & Tanda Tangan */
         .img-cap {
             position: absolute;
-            height: 95px;
-            z-index: 2; /* Cap di atas TTD */
+            height: 110px;
+            z-index: 2;
             opacity: 0.85;
-            transform: rotate(-5deg);
+            transform: rotate(-10deg);
             left: 50%;
-            margin-left: -50px;
+            margin-left: -55px;
         }
 
         .img-ttd {
             position: absolute;
-            height: 75px;
-            z-index: 1; /* TTD di bawah Cap */
+            height: 80px;
+            z-index: 1;
             left: 50%;
-            margin-left: -35px;
-            top: 15px;
+            margin-left: -40px;
         }
 
         .signature-box .sig-name {
-            border-top: 1px solid #000;
-            padding: 5px;
-            font-weight: bold;
+            border-top: 1px dashed #edf2f7;
+            padding: 12px;
+            font-weight: 800;
+            color: #C94F78;
+            background: #FDF0F5;
         }
 
-        /* Catatan Bawah */
+        /* Notes Section */
         .notes-table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 12px;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 30px;
+            border: none;
         }
 
-        .notes-table th,
-        .notes-table td {
-            border: 1px solid #000;
-            padding: 5px 10px;
+        .notes-table th {
+            background-color: #f8fafc;
+            color: #C94F78;
+            padding: 10px 20px;
+            border-radius: 12px 12px 0 0;
+            border: 1px solid #edf2f7;
+            border-bottom: none;
             text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .notes-table td {
+            padding: 8px 20px;
+            border: 1px solid #edf2f7;
+            color: #718096;
+            font-size: 12px;
+            font-weight: 500;
+            border-top: none;
+        }
+        
+        .notes-table tr:last-child td {
+            border-radius: 0 0 12px 12px;
         }
 
         .print-btn {
             display: block;
             width: 100%;
-            padding: 15px;
-            background: #C94F78;
+            padding: 16px;
+            background: linear-gradient(135deg, #C94F78, #b03d64);
             color: white;
             text-align: center;
-            font-weight: bold;
+            font-weight: 800;
+            margin-bottom: 25px;
             border: none;
             cursor: pointer;
-            margin-bottom: 20px;
+            border-radius: 50px;
+            font-size: 16px;
+            box-shadow: 0 10px 20px rgba(201, 79, 120, 0.25);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .print-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(201, 79, 120, 0.35);
         }
 
         @media print {
-            .print-btn {
-                display: none;
-            }
-
-            body {
-                padding: 0;
-            }
+            @page { size: A4; margin: 1cm; }
+            body { padding: 0; margin: 0; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-btn { display: none; }
+            .container { border: none; padding: 0; box-shadow: none; max-width: 100%; }
         }
     </style>
 </head>
 
 <body>
-    <button class="print-btn" onclick="window.print()">🖨️ CETAK SLIP GAJI PDF</button>
+    <button class="print-btn" onclick="window.print()">🖨️ CETAK SLIP GAJI</button>
     <div class="container">
 
         <table class="header-table">
             <tr>
-                <td style="width: 120px;"><img src="../public/logo/lbqueen_logo.PNG" class="header-logo"></td>
-                <td>
-                    <div class="title-main">SLIP GAJI KARYAWAN</div>
-                    <div class="title-sub">PT LBQUEEN CARE BEAUTY</div>
-                    <div class="title-addr">Jl. Hos Cokroaminoto no.17 Kebon Jeruk Tanjung Karang Timur, Bandar Lampung</div>
+                <td style="width: 85px;">
+                    <img src="../public/logo/lbqueen_logo.png" class="header-logo" alt="Logo">
+                </td>
+                <td class="header-text">
+                    <h2>SLIP GAJI KARYAWAN</h2>
+                    <h1>PT LBQUEEN CARE BEAUTY</h1>
+                    <p>Jl. Hos Cokroaminoto no.17 Kebon Jeruk Tanjung Karang Timur, Bandar Lampung.<br>
+                    Telp: +62 821-7617-1448 | Email: lbqueen.id@gmail.com</p>
                 </td>
             </tr>
         </table>
@@ -289,15 +366,15 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
         <table class="data-table">
             <tr class="bg-pink">
                 <td colspan="2">IDENTITAS KARYAWAN</td>
-                <td style="border-left:none; width:40%;"></td>
+                <td style="width:40%;"></td>
             </tr>
             <tr>
                 <td class="col-label">Nama</td>
-                <td colspan="2">: <?= htmlspecialchars($data_kar['nama']) ?></td>
+                <td colspan="2">: <b><?= htmlspecialchars($data_kar['nama']) ?></b></td>
             </tr>
             <tr>
                 <td class="col-label">Jabatan</td>
-                <td colspan="2">: <?= htmlspecialchars($data_kar['posisi']) ?></td>
+                <td colspan="2">: <?= htmlspecialchars($data_kar['posisi']) ?> (<?= htmlspecialchars($data_kar['status_pegawai']) ?>)</td>
             </tr>
             <tr>
                 <td class="col-label">Periode</td>
@@ -317,17 +394,19 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
             </tr>
             <tr>
                 <td class="col-label">Total Hari Kerja</td>
-                <td class="text-right"><?= $hari_kerja ?></td>
+                <td class="text-right"><?= $hari_kerja ?> Hari</td>
                 <td></td>
             </tr>
             <tr>
-                <td colspan="3" style="height: 15px; border-left: 1px solid #000; border-right: 1px solid #000; border-bottom: none; border-top: none;"></td>
+                <td colspan="3" style="height: 10px;"></td>
             </tr>
+            <?php if ($uang_makan > 0): ?>
             <tr>
                 <td class="col-label">Tunjangan Uang Makan</td>
                 <td class="text-right">Rp<?= number_format($uang_makan, 0, ',', '.') ?></td>
                 <td></td>
             </tr>
+            <?php endif; ?>
             <tr>
                 <td class="col-label">Uang Kerajinan</td>
                 <td class="text-right">Rp<?= number_format($uang_kerajinan, 0, ',', '.') ?></td>
@@ -338,10 +417,10 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
                 <td class="text-right">Rp<?= number_format($uang_bonus, 0, ',', '.') ?></td>
                 <td></td>
             </tr>
-            <tr>
-                <td class="col-label bg-pink">Total Penerima</td>
-                <td class="text-right bg-pink">Rp<?= number_format($total_penerima, 0, ',', '.') ?></td>
-                <td class="bg-pink"></td>
+            <tr class="bg-pink">
+                <td class="col-label" style="color:white;">Total Penerima</td>
+                <td class="text-right">Rp<?= number_format($total_penerima, 0, ',', '.') ?></td>
+                <td style="background:#C94F78;"></td>
             </tr>
         </table>
 
@@ -357,18 +436,22 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
         </div>
 
         <table class="notes-table">
-            <tr>
-                <th class="bg-pink">Catatan:</th>
-            </tr>
-            <tr>
-                <td>1. Cut off dilakukan setiap tanggal 25, jika lebih dari itu maka masuk ke bulan depan</td>
-            </tr>
-            <tr>
-                <td>2. Jika ada kesalahan silahkan hubungi tim HR</td>
-            </tr>
-            <tr>
-                <td>3. Silahkan cek lampiran untuk mengetahui uang yang dibayarkan</td>
-            </tr>
+            <thead>
+                <tr>
+                    <th>Catatan:</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1. Cut off dilakukan setiap tanggal 25, jika lebih dari itu maka masuk ke bulan depan</td>
+                </tr>
+                <tr>
+                    <td>2. Jika ada kesalahan silahkan hubungi tim HR</td>
+                </tr>
+                <tr>
+                    <td>3. Silahkan cek lampiran untuk mengetahui uang yang dibayarkan</td>
+                </tr>
+            </tbody>
         </table>
     </div>
     <script>
