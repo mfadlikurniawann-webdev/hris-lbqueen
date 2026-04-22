@@ -55,8 +55,35 @@ $result = $conn->query($sql);
         
         .signatures { margin-top: 50px; display: flex; justify-content: flex-end; }
         .signature-box { width: 250px; text-align: center; border: 1px dashed #cbd5e1; padding: 20px; border-radius: 16px; background: #f8fafc; }
-        .signature-box p { margin: 0 0 10px 0; color: #718096; font-size: 13px; }
-        .signature-box p.sign-title { color: #1a202c; font-weight: 800; font-size: 14px; margin-top: 60px; border-top: 1px solid #cbd5e1; padding-top: 10px; }
+        .signature-box p { margin: 0 0 5px 0; color: #718096; font-size: 13px; }
+        
+        .signature-box .sig-area {
+            height: 100px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .signature-box .sig-area img.sig-ttd {
+            height: 75px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .signature-box .sig-area img.sig-cap {
+            position: absolute;
+            height: 100px;
+            width: auto;
+            left: 50%;
+            top: 50%;
+            transform: translate(-60%, -50%);
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        .signature-box p.sign-title { color: #1a202c; font-weight: 800; font-size: 14px; margin-top: 5px; border-top: 1px solid #cbd5e1; padding-top: 10px; }
         
         @media print { 
             @page { size: A4; margin: 1cm; }
@@ -108,6 +135,10 @@ $result = $conn->query($sql);
             <div class="signature-box">
                 <p>Bandar Lampung, <?= date('d') ?> <?= $nama_bulan[(int)date('m')-1] ?> <?= date('Y') ?></p>
                 <p>Mengetahui,</p>
+                <div class="sig-area">
+                    <img src="/public/logo/Cap_LBQueen.png" class="sig-cap" alt="Cap Perusahaan">
+                    <img src="/public/logo/ttd.png" class="sig-ttd" alt="Tanda Tangan">
+                </div>
                 <p class="sign-title">Human Capital / HRD</p>
             </div>
         </div>

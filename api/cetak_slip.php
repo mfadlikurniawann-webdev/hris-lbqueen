@@ -169,7 +169,8 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
             width: auto;
             left: 50%;
             top: 50%;
-            transform: translate(-60%, -50%); /* Geser sedikit ke kiri agar natural */
+            transform: translate(-60%, -50%);
+            /* Geser sedikit ke kiri agar natural */
             z-index: 1;
             opacity: 0.8;
         }
@@ -298,8 +299,8 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
             <div class="signature-box">
                 <div class="sig-title">Best Regards</div>
                 <div class="sig-area">
-                    <img src="/public/logo/Cap_LBQueen.png" class="sig-cap" alt="Cap Perusahaan">
-                    <img src="/public/logo/ttd.png" class="sig-ttd" alt="Tanda Tangan">
+                    <img src="../logo/Cap_LBQueen.png" class="sig-cap" alt="Cap Perusahaan">
+                    <img src="/logo/ttd.png" class="sig-ttd" alt="Tanda Tangan">
                 </div>
                 <div class="sig-name">HR & Digital Ops</div>
             </div>
