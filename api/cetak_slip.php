@@ -94,264 +94,155 @@ $total_penerima = $gaji_pokok + $uang_makan + $uang_kerajinan + $uang_bonus;
     <meta charset="UTF-8">
     <title>Slip Gaji - <?= htmlspecialchars($data_kar['nama']) ?></title>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            font-size: 13px;
-            color: #000;
-            padding: 20px;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; font-size: 13px; color: #2d3748; line-height: 1.5; background: #fdfdfd; margin: 0; padding: 40px 20px; }
+        .page-container { max-width: 800px; margin: 0 auto; background: #fff; border: 1px solid #edf2f7; border-radius: 20px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px dashed #edf2f7; padding-bottom: 20px; position: relative; }
+        .header .logo { width: 100px; margin-bottom: 15px; }
+        .header h2 { margin: 5px 0 10px; color: #C94F78; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; text-transform: uppercase; }
+        .header .company-name { font-size: 18px; font-weight: 700; color: #1a202c; margin-bottom: 5px; }
+        .header .address { color: #718096; font-size: 12px; max-width: 500px; margin: 0 auto 20px; }
+        .header .period-pill { color: #718096; font-size: 13px; font-weight: 600; background: #f8fafc; display: inline-block; padding: 8px 24px; border-radius: 50px; border: 1px solid #edf2f7; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; padding: 20px; background: #fdfafb; border-radius: 16px; border: 1px solid #f9eef2; }
+        .info-item { display: flex; flex-direction: column; }
+        .info-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #a0aec0; font-weight: 700; margin-bottom: 4px; }
+        .info-value { font-size: 14px; font-weight: 700; color: #2d3748; }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 25px; border: 1px solid #edf2f7; border-radius: 16px; overflow: hidden; }
+        th { background-color: #FDF0F5; color: #C94F78; font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; padding: 14px 20px; text-align: left; }
+        td { padding: 12px 20px; border-bottom: 1px solid #edf2f7; color: #4a5568; font-weight: 500; }
+        tr:last-child td { border-bottom: none; }
+        
+        .text-right { text-align: right; }
+        .font-bold { font-weight: 700; color: #1a202c; }
+        .bg-pink-light { background-color: #fdf6f9; }
+        .total-row td { background-color: #C94F78; color: #ffffff; font-weight: 800; font-size: 15px; }
+        
+        .notes-section { margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid #edf2f7; }
+        .notes-title { font-weight: 800; font-size: 13px; color: #C94F78; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .notes-list { margin: 0; padding-left: 20px; color: #718096; font-size: 12px; line-height: 1.8; }
 
-        /* Tabel Header Atas */
-        .header-table {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1px solid #000;
-            margin-bottom: 20px;
-        }
+        .signature-container { margin-top: 40px; display: flex; justify-content: flex-end; }
+        .signature-box { width: 260px; text-align: center; position: relative; padding: 20px; border: 1px dashed #cbd5e1; border-radius: 16px; background: #f8fafc; }
+        .signature-box .date { font-size: 12px; color: #718096; margin-bottom: 10px; }
+        .signature-box .role { font-size: 13px; color: #4a5568; margin-bottom: 15px; }
+        .signature-area { height: 100px; display: flex; align-items: center; justify-content: center; position: relative; }
+        .signature-img { height: 80px; z-index: 2; position: relative; }
+        .stamp-img { position: absolute; height: 110px; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); opacity: 0.7; z-index: 1; pointer-events: none; }
+        .signature-name { margin-top: 15px; font-weight: 800; font-size: 14px; color: #1a202c; border-top: 1px solid #cbd5e1; padding-top: 10px; }
 
-        .header-table td {
-            padding: 10px;
-            text-align: center;
-            border: 1px solid #000;
+        .print-btn { 
+            display: block; width: 100%; max-width: 800px; margin: 0 auto 25px auto; padding: 16px; 
+            background: linear-gradient(135deg, #C94F78, #b03d64); color: white; text-align: center; 
+            text-decoration: none; font-weight: 800; font-size: 16px; border: none; cursor: pointer; 
+            border-radius: 50px; box-shadow: 0 10px 20px rgba(201, 79, 120, 0.25); 
+            text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; 
         }
-
-        .header-logo {
-            width: 80px;
-            height: auto;
-        }
-
-        .title-main {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-        }
-
-        .title-sub {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .title-addr {
-            font-size: 12px;
-        }
-
-        /* Tabel Konten (Sama Persis Desain Excel) */
-        table.data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        table.data-table th,
-        table.data-table td {
-            border: 1px solid #000;
-            padding: 6px 10px;
-            text-align: left;
-        }
-
-        .bg-pink {
-            background-color: #DDA0B8 !important;
-            font-weight: bold;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-
-        .text-right {
-            text-align: right;
-        }
-
-        .col-label {
-            width: 180px;
-        }
-
-        /* Kotak TTD */
-        .signature-wrapper {
-            width: 100%;
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 30px;
-        }
-
-        .signature-box {
-            width: 250px;
-            border: 1px solid #000;
-            text-align: center;
-        }
-
-        .signature-box .sig-title {
-            border-bottom: 1px solid #000;
-            padding: 5px;
-            font-weight: bold;
-        }
-
-        .signature-box .sig-area {
-            height: 90px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .signature-box .sig-area img {
-            height: 70px;
-            opacity: 0.8;
-        }
-
-        .signature-box .sig-name {
-            border-top: 1px solid #000;
-            padding: 5px;
-            font-weight: bold;
-        }
-
-        /* Catatan Bawah */
-        .notes-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 12px;
-        }
-
-        .notes-table th,
-        .notes-table td {
-            border: 1px solid #000;
-            padding: 5px 10px;
-            text-align: left;
-        }
-
-        .print-btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            background: #C94F78;
-            color: white;
-            text-align: center;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
+        .print-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(201, 79, 120, 0.35); }
 
         @media print {
-            .print-btn {
-                display: none;
-            }
-
-            body {
-                padding: 0;
-            }
+            @page { size: A4; margin: 1cm; }
+            body { background: #fff; padding: 0; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .page-container { box-shadow: none; border: none; width: 100%; max-width: 100%; padding: 0; }
+            .print-btn { display: none; }
+            .info-grid { background: #fdfafb !important; border: 1px solid #f9eef2 !important; }
+            th { background-color: #FDF0F5 !important; }
+            .total-row td { background-color: #C94F78 !important; color: #fff !important; }
         }
     </style>
 </head>
 
 <body>
     <button class="print-btn" onclick="window.print()">🖨️ CETAK SLIP GAJI PDF</button>
-    <div class="container">
 
-        <table class="header-table">
-            <tr>
-                <td style="width: 120px;"><img src="../public/logo/lbqueen_logo.png" class="header-logo"></td>
-                <td>
-                    <div class="title-main">SLIP GAJI KARYAWAN</div>
-                    <div class="title-sub">PT LBQUEEN CARE BEAUTY</div>
-                    <div class="title-addr">Jl. Hos Cokroaminoto no.17 Kebon Jeruk Tanjung Karang Timur, Bandar Lampung</div>
-                </td>
-            </tr>
-        </table>
-
-        <table class="data-table">
-            <tr class="bg-pink">
-                <td colspan="2">IDENTITAS KARYAWAN</td>
-                <td style="border-left:none; width:40%;"></td>
-            </tr>
-            <tr>
-                <td class="col-label">Nama</td>
-                <td colspan="2">: <?= htmlspecialchars($data_kar['nama']) ?></td>
-            </tr>
-            <tr>
-                <td class="col-label">Jabatan</td>
-                <td colspan="2">: <?= htmlspecialchars($data_kar['posisi']) ?></td>
-            </tr>
-            <tr>
-                <td class="col-label">Periode</td>
-                <td colspan="2">: <?= $periode ?></td>
-            </tr>
-        </table>
-
-        <table class="data-table">
-            <tr class="bg-pink">
-                <td colspan="2">PENERIMA</td>
-                <td style="width:40%;"></td>
-            </tr>
-            <tr>
-                <td class="col-label">Gaji Pokok</td>
-                <td class="text-right" style="width:150px;">Rp<?= number_format($gaji_pokok, 0, ',', '.') ?></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="col-label">Total Hari Kerja</td>
-                <td class="text-right"><?= $hari_kerja ?> Hari</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td colspan="3" style="height: 15px; border-left: 1px solid #000; border-right: 1px solid #000; border-bottom: none; border-top: none;"></td>
-            </tr>
-            <tr>
-                <td class="col-label">Tunjangan Uang Makan</td>
-                <td class="text-right">Rp<?= number_format($uang_makan, 0, ',', '.') ?></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="col-label">Uang Kerajinan</td>
-                <td class="text-right">Rp<?= number_format($uang_kerajinan, 0, ',', '.') ?></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="col-label">Uang Bonus Target</td>
-                <td class="text-right">Rp<?= number_format($uang_bonus, 0, ',', '.') ?></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="col-label bg-pink">Total Penerima</td>
-                <td class="text-right bg-pink">Rp<?= number_format($total_penerima, 0, ',', '.') ?></td>
-                <td class="bg-pink"></td>
-            </tr>
-        </table>
-
-        <div class="signature-wrapper">
-            <div class="signature-box">
-                <div class="sig-title">Best Regards</div>
-                <div class="sig-area">
-                    <img src="../public/logo/ttd.png" alt="Tanda Tangan">
-                </div>
-                <div class="sig-name">HR & Digital Ops</div>
+    <div class="page-container">
+        <div class="header">
+            <img src="../public/logo/lbqueen_logo.png" class="logo" alt="LBQueen Logo">
+            <h2>Slip Gaji Karyawan</h2>
+            <div class="company-name">PT LBQUEEN CARE BEAUTY</div>
+            <div class="address">Jl. Hos Cokroaminoto no.17 Kebon Jeruk Tanjung Karang Timur, Bandar Lampung</div>
+            <div class="period-pill">
+                Siklus: <b><?= date('d M Y', strtotime($start_date)) ?></b> s/d <b><?= date('d M Y', strtotime($end_date)) ?></b>
             </div>
         </div>
 
-        <table class="notes-table">
-            <tr>
-                <th class="bg-pink">Catatan:</th>
-            </tr>
-            <tr>
-                <td>1. Cut off dilakukan setiap tanggal 25, jika lebih dari itu maka masuk ke bulan depan</td>
-            </tr>
-            <tr>
-                <td>2. Jika ada kesalahan silahkan hubungi tim HR</td>
-            </tr>
-            <tr>
-                <td>3. Silahkan cek lampiran untuk mengetahui uang yang dibayarkan</td>
-            </tr>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Nama Karyawan</span>
+                <span class="info-value"><?= htmlspecialchars($data_kar['nama']) ?></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Jabatan / Posisi</span>
+                <span class="info-value"><?= htmlspecialchars($data_kar['posisi']) ?></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">NIK</span>
+                <span class="info-value"><?= htmlspecialchars($nik_target) ?></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Periode Pembayaran</span>
+                <span class="info-value"><?= $periode ?></span>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Komponen Penerimaan</th>
+                    <th class="text-right">Jumlah</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Gaji Pokok</td>
+                    <td class="text-right font-bold">Rp<?= number_format($gaji_pokok, 0, ',', '.') ?></td>
+                </tr>
+                <tr>
+                    <td>Tunjangan Uang Makan <span style="font-size: 11px; color: #718096; margin-left: 5px;">(<?= $hari_kerja ?> Hari Kerja)</span></td>
+                    <td class="text-right font-bold">Rp<?= number_format($uang_makan, 0, ',', '.') ?></td>
+                </tr>
+                <tr>
+                    <td>Uang Kerajinan</td>
+                    <td class="text-right font-bold">Rp<?= number_format($uang_kerajinan, 0, ',', '.') ?></td>
+                </tr>
+                <tr>
+                    <td>Uang Bonus Target</td>
+                    <td class="text-right font-bold">Rp<?= number_format($uang_bonus, 0, ',', '.') ?></td>
+                </tr>
+                <tr class="total-row">
+                    <td>TOTAL PENERIMAAN BERSIH (TAKE HOME PAY)</td>
+                    <td class="text-right">Rp<?= number_format($total_penerima, 0, ',', '.') ?></td>
+                </tr>
+            </tbody>
         </table>
+
+        <div class="notes-section">
+            <div class="notes-title">📌 Catatan Penting:</div>
+            <ul class="notes-list">
+                <li>Cut off dilakukan setiap tanggal 25. Input setelah tanggal tersebut akan diproses pada periode bulan berikutnya.</li>
+                <li>Jika terdapat ketidaksesuaian data, harap segera menghubungi tim HR maksimal 2 hari setelah slip diterima.</li>
+                <li>Slip ini merupakan dokumen resmi internal PT LBQueen Care Beauty.</li>
+            </ul>
+        </div>
+
+        <div class="signature-container">
+            <div class="signature-box">
+                <div class="date">Bandar Lampung, <?= date('d') ?> <?= $nama_bulan[(int)date('m')-1] ?> <?= date('Y') ?></div>
+                <div class="role">Mengetahui,</div>
+                <div class="signature-area">
+                    <img src="../public/logo/ttd.png" class="signature-img" alt="Tanda Tangan">
+                    <img src="../public/logo/Cap_LBQueen.png" class="stamp-img" alt="Stempel Perusahaan">
+                </div>
+                <div class="signature-name">HR & Digital Ops</div>
+            </div>
+        </div>
     </div>
+
     <script>
-        if (window.innerWidth > 800) {
-            window.onload = function() {
+        window.onload = function() {
+            if (window.innerWidth > 800) {
                 window.print();
             }
         }
